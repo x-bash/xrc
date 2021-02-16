@@ -1,6 +1,8 @@
 {
     "files.defaultLanguage": "shellscript",
     "files.associations": {
+        "*.json": "json",
+        "index.html": "shellscript",
         "**/std/**": "shellscript",
         "**/tools/*": "shellscript",
         "**/cloud/*": "shellscript",
@@ -8,7 +10,7 @@
         "**/con/*": "shellscript",
         "**/net/*": "shellscript",
         "**/el/*": "shellscript",
-        "boot": "shellscript",
-        "*install*": "shellscript",
+        "*": "shellscript",
+        "*install*": "shellscript"
     }
 }
