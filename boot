@@ -50,21 +50,19 @@ echo "[x-cmd] Creating $X_BASH_SRC_PATH/.source.mirror.list" >&2
 xrc_mirrors(){
     local fp="$X_BASH_SRC_PATH/.source.mirror.list"
     if [ $# -ne 0 ]; then
-        local IFS=$'\n'
+        local IFS="$(printf "\n")"
         echo "$*" >"$fp"
-    else
-        cat "$fp"
+        return
     fi
-    return 0
+    cat "$fp"
 }
 
 xrc_clear(){
-    if grep "xrc_clear()" "$X_BASH_SRC_PATH/boot"; then
-        rm -rf "$X_BASH_SRC_PATH";
-    else
+    if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/boot"; then
         echo "[xrc] '$X_BASH_SRC_PATH/boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH" >&2
         return 1
     fi
+    rm -rf "$X_BASH_SRC_PATH";
 }
 
 xrc_cache(){    echo "$X_BASH_SRC_PATH";    }
@@ -110,7 +108,7 @@ xrc_curl(){
 }
 
 xrc_curl_gitx(){   # Simple strategy
-    local IFS 
+    local IFS="$(printf "\n")"
     local i=1
     local mirror
     local mod="${1:?Provide location like str}"
