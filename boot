@@ -1,7 +1,6 @@
 # shellcheck shell=sh
 # shellcheck disable=SC2039
 {
-
 if [ -z "$RELOAD" ] && [ -n "$X_BASH_SRC_PATH" ]; then
     return 0 2>/dev/null || exit 0
 fi
@@ -23,6 +22,7 @@ fi
 X_BASH_SRC_SHELL="sh"
 if [ -n "$ZSH_VERSION" ]; then      X_BASH_SRC_SHELL="zsh"
 elif [ -n "$BASH_VERSION" ]; then   X_BASH_SRC_SHELL="bash"
+elif [ -n "$KSH_VERSION" ]; then   X_BASH_SRC_SHELL="ksh"
 fi
 export X_BASH_SRC_SHELL
 
@@ -30,41 +30,21 @@ export X_BASH_SRC_SHELL
 TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}
 export TMPDIR
 
-echo "Start initializing." >&2
+echo "[x-cmd] Start initializing." >&2
 
-X_BASH_SRC_PATH="$HOME/.x-cmd.com/x-bash"
-# TODO: What if zsh
-if [ $X_BASH_SRC_SHELL = bash ]; then
-    # BUG Notice, if we use eval instead of source to introduce the code, the BASH_SOURCE[0] will not be the location of this file.
-    if grep "xrc()" "${BASH_SOURCE[0]}" 1>/dev/null 2>&1; then
-        X_BASH_SRC_PATH=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-    else
-        echo "Script is NOT executed by source. So we have to guess $X_BASH_SRC_PATH as its path" >&2
-    fi
-fi
+X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"
+echo "[x-cmd] Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH" >&2
 
-boot_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
+PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
 
 mkdir -p "$X_BASH_SRC_PATH"
-
-STR_REGEX_SEP="$(printf "\001")"
-str_regex(){
-    # Only dash does not support pattern="${pattern//\\/\\\\}"
-    awk -v FS="${STR_REGEX_SEP}" '{
-        if (match($1, $2))  exit 0
-        else                exit 1
-    }' <<A
-${1}${STR_REGEX_SEP}${2:?str_regex(): Provide pattern}
-A
-}
-
 # https://sh.x-cmd.com
 cat >"$X_BASH_SRC_PATH/.source.mirror.list" <<A
 https://x-bash.github.io
 https://x-bash.gitee.io
 A
 
-echo "Creating $X_BASH_SRC_PATH/.source.mirror.list" >&2
+echo "[x-cmd] Creating $X_BASH_SRC_PATH/.source.mirror.list" >&2
 
 # shellcheck disable=SC2120
 xrc_mirrors(){
@@ -79,33 +59,18 @@ xrc_mirrors(){
 }
 
 xrc_clear(){
-    if [ -f "${X_BASH_SRC_PATH:?Env X_BASH_SRC_PATH should not be empty.}/boot" ]; then
-        if [ "$X_BASH_SRC_PATH" = "/" ]; then
-            echo "Env X_BASH_SRC_PATH should not be /" >&2
-        else
-            rm -rf "$X_BASH_SRC_PATH";
-        fi
+    if grep "xrc_clear()" "$X_BASH_SRC_PATH/boot"; then
+        rm -rf "$X_BASH_SRC_PATH";
     else
-        echo "'$X_BASH_SRC_PATH/boot' NOT found." >&2
+        echo "[xrc] '$X_BASH_SRC_PATH/boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH" >&2
+        return 1
     fi
 }
 
-xrc_cache(){ echo "$X_BASH_SRC_PATH"; }
-x_activate(){
-    X_BASH_X_CMD_PATH="$(command -v x)"
-    x(){
-        case "$1" in
-            rc|src) SRC_LOADER=bash eval "$(_xrc_print_code "$@")" ;;
-            # java | jar);;
-            # python | py);;
-            # javascript | js);;
-            # typescript | ts);;
-            # ruby | rb);;
-            # lua);;
-            *) "$X_BASH_X_CMD_PATH" "$@" ;;
-        esac
-    }
-}
+xrc_cache(){    echo "$X_BASH_SRC_PATH";    }
+x(){            xrc x/v1;       x "$@";     }
+# shellcheck disable=SC2046
+xrc_cat(){      cat $(xrc_which "$@");      }
 
 xrc(){
     if [ $# -eq 0 ]; then
@@ -123,9 +88,6 @@ A
     return 0
 }
 
-# shellcheck disable=SC2046
-xrc_cat(){      cat $(xrc_which "$@");      }
-
 xrc_curl(){
     local REDIRECT=/dev/stdout
     if [ -n "$CACHE" ]; then
@@ -136,29 +98,28 @@ xrc_curl(){
         REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
     fi
 
-    x_http_get "$1" 1>"$REDIRECT" 2>/dev/null
-    local code=$?
-    xrc_debug "x_http_get $1 return code: $code"
-    if [ $code -eq 0 ]; then 
+    if x_http_get "$1" 1>"$REDIRECT" 2>/dev/null; then
         if [ -n "$CACHE" ]; then
             xrc_debug "Copy the temp file to CACHE file: $CACHE"
             mkdir -p "$(dirname "$CACHE")"
             mv "$REDIRECT" "$CACHE"
         fi
+    else
+        return $?
     fi
-    return $code
 }
 
 xrc_curl_gitx(){   # Simple strategy
-    local IFS i=1 mirror mod="${1:?Provide location like std/str}"
+    local IFS 
+    local i=1
+    local mirror
+    local mod="${1:?Provide location like str}"
     local mirror_list
     mirror_list="$(xrc_mirrors)"
     for mirror in $mirror_list; do
-        xrc_debug "Trying xrc_curl $mirror/$mod"
         xrc_curl "$mirror/$mod"
         case $? in
         0)  if [ "$i" -ne 1 ]; then
-                xrc_debug "First guess NOW is $mirror"
                 xrc_mirrors "$mirror
 $(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
             fi
@@ -188,13 +149,11 @@ A
 _xrc_which_one(){
     local RESOURCE_NAME=${1:?Provide resource name};
 
-    local handler
-
-    if [ "${RESOURCE_NAME#/}" != "${RESOURCE_NAME}" ]; then
+    if [ "${RESOURCE_NAME#/}" != "$RESOURCE_NAME" ]; then
         echo "$RESOURCE_NAME"; return 0
     fi
 
-    if str_regex "$RESOURCE_NAME" "^\.\.?/"; then
+    if [ "${RESOURCE_NAME#\./}" = "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#\.\./}" = "$RESOURCE_NAME" ]; then
         local tmp
         if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
             echo "$tmp/$(basename "$RESOURCE_NAME")"
@@ -206,7 +165,7 @@ _xrc_which_one(){
     fi
 
     local TGT
-    if str_regex "$RESOURCE_NAME" "^https?://" ; then
+    if [ "${RESOURCE_NAME#http://}" = "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" = "$RESOURCE_NAME" ]; then
         # that relies on base64?
         TGT="$X_BASH_SRC_PATH/BASE64-URL-$(echo -n "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
         if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
@@ -219,10 +178,8 @@ _xrc_which_one(){
     fi
 
     local module="$RESOURCE_NAME"
-
-    # If it is short alias like str (short for str/latest)
-    if ! str_regex "$module" "/" ; then
-        module="$module/latest"
+    if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
+        module="$module/latest"         # If it is short alias like str (short for str/latest)
     fi
     TGT="$X_BASH_SRC_PATH/$module"
 
@@ -230,14 +187,12 @@ _xrc_which_one(){
         echo "ERROR: Fail to load $RESOURCE_NAME due to network error or other. Do you want to load std/$RESOURCE_NAME?" >&2
         return 1
     fi
-
     echo "$TGT"
 }
 
 _xrc_print_code(){
-    local TGT 
     local RESOURCE_NAME=${1:?Provide resource name}; shift
-
+    local TGT
     if ! TGT="$(_xrc_which_one "$RESOURCE_NAME")"; then
         echo "Aborted. Because '_xrc_which_one $RESOURCE_NAME' fails" >&2
         return 1
@@ -248,5 +203,4 @@ _xrc_print_code(){
 
 alias xrcw=xrc_which
 alias xrcc=xrc_cat
-
 }
