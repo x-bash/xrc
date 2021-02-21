@@ -16,14 +16,17 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         }
     fi
 
-    X_BASH_SRC_SHELL="sh"
-    if [ -n "$ZSH_VERSION" ]; then      X_BASH_SRC_SHELL="zsh"
-    elif [ -n "$BASH_VERSION" ]; then   X_BASH_SRC_SHELL="bash"
-    elif [ -n "$KSH_VERSION" ]; then   X_BASH_SRC_SHELL="ksh"
+    X_CMD_SRC_SHELL="sh"
+    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
+    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"
+    elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
     fi
-    export X_BASH_SRC_SHELL
+    export X_CMD_SRC_SHELL
 
-    # It is NOT set in some cases.
+    # It is NOT set in some cases. # TODO: Maybe we should consider not using it.
+
+    # reason not using: 1. some administrator would just regularly auto delete the tmp files. It could be controlled.
+    # some files using TMPDIR to tell the program where to put temporary files.
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}
     export TMPDIR
 
@@ -72,7 +75,7 @@ A
             return 1
         fi
 
-        while [ $# -eq 0 ]; do
+        while [ $# -ne 0 ]; do
             # shellcheck disable=SC1090
             . "$(_xrc_which_one "$1")" || return
             shift
