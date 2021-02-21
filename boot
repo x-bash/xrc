@@ -10,7 +10,6 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             return $code
         }
     else
-        x author | grep "Edwin.JH.Lee & LTeam" 1>/dev/null 2>/dev/null || x_activate
         x_http_get(){
             x cat "${1:?Provide target URL}"
         }
@@ -25,8 +24,6 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
     export TMPDIR
-
-    xrc_debug "Start initializing."
 
     X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"
     xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
