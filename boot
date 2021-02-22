@@ -1,7 +1,7 @@
-# shellcheck shell=sh
-# shellcheck disable=SC2039
+# shellcheck shell=sh disable=SC2039,SC1090
 
 if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
+
     if curl --version 1>/dev/null 2>&1; then
         x_http_get(){
             curl --fail "${1:?Provide target URL}"; 
@@ -9,11 +9,14 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             [ $code -eq 28 ] && return 4
             return $code
         }
+    elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
+        alias x_http_get="x cat"
     else
-        x_http_get(){
-            x cat "${1:?Provide target URL}"
-        }
+        printf "boot[ERR]: Cannot found curl or x-cmd binary for web resource downloader."
     fi
+
+    xrc_debug(){            [ "$XRC_DBG_FLAG" ] &&  printf "xrc[DBG] : %s\n" "$*" >&2;              }
+    xrc_log(){                                      printf "xrc[${LEVEL:-INF}]: %s\n" "$*" >&2;     }
 
     X_CMD_SRC_SHELL="sh"
     if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
@@ -25,24 +28,12 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
     export TMPDIR
 
-    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"
     xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
-
+    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"
+    mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
 
-    mkdir -p "$X_BASH_SRC_PATH"
-    xrc_debug_enable(){     XRC_DBG_XRC=1;                                  }
-    xrc_debug(){            [ "$XRC_DBG_XRC" ] && level=DBG xrc_log "$@";   }
-    xrc_log(){
-        if [ -z "$XRC_NO_COLOR" ]; then
-            printf "\e[;2mxrc[%s]: %s\e[0m\n" "${level:-INF}" "$*" >&2
-        else
-            printf "xrc[%s]: %s\n" "${level:-INF}" "$*" >&2
-        fi
-    }
-
-    xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list" >&2
-    # shellcheck disable=SC2120
+    xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
     xrc_mirror(){
         local fp="$X_BASH_SRC_PATH/.source.mirror.list"
         if [ $# -ne 0 ]; then
@@ -65,8 +56,8 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
     xrc_cache(){    echo "$X_BASH_SRC_PATH";    }
     x(){            xrc x/v1;       x "$@";     }
-    # shellcheck disable=SC2046
-    xrc_cat(){      cat $(xrc_which "$@");      }
+    xrc_cat(){      cat "$(xrc_which "$@")";    }
+    xrc_update(){   UPDATE=1 xrc_which "$@" 2>/dev/null;    }
 
     xrc(){
         if [ $# -eq 0 ]; then
@@ -79,7 +70,6 @@ A
         fi
 
         while [ $# -ne 0 ]; do
-            # shellcheck disable=SC1090
             . "$(_xrc_which_one "$1")" || return
             shift
         done
@@ -154,7 +144,7 @@ A
             echo "$RESOURCE_NAME"; return 0
         fi
 
-        if [ "${RESOURCE_NAME#\./}" = "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#\.\./}" = "$RESOURCE_NAME" ]; then
+        if [ "${RESOURCE_NAME#\./}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#\.\./}" != "$RESOURCE_NAME" ]; then
             local tmp
             if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
                 echo "$tmp/$(basename "$RESOURCE_NAME")"
@@ -166,8 +156,7 @@ A
         fi
 
         local TGT
-        if [ "${RESOURCE_NAME#http://}" = "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" = "$RESOURCE_NAME" ]; then
-            # that relies on base64?
+        if [ "${RESOURCE_NAME#http://}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" != "$RESOURCE_NAME" ]; then
             TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
                 xrc_log "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
