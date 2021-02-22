@@ -29,7 +29,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     export TMPDIR
 
     xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
-    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"
+    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"       # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
 
@@ -79,7 +79,7 @@ A
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
             if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
-                xrc_debug "xrc_curl() terminated. Because update is NOT forced and file existed: $CACHE"
+                xrc_debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
             REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
@@ -93,7 +93,7 @@ A
             fi
         else
             local code=$?
-            xrc_log "x_http_get $1 return code: $code. Fail to retrieve file from: $1"
+            LEVEL=WARN xrc_log "x_http_get $1 return code: $code. Fail to retrieve file from: $1"
             [ -n "$CACHE" ] && rm "$REDIRECT"
             return $code
         fi
@@ -150,7 +150,7 @@ A
                 echo "$tmp/$(basename "$RESOURCE_NAME")"
                 return 0
             else
-                xrc_log "local file not exists: $RESOURCE_NAME"
+                LEVEL=WARN xrc_log "Local file not exists: $RESOURCE_NAME"
                 return 1
             fi
         fi
@@ -159,7 +159,7 @@ A
         if [ "${RESOURCE_NAME#http://}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" != "$RESOURCE_NAME" ]; then
             TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
-                xrc_log "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+                LEVEL=WARN xrc_log "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
                 return 1
             fi
 
@@ -174,7 +174,7 @@ A
         TGT="$X_BASH_SRC_PATH/$module"
 
         if ! CACHE="$TGT" xrc_curl_gitx "$module"; then
-            xrc_log "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+            LEVEL=WARN xrc_log "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
         echo "$TGT"
