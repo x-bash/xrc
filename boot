@@ -3,20 +3,45 @@
 if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
     if curl --version 1>/dev/null 2>&1; then
-        x_http_get(){
+        _xrc_http_get(){
             curl --fail "${1:?Provide target URL}"; 
             local code=$?
             [ $code -eq 28 ] && return 4
             return $code
         }
     elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
-        alias x_http_get="x cat"
+        alias _xrc_http_get="x cat"
     else
         printf "boot[ERR]: Cannot found curl or x-cmd binary for web resource downloader."
+        return 1 || exit 1
     fi
 
-    xrc_debug(){            [ "$XRC_DBG_FLAG" ] &&  printf "xrc[DBG] : %s\n" "$*" >&2;              }
-    xrc_log(){                                      printf "xrc[${LEVEL:-INF}]: %s\n" "$*" >&2;     }
+    _xrc_debug(){            [ "$XRC_DBG_FLAG" ] &&  printf "xrc[DBG] : %s\n" "$*" >&2;              }
+    _xrc_log(){                                      printf "xrc[${LEVEL:-INF}]: %s\n" "$*" >&2;     }
+
+    xrc_curl(){
+        local REDIRECT=/dev/stdout
+        if [ -n "$CACHE" ]; then
+            if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
+                _xrc_debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
+                return 0
+            fi
+            REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
+        fi
+
+        if _xrc_http_get "$1" 1>"$REDIRECT" 2>/dev/null; then
+            if [ -n "$CACHE" ]; then
+                _xrc_debug "Copy the temp file to CACHE file: $CACHE"
+                mkdir -p "$(dirname "$CACHE")"
+                mv "$REDIRECT" "$CACHE"
+            fi
+        else
+            local code=$?
+            LEVEL=WARN _xrc_log "_xrc_http_get $1 return code: $code. Fail to retrieve file from: $1"
+            [ -n "$CACHE" ] && rm "$REDIRECT"
+            return $code
+        fi
+    }
 
     X_CMD_SRC_SHELL="sh"
     if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
@@ -28,91 +53,84 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
     export TMPDIR
 
-    xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
-    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"       # boot will be placed in "$HOME/.x-cmd/boot"
+    _xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
+    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
-
-    xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
-    xrc_mirror(){
-        local fp="$X_BASH_SRC_PATH/.source.mirror.list"
-        if [ $# -ne 0 ]; then
-            local IFS="
-"
-            echo "$*" >"$fp"
-            return
-        fi
-        cat "$fp"
-    }
-    xrc_mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
-
-    xrc_clear(){
-        if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/boot"; then
-            xrc_debug "'$X_BASH_SRC_PATH/boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
-            return 1
-        fi
-        rm -rf "$X_BASH_SRC_PATH"
-    }
-
-    xrc_cache(){    echo "$X_BASH_SRC_PATH";    }
-    x(){            xrc x/v1;       x "$@";     }
-    xrc_cat(){      cat "$(xrc_which "$@")";    }
-    xrc_update(){   UPDATE=1 xrc_which "$@" 2>/dev/null;    }
-
+    
     xrc(){
-        if [ $# -eq 0 ]; then
-            cat >&2 <<A
+        [ $# -eq 0 ] && set -- "help"
+        case "$1" in
+            help)   cat >&2 <<A
 xrc     x-bash core function.
         Uasge:  xrc <lib> [<lib>...]
         Notice, builtin command 'source' format is 'source <lib> [argument...]'"
+
+Subcommand:
+        cat|c       Provide cat facility
+        which|w     Provide local cache file location
+        update      Update file
+        cache       Provide cache filepath
+        clear       Clear the cache
 A
-            return 1
-        fi
-
-        while [ $# -ne 0 ]; do
-            . "$(_xrc_which_one "$1")" || return
-            shift
-        done
+                    return ;;
+            c|cat)    shift;
+                    cat $(xrc which "$@") ;;
+            w|which)  shift;
+                    if [ $# -eq 0 ]; then
+                        cat >&2 <<A
+xrc which  Download lib files and print the local path.
+        Uasge:  xrc_which <lib> [<lib>...]
+        Example: source "$(xrc_which std/str)"
+A
+                        return 1
+                    fi
+                    while [ $# -gt 0 ]; do
+                        _xrc_which_one "$1" || return;  shift
+                    done ;;
+            update) shift;  UPDATE=1 xrc which "$@" 2>/dev/null ;;
+            upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
+            cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
+            clear)  shift;
+                    if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
+                        _xrc_debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
+                        return 1
+                    fi
+                    rm -rf "$X_BASH_SRC_PATH" ;;
+            mirror) shift;
+                    local fp="$X_BASH_SRC_PATH/.source.mirror.list"
+                    if [ $# -ne 0 ]; then
+                        local IFS="
+"; 
+                        echo "$*" >"$fp"
+                        return
+                    fi
+                    cat "$fp"
+                    return ;;
+            *)      while [ $# -ne 0 ]; do
+                        . "$(_xrc_which_one "$1")" || return
+                        shift
+                    done
+        esac
     }
 
-    xrc_curl(){
-        local REDIRECT=/dev/stdout
-        if [ -n "$CACHE" ]; then
-            if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
-                xrc_debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
-                return 0
-            fi
-            REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
-        fi
+    _xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
+    xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
 
-        if x_http_get "$1" 1>"$REDIRECT" 2>/dev/null; then
-            if [ -n "$CACHE" ]; then
-                xrc_debug "Copy the temp file to CACHE file: $CACHE"
-                mkdir -p "$(dirname "$CACHE")"
-                mv "$REDIRECT" "$CACHE"
-            fi
-        else
-            local code=$?
-            LEVEL=WARN xrc_log "x_http_get $1 return code: $code. Fail to retrieve file from: $1"
-            [ -n "$CACHE" ] && rm "$REDIRECT"
-            return $code
-        fi
-    }
-
-    xrc_curl_gitx(){   # Simple strategy
+    _xrc_curl_gitx(){   # Simple strategy
         local IFS="
 "
         local i=1
         local mirror
         local mod="${1:?Provide location like str}"
         local mirror_list
-        mirror_list="$(xrc_mirror)"
+        mirror_list="$(xrc mirror)"
         for mirror in $mirror_list; do
             xrc_curl "$mirror/$mod"
             case $? in
                 0)  if [ "$i" -ne 1 ]; then
-                        xrc_debug "Default mirror now is $mirror"
-                        xrc_mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
+                        _xrc_debug "Default mirror now is $mirror"
+                        xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
                     fi
                     return 0;;
                 4)  return 4;;
@@ -120,21 +138,6 @@ A
             i=$((i+1))  # Support both ash, dash, bash
         done
         return 1
-    }
-
-    xrc_which(){
-        if [ $# -eq 0 ]; then
-            cat >&2 <<A
-xrc_which  Download lib files and print the local path.
-        Uasge:  xrc_which <lib> [<lib>...]
-        Example: source "$(xrc_which std/str)"
-A
-            return 1
-        fi
-        local i
-        for i in "$@"; do
-            _xrc_which_one "$i" || return
-        done
     }
 
     _xrc_which_one(){
@@ -150,7 +153,7 @@ A
                 echo "$tmp/$(basename "$RESOURCE_NAME")"
                 return 0
             else
-                LEVEL=WARN xrc_log "Local file not exists: $RESOURCE_NAME"
+                LEVEL=WARN _xrc_log "Local file not exists: $RESOURCE_NAME"
                 return 1
             fi
         fi
@@ -159,7 +162,7 @@ A
         if [ "${RESOURCE_NAME#http://}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" != "$RESOURCE_NAME" ]; then
             TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
-                LEVEL=WARN xrc_log "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+                _xrc_debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
                 return 1
             fi
 
@@ -173,13 +176,12 @@ A
         fi
         TGT="$X_BASH_SRC_PATH/$module"
 
-        if ! CACHE="$TGT" xrc_curl_gitx "$module"; then
-            LEVEL=WARN xrc_log "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+        if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
+            LEVEL=WARN _xrc_log "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
         echo "$TGT"
     }
 
-    alias xrcw=xrc_which
-    alias xrcc=xrc_cat
+    # xrc x comp/xrc comp/x
 fi
