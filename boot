@@ -65,6 +65,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 xrc     x-bash core function.
         Uasge:  xrc <lib> [<lib>...]
         Notice, builtin command 'source' format is 'source <lib> [argument...]'"
+        Please visit hosting repository for more information: https://gitee.com/x-bash/x-bash, https://github.com/x-bash/x-bash.github.io, https://gitlab.com/x-bash/x-bash/x-bash, or https://bitbucket.com/x-bash/x-bash/x-bash
 
 Subcommand:
         cat|c       Provide cat facility
