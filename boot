@@ -16,14 +16,11 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         return 1 || exit 1
     fi
 
-    xrc_debug(){            [ "$XRC_DBG_XRC" ] &&  printf "xrc[DBG] : %s\n" "$*" >&2;              }
-    _xrc_log(){                                      printf "xrc[${LEVEL:-INF}]: %s\n" "$*" >&2;     }
-
     xrc_curl(){
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
             if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
-                xrc_debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
+                xrc_log debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
             REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
@@ -31,13 +28,13 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
         if _xrc_http_get "$1" 1>"$REDIRECT" 2>/dev/null; then
             if [ -n "$CACHE" ]; then
-                xrc_debug "Copy the temp file to CACHE file: $CACHE"
+                xrc_log debug "Copy the temp file to CACHE file: $CACHE"
                 mkdir -p "$(dirname "$CACHE")"
                 mv "$REDIRECT" "$CACHE"
             fi
         else
             local code=$?
-            xrc_debug "_xrc_http_get $1 return code: $code. Fail to retrieve file from: $1"
+            xrc_log debug "_xrc_http_get $1 return code: $code. Fail to retrieve file from: $1"
             [ -n "$CACHE" ] && rm "$REDIRECT"
             return $code
         fi
@@ -78,48 +75,77 @@ A
                         return 1
                     fi
                     eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
-            update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null 2>&1 ;;
+            update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null 2>&1    ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
             clear)  shift;
                     if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
-                        xrc_debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
+                        xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
                         return 1
                     fi
                     rm -rf "$X_BASH_SRC_PATH" ;;
-            debug)  shift; # xrc debug +work +work :work
+            log)    shift;
                     if [ $# -eq 0 ]; then
                         cat >&2 <<A
-xrc debug           Control debug files
-        Uasge:      xrc debug [ +<lib> | -<lib> | :<lib> ]
-        Example:    Enable debug for module json:   xrc debug +json
-                    Dsiable debug for module json:  xrc debug -json
-                    Generate debug function 'json_debug' for json module:  xrc debug :json
+xrc log     Provide log facility
+Subcommand:
+        init <module>:                      Generate function '<module>_log'
+        debug|dbg|verbose|v [...module]     Display the module log of all level 
+        info|INFO|i         [...module]     Display the module log of level: info, warn, error
+        warn|WARN|w         [...module]     Display the module log of level: warn, error
+        error|ERROR|e       [...module]     Display the module log of level: error
+        none|no|n           [...module]     Display no module log
+Example:
+        Enable debug log for module json:   
+                xrc log debug json
+        Dsiable debug log for module json:  
+                xrc log info json
+A
+                        return 1
+                    fi
+                    local var
+                    local level_code=0
+                    case "$1" in
+                        init) shift;
+                            for i in "$@"; do
+                                var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
+                                eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
+                            done 
+                            return 0;;
+                        debug|dbg|verbose|v)        level_code=0 ;;
+                        info|INFO|i)                level_code=1 ;;
+                        warn|WARN|w)                level_code=2 ;;
+                        error|ERROR|e)              level_code=3 ;;
+                        none|n|no)                   level_code=4 ;;
+                    esac
+                    shift;
+                    for i in "$@"; do
+                        var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
+                        eval "$var=0"
+                    done ;;
+            debug|dbg)  shift;
+                    if [ $# -eq 0 ]; then
+                        cat >&2 <<A
+xrc debug           Control debug level log
+        Uasge:      xrc debug [ +<module> | -<module> | <module> ]
+        Example:    Enable debug for module json:   
+                            xrc debug json 
+                            xrc debug +json
+                    Dsiable debug for module json:  
+                            xrc debug -json
 A
                         return 1
                     fi
                     local i
                     for i in "$@"; do
                         case "$i" in
-                            :*) local var
-                                var="$(echo "XRC_DBG_$i" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=\${$var:-\$$var}"
-                                eval "${i}_debug(){ [ \$$var ] && O=$i LEVEL=DBG _debug_logger \"\$@\"; }"
-                                [ ! "$X_BASH_SRC_SHELL" = "sh" ] && {
-                                    eval "export $var" 2>/dev/null
-                                    eval "export -f ${i}_debug 2>/dev/null"  # "$i_debug_enable $i.debug_disable"
-                                }    
-                                ;;
-                            -*) var="$(echo "XRC_DBG_${i#-}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var="
-                                ;;  
-                            +*) var="$(echo "XRC_DBG_${i#+}" | tr "[:lower:]" "[:upper:]")"
+                            -*) var="$(echo "XRC_LOG_LEVEL_${i#-}" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var=1" ;;
+                            +*) var="$(echo "XRC_LOG_LEVEL_${i#+}" | tr "[:lower:]" "[:upper:]")"
                                 echo "$var"
-                                eval "$var=true"
-                                ;; 
-                            *)  var="$(echo "XRC_DBG_${i}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=true"
-                                ;;
+                                eval "$var=0" ;; 
+                            *)  var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var=0" ;;
                         esac
                     done
                     ;;
@@ -138,7 +164,7 @@ A
         esac
     }
 
-    xrc debug :XRC
+    xrc logger xrc
 
     X_CMD_SRC_SHELL="sh"
     if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
@@ -150,7 +176,7 @@ A
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
     export TMPDIR
 
-    xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
+    xrc_log debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
     X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
@@ -168,7 +194,7 @@ A
         echo "$code"
     }
 
-    xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
+    xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
     xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
 
     _xrc_curl_gitx(){   # Simple strategy
@@ -183,7 +209,7 @@ A
             xrc_curl "$mirror/$mod"
             case $? in
                 0)  if [ "$i" -ne 1 ]; then
-                        xrc_debug "Default mirror now is $mirror"
+                        xrc_log debug "Default mirror now is $mirror"
                         xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
                     fi
                     return 0;;
@@ -198,28 +224,28 @@ A
         local RESOURCE_NAME=${1:?Provide resource name};
 
         if [ "${RESOURCE_NAME#/}" != "$RESOURCE_NAME" ]; then
-            xrc_debug "Resource recognized as local file: $RESOURCE_NAME"
+            xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
             echo "$RESOURCE_NAME"; return 0
         fi
 
         if [ "${RESOURCE_NAME#\./}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#\.\./}" != "$RESOURCE_NAME" ]; then
-            xrc_debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
+            xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
             local tmp
             if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
                 echo "$tmp/$(basename "$RESOURCE_NAME")"
                 return 0
             else
-                LEVEL=WARN _xrc_log "Local file not exists: $RESOURCE_NAME"
+                xrc_log warn "Local file not exists: $RESOURCE_NAME"
                 return 1
             fi
         fi
 
         local TGT
         if [ "${RESOURCE_NAME#http://}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" != "$RESOURCE_NAME" ]; then
-            xrc_debug "Resource recognized as http resource: $RESOURCE_NAME"
+            xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
             TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
-                xrc_debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+                xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
                 return 1
             fi
 
@@ -227,11 +253,11 @@ A
             return 0
         fi
 
-        xrc_debug "Resource recognized as x-bash library: $RESOURCE_NAME"
+        xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
         local module="$RESOURCE_NAME"
         if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
             module="$module/latest"         # If it is short alias like str (short for str/latest)
-            xrc_debug "Adding latest tag by default: $module"
+            xrc_log debug "Adding latest tag by default: $module"
         fi
         TGT="$X_BASH_SRC_PATH/$module"
 
@@ -240,36 +266,48 @@ A
             return
         fi
 
-        xrc_debug "Dowoading resource=$RESOURCE_NAME to local cache: $TGT"
+        xrc_log debug "Dowoading resource=$RESOURCE_NAME to local cache: $TGT"
         if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
-            LEVEL=WARN _xrc_log "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+            xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
         echo "$TGT"
     }
 
-    export XRC_COLOR_LOG=1
+    export XRC_LOG_COLOR=1
 
-    _debug_logger(){
-        local logger=${O:-DEFAULT}
-        local level=${LEVEL:-DBG}
+    _xrc_logger(){
+        local logger="${O:-DEFAULT}"
         local IFS=
-        # eval "[ \$$var ] && return 0"
+        local level="${1:?Please provide logger level}"
+        local FLAG_NAME=${FLAG_NAME:?WRONG}
 
-        if [ $# -eq 0 ]; then
-            if [ -n "$XRC_COLOR_LOG" ]; then
-                # printf "\e[31m%s[%s]: " "$logger" "$level" 
-                printf "\e[;2m%s[%s]: " "$logger" "$level"
+        local color="\e[32;2m"
+        local level_code=0
+        case "$level" in
+            debug|DEBUG|verbose)    level="verbose"     shift ;;
+            info|INFO)              level_code=1;   color="\e[36m";     shift ;;
+            warn|WARN)              level_code=2;   color="\e[33m";     shift ;;
+            error|ERROR)            level_code=3;   color="\e[31m";     shift ;;
+            *)                      level="verbose"           ;;
+        esac
+
+        eval "[ $level_code -lt \${FLAG_NAME:-1} ]" && return 0
+
+        if [ -n "$XRC_LOG_COLOR" ]; then
+
+            if [ $# -eq 0 ]; then
+                printf "${color}%s[%s]: " "$logger" "$level"
                 cat
                 printf "\e[0m\n"
             else
+                printf "${color}%s[%s]: %s\e[0m\n" "$logger" "$level" "$*"
+            fi
+        else
+            if [ $# -eq 0 ]; then
                 printf "%s[%s]: " "$logger" "$level"
                 cat
                 printf "\n"
-            fi
-        else
-            if [ -n "$XRC_COLOR_LOG" ]; then
-                printf "\e[;2m%s[%s]: %s\e[0m\n" "$logger" "$level" "$*"
             else
                 printf "%s[%s]: %s\n" "$logger" "$level" "$*"
             fi
