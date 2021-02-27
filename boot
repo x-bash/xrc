@@ -63,7 +63,7 @@ Subcommand:
         upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
         cache           Provide cache filepath
         clear           Clear the cache
-        debug|d         Control debug flags
+        debug|d         Control debug flags.
 A
                     return ;;
             c|cat)  shift;
@@ -88,6 +88,16 @@ A
                     fi
                     rm -rf "$X_BASH_SRC_PATH" ;;
             debug)  shift; # xrc debug +work +work :work
+                    if [ $# -eq 0 ]; then
+                        cat >&2 <<A
+xrc debug           Control debug files
+        Uasge:      xrc debug [ +<lib> | -<lib> | :<lib> ]
+        Example:    Enable debug for module json:   xrc debug +json
+                    Dsiable debug for module json:  xrc debug -json
+                    Generate debug function 'json_debug' for json module:  xrc debug :json
+A
+                        return 1
+                    fi
                     local i
                     for i in "$@"; do
                         case "$i" in
