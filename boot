@@ -87,68 +87,57 @@ A
             log)    shift;
                     if [ $# -eq 0 ]; then
                         cat >&2 <<A
-xrc log     Provide log facility
+xrc log     log control facility
+        Usage: 
+            xrc log init [ module ]
+            xrc log [... +module | -module | module/log-level ]
 Subcommand:
         init <module>:                      Generate function '<module>_log'
-        debug|dbg|verbose|v [...module]     Display the module log of all level 
-        info|INFO|i         [...module]     Display the module log of level: info, warn, error
-        warn|WARN|w         [...module]     Display the module log of level: warn, error
-        error|ERROR|e       [...module]     Display the module log of level: error
-        none|no|n           [...module]     Display no module log
 Example:
-        Enable debug log for module json:   
-                xrc log debug json
-        Dsiable debug log for module json:  
-                xrc log info json
+        Enable debug log for module json:
+                xrc log +json          or   xrc log json
+                xrc log json/verbose   or   xrc log json/v
+                xrc log json/debug     or   xrc log json/d
+        Dsiable debug log for module json:
+                xrc log -json
+                xrc log json/info
 A
                         return 1
                     fi
                     local var
                     local level_code=0
-                    case "$1" in
-                        init) shift;
-                            for i in "$@"; do
-                                var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
-                                eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
-                            done 
-                            return 0;;
-                        debug|dbg|verbose|v)        level_code=0 ;;
-                        info|INFO|i)                level_code=1 ;;
-                        warn|WARN|w)                level_code=2 ;;
-                        error|ERROR|e)              level_code=3 ;;
-                        none|n|no)                   level_code=4 ;;
-                    esac
-                    shift;
-                    for i in "$@"; do
-                        var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
-                        eval "$var=0"
-                    done ;;
-            debug|dbg)  shift;
-                    if [ $# -eq 0 ]; then
-                        cat >&2 <<A
-xrc debug           Control debug level log
-        Uasge:      xrc debug [ +<module> | -<module> | <module> ]
-        Example:    Enable debug for module json:   
-                            xrc debug json 
-                            xrc debug +json
-                    Dsiable debug for module json:  
-                            xrc debug -json
-A
-                        return 1
+                    if [ "$1" = init ]; then
+                        shift;
+                        for i in "$@"; do
+                            var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
+                            eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
+                        done 
+                        return 0
                     fi
-                    local i
-                    for i in "$@"; do
-                        case "$i" in
-                            -*) var="$(echo "XRC_LOG_LEVEL_${i#-}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=1" ;;
-                            +*) var="$(echo "XRC_LOG_LEVEL_${i#+}" | tr "[:lower:]" "[:upper:]")"
-                                echo "$var"
-                                eval "$var=0" ;; 
-                            *)  var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=0" ;;
+
+                    local level
+                    while [ $# -eq 0 ]; do
+                        case "$1" in
+                            -*) var="$(echo "XRC_LOG_LEVEL_${1#-}" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var=1"   ;;
+                            +*) var="$(echo "XRC_LOG_LEVEL_${1#+}" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var=0"   ;;
+                            *)
+                                level="${1#*/}"
+                                var="${1%/*}"
+                                case "$level" in
+                                    debug|dbg|verbose|v)        level_code=0 ;;
+                                    info|INFO|i)                level_code=1 ;;
+                                    warn|WARN|w)                level_code=2 ;;
+                                    error|ERROR|e)              level_code=3 ;;
+                                    none|n|no)                  level_code=4 ;;
+                                    *)                          level_code=0 ;;
+                                esac
+                                var="$(echo "XRC_LOG_LEVEL_${var}" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var=$level" ;;
                         esac
-                    done
-                    ;;
+                        shift
+                    done ;;
             mirror) shift;
                     local fp="$X_BASH_SRC_PATH/.source.mirror.list"
                     if [ $# -ne 0 ]; then
@@ -164,7 +153,7 @@ A
         esac
     }
 
-    xrc logger xrc
+    xrc log init xrc
 
     X_CMD_SRC_SHELL="sh"
     if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
@@ -275,7 +264,6 @@ A
     }
 
     export XRC_LOG_COLOR=1
-
     _xrc_logger(){
         local logger="${O:-DEFAULT}"
         local IFS=
@@ -312,7 +300,6 @@ A
                 printf "%s[%s]: %s\n" "$logger" "$level" "$*"
             fi
         fi >&2
-        return 0
     }
 
     # xrc x comp/xrc comp/x
