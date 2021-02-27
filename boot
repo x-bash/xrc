@@ -12,7 +12,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
         alias _xrc_http_get="x cat"
     else
-        printf "boot[ERR]: Cannot found curl or x-cmd binary for web resource downloader."
+        printf "boot[ERR]: Cannot found curl or x-cmd binary for web resource downloader." >&2
         return 1 || exit 1
     fi
 
