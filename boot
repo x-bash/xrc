@@ -65,14 +65,19 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 xrc     x-bash core function.
         Uasge:  xrc <lib> [<lib>...]
         Notice, builtin command 'source' format is 'source <lib> [argument...]'"
-        Please visit hosting repository for more information: https://gitee.com/x-bash/x-bash, https://github.com/x-bash/x-bash.github.io, https://gitlab.com/x-bash/x-bash/x-bash, or https://bitbucket.com/x-bash/x-bash/x-bash
+        Please visit following hosting repository for more information:
+            https://gitee.com/x-bash/x-bash
+            https://github.com/x-bash/x-bash.github.io
+            https://gitlab.com/x-bash/x-bash/x-bash
+            https://bitbucket.com/x-bash/x-bash/x-bash
 
 Subcommand:
-        cat|c       Provide cat facility
-        which|w     Provide local cache file location
-        update      Update file
-        cache       Provide cache filepath
-        clear       Clear the cache
+        cat|c           Provide cat facility
+        which|w         Provide local cache file location
+        update|u        Update file
+        upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
+        cache           Provide cache filepath
+        clear           Clear the cache
 A
                     return ;;
             c|cat)  shift;
@@ -100,10 +105,11 @@ A
                     local fp="$X_BASH_SRC_PATH/.source.mirror.list"
                     if [ $# -ne 0 ]; then
                         local IFS="
-"; 
+";
                         echo "$*" >"$fp"
                         return
                     fi
+                    [ ! -f "$fp" ] && xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
                     cat "$fp"
                     return ;;
             *)      eval "$(t="." _xrc_source_file_list_code "$@")"
@@ -185,6 +191,11 @@ A
             module="$module/latest"         # If it is short alias like str (short for str/latest)
         fi
         TGT="$X_BASH_SRC_PATH/$module"
+
+        if [ -f "$TGT" ]; then
+            echo "$TGT"
+            return
+        fi
 
         if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
             LEVEL=WARN _xrc_log "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
