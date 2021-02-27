@@ -75,21 +75,19 @@ Subcommand:
         clear       Clear the cache
 A
                     return ;;
-            c|cat)    shift;
-                    cat $(xrc which "$@") ;;
+            c|cat)  shift;
+                    eval "$(t="cat" _xrc_source_file_list_code "$@")" ;;
             w|which)  shift;
                     if [ $# -eq 0 ]; then
                         cat >&2 <<A
 xrc which  Download lib files and print the local path.
-        Uasge:  xrc_which <lib> [<lib>...]
+        Uasge:  xrc which <lib> [<lib>...]
         Example: source "$(xrc_which std/str)"
 A
                         return 1
                     fi
-                    while [ $# -gt 0 ]; do
-                        _xrc_which_one "$1" || return;  shift
-                    done ;;
-            update) shift;  UPDATE=1 xrc which "$@" 2>/dev/null ;;
+                    eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
+            update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null 2>&1 ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
             clear)  shift;
@@ -108,11 +106,21 @@ A
                     fi
                     cat "$fp"
                     return ;;
-            *)      while [ $# -ne 0 ]; do
-                        . "$(_xrc_which_one "$1")" || return
-                        shift
-                    done
+            *)      eval "$(t="." _xrc_source_file_list_code "$@")"
         esac
+    }
+
+    _xrc_source_file_list_code(){
+        local code=""
+        while [ $# -ne 0 ]; do
+            if ! code="$code
+            ${t:-.} \"$(_xrc_which_one "$1")\""; then
+                echo "return 1"
+                return 0
+            fi
+            shift
+        done
+        echo "$code"
     }
 
     _xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
@@ -127,6 +135,7 @@ A
         local mirror_list
         mirror_list="$(xrc mirror)"
         for mirror in $mirror_list; do
+            _xrc_debug "Fuck... $i $mirror"
             xrc_curl "$mirror/$mod"
             case $? in
                 0)  if [ "$i" -ne 1 ]; then
