@@ -16,14 +16,14 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         return 1 || exit 1
     fi
 
-    _xrc_debug(){            [ "$XRC_DBG_FLAG" ] &&  printf "xrc[DBG] : %s\n" "$*" >&2;              }
+    xrc_debug(){            [ "$XRC_DBG_XRC" ] &&  printf "xrc[DBG] : %s\n" "$*" >&2;              }
     _xrc_log(){                                      printf "xrc[${LEVEL:-INF}]: %s\n" "$*" >&2;     }
 
     xrc_curl(){
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
             if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
-                _xrc_debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
+                xrc_debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
             REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
@@ -31,32 +31,17 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
         if _xrc_http_get "$1" 1>"$REDIRECT" 2>/dev/null; then
             if [ -n "$CACHE" ]; then
-                _xrc_debug "Copy the temp file to CACHE file: $CACHE"
+                xrc_debug "Copy the temp file to CACHE file: $CACHE"
                 mkdir -p "$(dirname "$CACHE")"
                 mv "$REDIRECT" "$CACHE"
             fi
         else
             local code=$?
-            LEVEL=WARN _xrc_log "_xrc_http_get $1 return code: $code. Fail to retrieve file from: $1"
+            xrc_debug "_xrc_http_get $1 return code: $code. Fail to retrieve file from: $1"
             [ -n "$CACHE" ] && rm "$REDIRECT"
             return $code
         fi
     }
-
-    X_CMD_SRC_SHELL="sh"
-    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
-    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"
-    elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
-    fi
-    export X_CMD_SRC_SHELL
-
-    TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
-    export TMPDIR
-
-    _xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
-    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
-    mkdir -p "$X_BASH_SRC_PATH"
-    PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
     
     xrc(){
         [ $# -eq 0 ] && set -- "help"
@@ -78,6 +63,7 @@ Subcommand:
         upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
         cache           Provide cache filepath
         clear           Clear the cache
+        debug|d         Control debug flags
 A
                     return ;;
             c|cat)  shift;
@@ -97,10 +83,36 @@ A
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
             clear)  shift;
                     if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
-                        _xrc_debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
+                        xrc_debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
                         return 1
                     fi
                     rm -rf "$X_BASH_SRC_PATH" ;;
+            debug)  shift; # xrc debug +work +work :work
+                    local i
+                    for i in "$@"; do
+                        case "$i" in
+                            :*) local var
+                                var="$(echo "XRC_DBG_$i" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var=\${$var:-\$$var}"
+                                eval "${i}_debug(){ [ \$$var ] && O=$i LEVEL=DBG _debug_logger \"\$@\"; }"
+                                [ ! "$X_BASH_SRC_SHELL" = "sh" ] && {
+                                    eval "export $var" 2>/dev/null
+                                    eval "export -f ${i}_debug 2>/dev/null"  # "$i_debug_enable $i.debug_disable"
+                                }    
+                                ;;
+                            -*) var="$(echo "XRC_DBG_${i#-}" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var="
+                                ;;  
+                            +*) var="$(echo "XRC_DBG_${i#+}" | tr "[:lower:]" "[:upper:]")"
+                                echo "$var"
+                                eval "$var=true"
+                                ;; 
+                            *)  var="$(echo "XRC_DBG_${i}" | tr "[:lower:]" "[:upper:]")"
+                                eval "$var=true"
+                                ;;
+                        esac
+                    done
+                    ;;
             mirror) shift;
                     local fp="$X_BASH_SRC_PATH/.source.mirror.list"
                     if [ $# -ne 0 ]; then
@@ -116,6 +128,23 @@ A
         esac
     }
 
+    xrc debug :XRC
+
+    X_CMD_SRC_SHELL="sh"
+    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
+    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"
+    elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
+    fi
+    export X_CMD_SRC_SHELL
+
+    TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
+    export TMPDIR
+
+    xrc_debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
+    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
+    mkdir -p "$X_BASH_SRC_PATH"
+    PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
+
     _xrc_source_file_list_code(){
         local code=""
         while [ $# -ne 0 ]; do
@@ -129,7 +158,7 @@ A
         echo "$code"
     }
 
-    _xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
+    xrc_debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
     xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
 
     _xrc_curl_gitx(){   # Simple strategy
@@ -141,11 +170,10 @@ A
         local mirror_list
         mirror_list="$(xrc mirror)"
         for mirror in $mirror_list; do
-            _xrc_debug "Fuck... $i $mirror"
             xrc_curl "$mirror/$mod"
             case $? in
                 0)  if [ "$i" -ne 1 ]; then
-                        _xrc_debug "Default mirror now is $mirror"
+                        xrc_debug "Default mirror now is $mirror"
                         xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
                     fi
                     return 0;;
@@ -160,10 +188,12 @@ A
         local RESOURCE_NAME=${1:?Provide resource name};
 
         if [ "${RESOURCE_NAME#/}" != "$RESOURCE_NAME" ]; then
+            xrc_debug "Resource recognized as local file: $RESOURCE_NAME"
             echo "$RESOURCE_NAME"; return 0
         fi
 
         if [ "${RESOURCE_NAME#\./}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#\.\./}" != "$RESOURCE_NAME" ]; then
+            xrc_debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
             local tmp
             if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
                 echo "$tmp/$(basename "$RESOURCE_NAME")"
@@ -176,9 +206,10 @@ A
 
         local TGT
         if [ "${RESOURCE_NAME#http://}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" != "$RESOURCE_NAME" ]; then
+            xrc_debug "Resource recognized as http resource: $RESOURCE_NAME"
             TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
-                _xrc_debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+                xrc_debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
                 return 1
             fi
 
@@ -186,9 +217,11 @@ A
             return 0
         fi
 
+        xrc_debug "Resource recognized as x-bash library: $RESOURCE_NAME"
         local module="$RESOURCE_NAME"
         if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
             module="$module/latest"         # If it is short alias like str (short for str/latest)
+            xrc_debug "Adding latest tag by default: $module"
         fi
         TGT="$X_BASH_SRC_PATH/$module"
 
@@ -197,11 +230,41 @@ A
             return
         fi
 
+        xrc_debug "Dowoading resource=$RESOURCE_NAME to local cache: $TGT"
         if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
             LEVEL=WARN _xrc_log "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
         echo "$TGT"
+    }
+
+    export XRC_COLOR_LOG=1
+
+    _debug_logger(){
+        local logger=${O:-DEFAULT}
+        local level=${LEVEL:-DBG}
+        local IFS=
+        # eval "[ \$$var ] && return 0"
+
+        if [ $# -eq 0 ]; then
+            if [ -n "$XRC_COLOR_LOG" ]; then
+                # printf "\e[31m%s[%s]: " "$logger" "$level" 
+                printf "\e[;2m%s[%s]: " "$logger" "$level"
+                cat
+                printf "\e[0m\n"
+            else
+                printf "%s[%s]: " "$logger" "$level"
+                cat
+                printf "\n"
+            fi
+        else
+            if [ -n "$XRC_COLOR_LOG" ]; then
+                printf "\e[;2m%s[%s]: %s\e[0m\n" "$logger" "$level" "$*"
+            else
+                printf "%s[%s]: %s\n" "$logger" "$level" "$*"
+            fi
+        fi >&2
+        return 0
     }
 
     # xrc x comp/xrc comp/x
