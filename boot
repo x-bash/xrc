@@ -68,8 +68,8 @@ xrc     x-bash core function.
         Please visit following hosting repository for more information:
             https://gitee.com/x-bash/x-bash
             https://github.com/x-bash/x-bash.github.io
-            https://gitlab.com/x-bash/x-bash/x-bash
-            https://bitbucket.com/x-bash/x-bash/x-bash
+            https://gitlab.com/x-bash/x-bash
+            https://bitbucket.com/x-bash/x-bash
 
 Subcommand:
         cat|c           Provide cat facility
