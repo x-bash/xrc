@@ -39,6 +39,51 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             return $code
         fi
     }
+
+    export XRC_LOG_COLOR=1
+    # export XRC_LOG_TIMESTAMP="+%H:%M:%S"      # Enable Timestamp.
+    XRC_LOG_TIMESTAMP=
+    # export XRC_LOG_TIMESTAMP="+%m%d-%H:%M:%S"      # Enable Timestamp.
+    _xrc_logger(){
+        local logger="${O:-DEFAULT}"
+        local IFS=
+        local level="${1:?Please provide logger level}"
+        local FLAG_NAME=${FLAG_NAME:?WRONG}
+
+        local color="\e[32;2m"
+        local level_code=0
+        case "$level" in
+            debug|DEBUG|verbose)    level="DBG";    shift ;;
+            info|INFO)              level="INF";    level_code=1;   color="\e[36m";     shift ;;
+            warn|WARN)              level="WRN";    level_code=2;   color="\e[33m";     shift ;;
+            error|ERROR)            level="ERR";    level_code=3;   color="\e[31m";     shift ;;
+            *)                      level="verbose"           ;;
+        esac
+
+        eval "[ $level_code -lt \"\${$FLAG_NAME:-1}\" ]" && return 0
+        
+        local timestamp
+        [ -n "$XRC_LOG_TIMESTAMP" ] && timestamp=" [$(date ${XRC_LOG_TIMESTAMP})]"
+
+        if [ -n "$XRC_LOG_COLOR" ]; then
+
+            if [ $# -eq 0 ]; then
+                printf "${color}%s[%s]${timestamp}: " "$logger" "$level"
+                cat
+                printf "\e[0m\n"
+            else
+                printf "${color}%s[%s]${timestamp}: %s\e[0m\n" "$logger" "$level" "$*"
+            fi
+        else
+            if [ $# -eq 0 ]; then
+                printf "%s[%s]${timestamp}: " "$logger" "$level"
+                cat
+                printf "\n"
+            else
+                printf "%s[%s]${timestamp}: %s\n" "$logger" "$level" "$*"
+            fi
+        fi >&2
+    }
     
     xrc(){
         [ $# -eq 0 ] && set -- "help"
@@ -92,7 +137,11 @@ xrc log     log control facility
             xrc log init [ module ]
             xrc log [... +module | -module | module/log-level ]
 Subcommand:
-        init <module>:                      Generate function '<module>_log'
+        init <module>:                  Generate function '<module>_log'
+        timestamp < on | off | <format> >:
+                                        off, default setting. shutdown the timestamp output in log 
+                                        on, default format is +%H:%M:%S
+                                        <format>, customized timestamp format like "+%H:%M:%S", "+%m/%d-%H:%M:%S"
 Example:
         Enable debug log for module json:
                 xrc log +json          or   xrc log json
@@ -106,17 +155,30 @@ A
                     fi
                     local var
                     local level_code=0
-                    if [ "$1" = init ]; then
-                        shift;
-                        for i in "$@"; do
-                            var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
-                            eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
-                        done 
-                        return 0
-                    fi
+
+                    case "$1" in
+                        init)
+                            shift;
+                            for i in "$@"; do
+                                var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
+                                eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
+                            done 
+                            return 0 ;;
+                        timestamp)
+                            case "$2" in
+                                on)     XRC_LOG_TIMESTAMP="+%H:%M:%S";      return 0   ;;
+                                off)    XRC_LOG_TIMESTAMP= ;                return 0   ;;
+                                *)      printf "Try customized timestamp format wit date command:\n"
+                                        if date "$2"; then
+                                            XRC_LOG_TIMESTAMP="$2"
+                                            return 0
+                                        fi
+                                        return 1    ;;
+                            esac
+                    esac
 
                     local level
-                    while [ $# -eq 0 ]; do
+                    while [ $# -ne 0 ]; do
                         case "$1" in
                             -*) var="$(echo "XRC_LOG_LEVEL_${1#-}" | tr "[:lower:]" "[:upper:]")"
                                 eval "$var=1"   ;;
@@ -134,7 +196,7 @@ A
                                     *)                          level_code=0 ;;
                                 esac
                                 var="$(echo "XRC_LOG_LEVEL_${var}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=$level" ;;
+                                eval "$var=$level_code" ;;
                         esac
                         shift
                     done ;;
@@ -198,7 +260,7 @@ A
             xrc_curl "$mirror/$mod"
             case $? in
                 0)  if [ "$i" -ne 1 ]; then
-                        xrc_log debug "Default mirror now is $mirror"
+                        xrc_log debug "Current default mirror is $mirror"
                         xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
                     fi
                     return 0;;
@@ -261,45 +323,6 @@ A
             return 1
         fi
         echo "$TGT"
-    }
-
-    export XRC_LOG_COLOR=1
-    _xrc_logger(){
-        local logger="${O:-DEFAULT}"
-        local IFS=
-        local level="${1:?Please provide logger level}"
-        local FLAG_NAME=${FLAG_NAME:?WRONG}
-
-        local color="\e[32;2m"
-        local level_code=0
-        case "$level" in
-            debug|DEBUG|verbose)    level="verbose"     shift ;;
-            info|INFO)              level_code=1;   color="\e[36m";     shift ;;
-            warn|WARN)              level_code=2;   color="\e[33m";     shift ;;
-            error|ERROR)            level_code=3;   color="\e[31m";     shift ;;
-            *)                      level="verbose"           ;;
-        esac
-
-        eval "[ $level_code -lt \${FLAG_NAME:-1} ]" && return 0
-
-        if [ -n "$XRC_LOG_COLOR" ]; then
-
-            if [ $# -eq 0 ]; then
-                printf "${color}%s[%s]: " "$logger" "$level"
-                cat
-                printf "\e[0m\n"
-            else
-                printf "${color}%s[%s]: %s\e[0m\n" "$logger" "$level" "$*"
-            fi
-        else
-            if [ $# -eq 0 ]; then
-                printf "%s[%s]: " "$logger" "$level"
-                cat
-                printf "\n"
-            else
-                printf "%s[%s]: %s\n" "$logger" "$level" "$*"
-            fi
-        fi >&2
     }
 
     # xrc x comp/xrc comp/x

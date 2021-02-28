@@ -1,0 +1,1 @@
+[32;2mabc[verbose]: hi[0m
