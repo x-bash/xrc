@@ -40,10 +40,8 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         fi
     }
 
-    export XRC_LOG_COLOR=1
-    # export XRC_LOG_TIMESTAMP="+%H:%M:%S"      # Enable Timestamp.
-    XRC_LOG_TIMESTAMP=
-    # export XRC_LOG_TIMESTAMP="+%m%d-%H:%M:%S"      # Enable Timestamp.
+    XRC_LOG_COLOR=1
+    XRC_LOG_TIMESTAMP=      # "+%H:%M:%S"      # Enable Timestamp.
     _xrc_logger(){
         local logger="${O:-DEFAULT}"
         local IFS=
@@ -225,10 +223,8 @@ A
     elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"
     elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
     fi
-    export X_CMD_SRC_SHELL
 
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
-    export TMPDIR
 
     xrc_log debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
     X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
