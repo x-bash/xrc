@@ -60,8 +60,8 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
         eval "[ $level_code -lt \"\${$FLAG_NAME:-1}\" ]" && return 0
         
-        local timestamp
-        [ -n "$XRC_LOG_TIMESTAMP" ] && timestamp=" [$(date ${XRC_LOG_TIMESTAMP})]"
+        local timestamp=
+        [ -n "$XRC_LOG_TIMESTAMP" ] && timestamp=" [$(date "${XRC_LOG_TIMESTAMP}")]"
 
         if [ -n "$XRC_LOG_COLOR" ]; then
 
