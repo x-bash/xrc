@@ -181,20 +181,23 @@ A
                     while [ $# -ne 0 ]; do
                         case "$1" in
                             -*) var="$(echo "XRC_LOG_LEVEL_${1#-}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=1"   ;;
+                                eval "$var=1"   
+                                xrc_log info "Level of logger [${1#-} is set to [info]" ;;
                             +*) var="$(echo "XRC_LOG_LEVEL_${1#+}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=0"   ;;
+                                eval "$var=0"   
+                                xrc_log info "Level of logger [${1#+}] is set to [debug]" ;;
                             *)
                                 level="${1#*/}"
                                 var="${1%/*}"
                                 case "$level" in
-                                    debug|dbg|verbose|v)        level_code=0 ;;
-                                    info|INFO|i)                level_code=1 ;;
-                                    warn|WARN|w)                level_code=2 ;;
-                                    error|ERROR|e)              level_code=3 ;;
-                                    none|n|no)                  level_code=4 ;;
-                                    *)                          level_code=0 ;;
+                                    debug|dbg|verbose|v)        level=debug;    level_code=0 ;;
+                                    info|INFO|i)                level=info;     level_code=1 ;;
+                                    warn|WARN|w)                level=warn;     level_code=2 ;;
+                                    error|ERROR|e)              level=error;    level_code=3 ;;
+                                    none|n|no)                  level=none;     level_code=4 ;;
+                                    *)                          level=debug;    level_code=0 ;;
                                 esac
+                                xrc_log info "Level of logger [$var] is set to [$level]" 
                                 var="$(echo "XRC_LOG_LEVEL_${var}" | tr "[:lower:]" "[:upper:]")"
                                 eval "$var=$level_code" ;;
                         esac
