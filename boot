@@ -234,6 +234,7 @@ A
     _xrc_source_file_list_code(){
         local code=""
         while [ $# -ne 0 ]; do
+            # What if the _xrc_which_one contains '"'
             if ! code="$code
             ${t:-.} \"$(_xrc_which_one "$1")\""; then
                 echo "return 1"
