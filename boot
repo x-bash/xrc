@@ -204,12 +204,15 @@ A
             mirror) shift;
                     local fp="$X_BASH_SRC_PATH/.source.mirror.list"
                     if [ $# -ne 0 ]; then
+                        mkdir -p "$(dirname "$fp")"
                         local IFS="
 ";
                         echo "$*" >"$fp"
                         return
                     fi
-                    [ ! -f "$fp" ] && xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
+                    if [ ! -f "$fp" ]; then
+                        xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
+                    fi
                     cat "$fp"
                     return ;;
             *)      eval "$(t="." _xrc_source_file_list_code "$@")"
@@ -249,14 +252,12 @@ A
     xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
 
     _xrc_curl_gitx(){   # Simple strategy
-        local IFS="
-"
         local i=1
         local mirror
         local mod="${1:?Provide location like str}"
         local mirror_list
         mirror_list="$(xrc mirror)"
-        for mirror in $mirror_list; do
+        while IFS= read -r mirror; do    # It is said '-r' not supported in Bourne shell
             xrc_curl "$mirror/$mod"
             case $? in
                 0)  if [ "$i" -ne 1 ]; then
@@ -267,7 +268,9 @@ A
                 4)  return 4;;
             esac
             i=$((i+1))  # Support both ash, dash, bash
-        done
+        done <<A
+$mirror_list
+A
         return 1
     }
 
@@ -317,7 +320,7 @@ A
             return
         fi
 
-        xrc_log debug "Dowoading resource=$RESOURCE_NAME to local cache: $TGT"
+        xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
         if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
             xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
