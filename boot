@@ -35,7 +35,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         else
             local code=$?
             xrc_log debug "_xrc_http_get $1 return code: $code. Fail to retrieve file from: $1"
-            [ -n "$CACHE" ] && rm "$REDIRECT"
+            [ -n "$CACHE" ] && rm -f "$REDIRECT"    # In centos, file in "$REDIRECT" is write protected.
             return $code
         fi
     }
