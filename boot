@@ -222,8 +222,8 @@ A
     xrc log init xrc
 
     X_CMD_SRC_SHELL="sh"
-    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh"
-    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"
+    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh";  setopt aliases
+    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"; shopt -s expand_aliases
     elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
     fi
 
