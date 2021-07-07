@@ -12,18 +12,18 @@ _xdk_easy_env(){
 xdk(){
     local op="${1}";    shift
     case "$op" in
-        ubuntu*|ubu*)     _docker_easy_env ubuntu ${1:+"$@"} ;;
-        debian*|deb*)     _docker_easy_env debian ${1:+"$@"} ;;
-        busybox*|bbox*)   _docker_easy_env busybox ${1:+"$@"} ;;
-        alpine*|alp*)     _docker_easy_env alpine ${1:+"$@"} ;;
+        ubuntu*|ubu*)     _xdk_easy_env ubuntu ${1:+"$@"}   ;;
+        debian*|deb*)     _xdk_easy_env debian ${1:+"$@"}   ;;
+        busybox*|bbox*)   _xdk_easy_env busybox ${1:+"$@"}  ;;
+        alpine*|alp*)     _xdk_easy_env alpine ${1:+"$@"}   ;;
 
-        xrun|x)
+        run)
             $_X_CMD_DOCKER_BIN run \
                 -v "/root/.x-cmd/x:/bin/x" \
                 -v "/root/.x-cmd/bin/x-cmd:/var/x-cmd/bin/x" \
                 ${1:+"$@"}
             ;;
-        xexec)
+        exec)
             local name
             name=$(
                 for arg in "$@"; do
@@ -37,17 +37,17 @@ xdk(){
                 done
             )
             [ -z "$name" ] &&  return 1
+            xdk empower "$name"
 
             $_X_CMD_DOCKER_BIN exec ${1:+"$@"}
             ;;
-        xinit)
+        emp|empower)
             local container
             for container in "$@"; do
                 $_X_CMD_DOCKER_BIN cp    /root/.x-cmd/x             "$container:/bin/x"
                 $_X_CMD_DOCKER_BIN cp    /root/.x-cmd/bin/x-cmd     "$container:/var/x-cmd/bin/x-cmd"
             done
             ;;
-        *)      
-            $_X_CMD_DOCKER_BIN "$op" ${1:+"$@"} ;;
+        *)  $_X_CMD_DOCKER_BIN "$op" ${1:+"$@"} ;;
     esac
 }
