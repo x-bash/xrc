@@ -6,7 +6,7 @@
 _X_CMD_DOCKER_BIN="$(command -v docker)"
 
 _xdk_easy_env(){
-    $_X_CMD_DOCKER_BIN run -it "$@"
+    $_X_CMD_DOCKER_BIN run -it "$@";    # xdk run -it "$@"
 }
 
 xdk(){
