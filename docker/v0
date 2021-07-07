@@ -6,19 +6,19 @@
 _X_CMD_DOCKER_BIN="$(command -v docker)"
 
 _docker_easy_env(){
-    _X_CMD_DOCKER_BIN run -it "$@"
+    $_X_CMD_DOCKER_BIN run -it "$@"
 }
 
 docker(){
     local op="${1}";    shift
     case "$op" in
-        ubuntu*|ubu*)     _docker_easy_env ${1:+"$@"} ;;
-        debian*|deb*)     _docker_easy_env ${1:+"$@"} ;;
-        busybox*|bbox*)   _docker_easy_env ${1:+"$@"} ;;
-        alpine*|alp*)     _docker_easy_env ${1:+"$@"} ;;
+        ubuntu*|ubu*)     _docker_easy_env ubuntu ${1:+"$@"} ;;
+        debian*|deb*)     _docker_easy_env debian ${1:+"$@"} ;;
+        busybox*|bbox*)   _docker_easy_env busybox ${1:+"$@"} ;;
+        alpine*|alp*)     _docker_easy_env alpine ${1:+"$@"} ;;
 
         xrun|x)
-            _X_CMD_DOCKER_BIN run \
+            $_X_CMD_DOCKER_BIN run \
                 -v "/root/.x-cmd/x:/bin/x" \
                 -v "/root/.x-cmd/bin/x-cmd:/var/x-cmd/bin/x" \
                 ${1:+"$@"}
@@ -38,16 +38,16 @@ docker(){
             )
             [ -z "$name" ] &&  return 1
 
-            _X_CMD_DOCKER_BIN exec ${1:+"$@"}
+            $_X_CMD_DOCKER_BIN exec ${1:+"$@"}
             ;;
         xinit)
             local container
             for container in "$@"; do
-                _X_CMD_DOCKER_BIN cp    /root/.x-cmd/x             "$container:/bin/x"
-                _X_CMD_DOCKER_BIN cp    /root/.x-cmd/bin/x-cmd     "$container:/var/x-cmd/bin/x-cmd"
+                $_X_CMD_DOCKER_BIN cp    /root/.x-cmd/x             "$container:/bin/x"
+                $_X_CMD_DOCKER_BIN cp    /root/.x-cmd/bin/x-cmd     "$container:/var/x-cmd/bin/x-cmd"
             done
             ;;
         *)      
-            _X_CMD_DOCKER_BIN "$op" ${1:+"$@"} ;;
+            $_X_CMD_DOCKER_BIN "$op" ${1:+"$@"} ;;
     esac
 }
