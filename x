@@ -20,7 +20,9 @@ x(){
         ruby|rb)
             shift;
             python "$(xrc which "$2")" "$@" ;;
-        lua) ;;
+        lua) 
+            shift
+            ;;
         *)  if [ -z "$X_CMD_PATH" ] && ! X_CMD_PATH="$(command -v x)"; then
                 if ! eval "$(curl https://get.x-cmd.com/x-cmd-binary)" || ! X_CMD_PATH="$(command -v x)"; then
                     echo "Installation of x-cmd binary failed. Please retry again." >&2

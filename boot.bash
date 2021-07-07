@@ -18,7 +18,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         return 1 || exit 1
     fi
 
-    xrc_curl() {
+    xrc_curl(){
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
             if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
