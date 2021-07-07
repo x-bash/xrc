@@ -9,6 +9,8 @@ _docker_easy_env(){
     $_X_CMD_DOCKER_BIN run -it "$@"
 }
 
+alias dk=docker
+
 docker(){
     local op="${1}";    shift
     case "$op" in
