@@ -5,13 +5,11 @@
 
 _X_CMD_DOCKER_BIN="$(command -v docker)"
 
-_docker_easy_env(){
+_xdk_easy_env(){
     $_X_CMD_DOCKER_BIN run -it "$@"
 }
 
-alias dk=docker
-
-docker(){
+xdk(){
     local op="${1}";    shift
     case "$op" in
         ubuntu*|ubu*)     _docker_easy_env ubuntu ${1:+"$@"} ;;
