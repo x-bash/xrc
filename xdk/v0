@@ -6,16 +6,23 @@
 _X_CMD_DOCKER_BIN="$(command -v docker)"
 
 _xdk_easy_env(){
-    $_X_CMD_DOCKER_BIN run -it "$@";    # xdk run -it "$@"
+    if [ -t 0 ]; then
+        $_X_CMD_DOCKER_BIN run -it "$@";    # xdk run -it "$@"
+    else
+        $_X_CMD_DOCKER_BIN run -i "$@"
+    fi
 }
 
+# shellcheck disable=SC2139
 xdk(){
     local op="${1}";    shift
     case "$op" in
-        ubuntu*|ubu*)     _xdk_easy_env ubuntu ${1:+"$@"}   ;;
-        debian*|deb*)     _xdk_easy_env debian ${1:+"$@"}   ;;
-        busybox*|bbox*)   _xdk_easy_env busybox ${1:+"$@"}  ;;
-        alpine*|alp*)     _xdk_easy_env alpine ${1:+"$@"}   ;;
+        alias)              code="alias \"${1:-xdk}=x dk\"" 
+                            printf "%s" "$code"; eval "$code" ;;
+        ubuntu*|ubu*)       _xdk_easy_env ubuntu ${1:+"$@"}   ;;
+        debian*|deb*)       _xdk_easy_env debian ${1:+"$@"}   ;;
+        busybox*|bbox*)     _xdk_easy_env busybox ${1:+"$@"}  ;;
+        alpine*|alp*)       _xdk_easy_env alpine ${1:+"$@"}   ;;
 
         run)
             $_X_CMD_DOCKER_BIN run \
@@ -51,3 +58,7 @@ xdk(){
         *)  $_X_CMD_DOCKER_BIN "$op" ${1:+"$@"} ;;
     esac
 }
+
+if [ 0 -ne $# ]; then
+    xdk "$@"
+fi
