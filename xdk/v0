@@ -13,17 +13,37 @@ _xdk_easy_env(){
     fi
 }
 
+_xdk_accept_os(){
+    local os="${1:?Provide}"
+    case "$os" in
+        ubuntu*|ubu*)       echo ubuntu         ;;
+        debian*|deb*)       echo debian         ;;
+        busybox*|bbox*)     echo busybox        ;;
+        alpine*|alp*)       echo alpine         ;;
+        *)                  return 1            ;;
+    esac
+}
+
+_xdk_accept(){
+    local name="${1:?Provide}"
+    local sys=${name%%:*}
+    local ver=${name#*:}
+    if [ "$sys" = "$name" ]; then
+        ver=latest
+    fi
+    if sys=$(_xdk_accept_os "$sys"); then
+        echo "$sys:$ver"
+    else
+        return 1
+    fi
+}
+
 # shellcheck disable=SC2139
 xdk(){
     local op="${1}";    shift
     case "$op" in
         alias)              code="alias \"${1:-xdk}=x dk\"" 
-                            printf "%s" "$code"; eval "$code" ;;
-        ubuntu*|ubu*)       _xdk_easy_env ubuntu ${1:+"$@"}   ;;
-        debian*|deb*)       _xdk_easy_env debian ${1:+"$@"}   ;;
-        busybox*|bbox*)     _xdk_easy_env busybox ${1:+"$@"}  ;;
-        alpine*|alp*)       _xdk_easy_env alpine ${1:+"$@"}   ;;
-
+                            printf "%s" "$code";    eval "$code"    ;;
         run)
             $_X_CMD_DOCKER_BIN run \
                 -v "/root/.x-cmd/x:/bin/x" \
@@ -55,7 +75,14 @@ xdk(){
                 $_X_CMD_DOCKER_BIN cp    /root/.x-cmd/bin/x-cmd     "$container:/var/x-cmd/bin/x-cmd"
             done
             ;;
-        *)  $_X_CMD_DOCKER_BIN "$op" ${1:+"$@"} ;;
+        *)  
+            local name
+            if name="$(_xdk_accept "$op")"; then
+                _xdk_easy_env "$name" ${1:+"$@"}
+            else
+                $_X_CMD_DOCKER_BIN "$op" ${1:+"$@"} 
+            fi
+            ;;
     esac
 }
 
