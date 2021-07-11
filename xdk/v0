@@ -44,8 +44,12 @@ _xdk_accept(){
 xdk(){
     local op="${1}";    shift
     case "$op" in
-        alias)              code="alias \"${1:-xdk}=x dk\"" 
-                            printf "%s" "$code";    eval "$code"    ;;
+        alias)              
+            # code="alias \"${1:-xdk}=x dk\""                 
+            # printf "%s" "$code";    eval "$code"    ;;
+            alias xdku="xdk ubuntu:latest"
+            alias xdkc="xdk centos:latest"
+            ;;
         run)
             $_X_CMD_DOCKER_BIN run \
                 -v "/root/.x-cmd/x:/bin/x" \
@@ -88,6 +92,10 @@ xdk(){
     esac
 }
 
+# TODO: Move it to lteam preference.
+
+alias xdku="xdk ubuntu:latest"
+alias xdkc="xdk centos:latest"
 
 if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
     xrc advise/v0
@@ -108,6 +116,7 @@ if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
     "busybox": {}
 }
 A
+
 fi
 
 # if [ 0 -ne $# ]; then
