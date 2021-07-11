@@ -12,7 +12,7 @@ x(){
         javascript|js)
             shift;
             # Install node using nvm
-            node "$(xrcwhich "$2")" "$@" ;;
+            node "$(xrc which "$2")" "$@" ;;
         typescript|ts)
             shift;
             # Install node using nvm
