@@ -19,6 +19,7 @@ _xdk_accept_os(){
     case "$os" in
         ubuntu*|ubu*)       echo ubuntu         ;;
         debian*|deb*)       echo debian         ;;
+        centos*|cen*)       echo centos         ;;
         busybox*|bbox*)     echo busybox        ;;
         alpine*|alp*)       echo alpine         ;;
         *)                  return 1            ;;
@@ -87,6 +88,19 @@ xdk(){
     esac
 }
 
-if [ 0 -ne $# ]; then
-    xdk "$@"
+
+if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
+    xrc advise/v0
+    advise xdk - <<A
+{
+    "alias": {},
+    "run":  {},
+    "exec": {},
+    "empower": {}
+}
+A
 fi
+
+# if [ 0 -ne $# ]; then
+#     xdk "$@"
+# fi
