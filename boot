@@ -238,6 +238,7 @@ A
     _xrc_source_file_list_code(){
         local code=""
         local file
+        local exec=${t:-.}
         while [ $# -ne 0 ]; do
             # What if the _xrc_which_one contains '"'
 
@@ -246,9 +247,9 @@ A
                 return 0
             fi
 
-            if [ "${X_CMD_SH_IN_USED#$file}" = "${X_CMD_SH_IN_USED}" ]; then
+            if [ "$exec" != "." ] || [ "${X_CMD_SH_IN_USED#$file}" = "${X_CMD_SH_IN_USED}" ]; then
                 code="$code
-${t:-.} \"$file\" && \
+$exec \"$file\" && \
 X_CMD_SH_IN_USED=\"\$X_CMD_SH_IN_USED
 $file
 \"
