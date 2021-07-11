@@ -329,7 +329,7 @@ A
         local module="$RESOURCE_NAME"
         if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
             module="$module/latest"         # If it is short alias like str (short for str/latest)
-            xrc_log debug "Adding latest tag by default: $module"
+            xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
         fi
         TGT="$X_BASH_SRC_PATH/$module"
 
