@@ -101,7 +101,11 @@ if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
         "busybox": {}
     },
     "exec": {},
-    "empower": {}
+    "empower": {},
+    "centos": {},
+    "ubuntu": {},
+    "alpine": {},
+    "busybox": {}
 }
 A
 fi
