@@ -340,7 +340,7 @@ A
     }
 
     if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
-        xrc advise/v1
+        xrc advise/v0
         advise xrc <"$(xrc w boot.advise.json)"
     fi
     
