@@ -119,7 +119,7 @@ A
                         return 1
                     fi
                     eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
-            update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null 2>&1    ;;
+            update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null         ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
             clear)  shift;
@@ -258,8 +258,7 @@ $exec \"$file\""
                 code="$code
 $exec \"$file\" && \
 X_CMD_SH_IN_USED=\"\$X_CMD_SH_IN_USED
-$file\""  
-                echo "$code" >&2
+$file\""
             fi
             shift
         done
@@ -333,7 +332,7 @@ A
         fi
         TGT="$X_BASH_SRC_PATH/$module"
 
-        if [ -f "$TGT" ]; then
+        if [ -z "$UPDATE" ] && [ -f "$TGT" ]; then
             echo "$TGT"
             return
         fi
