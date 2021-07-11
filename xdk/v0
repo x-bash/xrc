@@ -94,7 +94,12 @@ if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
     advise xdk - <<A
 {
     "alias": {},
-    "run":  {},
+    "run":  {
+        "centos": {},
+        "ubuntu": {},
+        "alpine": {},
+        "busybox": {}
+    },
     "exec": {},
     "empower": {}
 }
