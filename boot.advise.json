@@ -1,0 +1,29 @@
+{
+    "cat|c": {
+        "#n": "xrc list-index"
+    },
+    "which|w": {
+        "#n": "xrc list-index"
+    },
+    "update|u": {},
+    "upgrade": {},
+    "cache": {},
+    "clear": {},
+    "log": {
+        "-json": null,
+        "+json": null,
+        "init": {},
+        "timestamp": {
+            "on": {},
+            "off": {}
+        }
+    },
+    "mirror": {
+        "#n": [
+            "https://x-bash.gitee.io",
+            "https://x-bash.github.io",
+            "https://x-bash.gitlab.io",
+            "https://bitbucket.com/x-bash/x-bash"
+        ]
+    }
+}

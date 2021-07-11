@@ -6,6 +6,7 @@
 _X_CMD_DOCKER_BIN="$(command -v docker)"
 
 _xdk_easy_env(){
+    # Thanks to: https://scripter.co/nim-check-if-stdin-stdout-are-associated-with-terminal-or-pipe/
     if [ -t 0 ]; then
         $_X_CMD_DOCKER_BIN run -it "$@";    # xdk run -it "$@"
     else

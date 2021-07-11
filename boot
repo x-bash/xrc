@@ -1,7 +1,6 @@
-# shellcheck shell=sh disable=SC2039,SC1090,SC3043
+# shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
 if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
-
     if curl --version 1>/dev/null 2>&1; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
         _xrc_http_get(){
@@ -238,12 +237,22 @@ A
 
     _xrc_source_file_list_code(){
         local code=""
+        local file
         while [ $# -ne 0 ]; do
             # What if the _xrc_which_one contains '"'
-            if ! code="$code
-            ${t:-.} \"$(_xrc_which_one "$1")\""; then
+
+            if ! file="$(_xrc_which_one "$1")"; then
                 echo "return 1"
                 return 0
+            fi
+
+            if [ "${X_CMD_SH_IN_USED#$file}" = "${X_CMD_SH_IN_USED}" ]; then
+                code="$code
+${t:-.} \"$file\" && \
+X_CMD_SH_IN_USED=\"\$X_CMD_SH_IN_USED
+$file
+\"
+"
             fi
             shift
         done
@@ -330,5 +339,9 @@ A
         echo "$TGT"
     }
 
-    # xrc x comp/xrc comp/x
+    if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
+        xrc advise/v1
+        advise xrc <"$(xrc w boot.advise.json)"
+    fi
+    
 fi
