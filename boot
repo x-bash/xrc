@@ -247,13 +247,19 @@ A
                 return 0
             fi
 
-            if [ "$exec" != "." ] || [ "${X_CMD_SH_IN_USED#$file}" = "${X_CMD_SH_IN_USED}" ]; then
+            if [ "$exec" != "." ]; then
+                code="$code
+$exec \"$file\""
+            else
+                if [ "${X_CMD_SH_IN_USED#*$file}" != "${X_CMD_SH_IN_USED}" ]; then
+                    shift
+                    continue;   # exixted already. skip
+                fi
                 code="$code
 $exec \"$file\" && \
 X_CMD_SH_IN_USED=\"\$X_CMD_SH_IN_USED
-$file
-\"
-"
+$file\""  
+                echo "$code" >&2
             fi
             shift
         done
@@ -341,8 +347,9 @@ A
     }
 
     if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
-        xrc advise/v0
-        advise xrc <"$(xrc w boot.advise.json)"
+        # xrc advise/v0
+        # advise xrc <"$(xrc w boot.advise.json)"
+        :
     fi
     
 fi
