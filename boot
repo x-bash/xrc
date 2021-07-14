@@ -350,7 +350,37 @@ A
     if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
         echo "Using advise json" >&2
         xrc advise/v0
-        advise xrc <"$(xrc w boot_advise_json)"
+        advise xrc - <<A
+{
+    "cat|c": {
+        "#n": "ls /Users/edwinjhlee/.x-cmd/"
+    },
+    "which|w": {
+        "#n": "ls /Users/edwinjhlee/.x-cmd/"
+    },
+    "update|u": {},
+    "upgrade": {},
+    "cache": {},
+    "clear": {},
+    "log": {
+        "-json": null,
+        "+json": null,
+        "init": {},
+        "timestamp": {
+            "on": {},
+            "off": {}
+        }
+    },
+    "mirror": {
+        "#n": [
+            "https://x-bash.gitee.io",
+            "https://x-bash.github.io",
+            "https://x-bash.gitlab.io",
+            "https://bitbucket.com/x-bash/x-bash"
+        ]
+    }
+}
+A
         :
     fi
     
