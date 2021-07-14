@@ -268,12 +268,33 @@ $file\""
     xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
     xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
 
+#     _xrc_curl_gitx(){   # Simple strategy
+#         local i=1
+#         local mirror
+#         local mod="${1:?Provide location like str}"
+#         local mirror_list
+#         mirror_list="$(xrc mirror)"
+#         while IFS= read -r mirror; do    # It is said '-r' not supported in Bourne shell
+#             xrc_curl "$mirror/$mod"
+#             case $? in
+#                 0)  if [ "$i" -ne 1 ]; then
+#                         xrc_log debug "Current default mirror is $mirror"
+#                         xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
+#                     fi
+#                     return 0;;
+#                 4)  return 4;;
+#             esac
+#             i=$((i+1))  # Support both ash, dash, bash
+#         done <<A
+# $mirror_list
+# A
+#         return 1
+#     }
+
     _xrc_curl_gitx(){   # Simple strategy
         local i=1
         local mirror
         local mod="${1:?Provide location like str}"
-        local mirror_list
-        mirror_list="$(xrc mirror)"
         while IFS= read -r mirror; do    # It is said '-r' not supported in Bourne shell
             xrc_curl "$mirror/$mod"
             case $? in
@@ -285,9 +306,7 @@ $file\""
                 4)  return 4;;
             esac
             i=$((i+1))  # Support both ash, dash, bash
-        done <<A
-$mirror_list
-A
+        done
         return 1
     }
 
@@ -338,7 +357,10 @@ A
         fi
 
         xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-        if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
+        if ! CACHE="$TGT" _xrc_curl_gitx "$module"<<A
+$(xrc mirror)
+A
+        then
             xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
@@ -349,16 +371,41 @@ A
         xrc_log debug "Using module advise for completion."
         xrc advise/v0
 
-        _com(){
-            if [ "$cur" == "" ]; then
-                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 # | awk '{ print "+" $0; }'
+        _xrc_log_completer(){
+            if [ "$cur" = "" ]; then
+                echo "+"
+                echo "-"
+                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64  | awk '{ print $0 "/"; }'
+                # echo "$X_CMD_SH_IN_USED"  | awk '{ print $0 "/"; }'
             elif [[ "$cur" = */* ]]; then
                 echo "${cur%/*}/debug"
                 echo "${cur%/*}/verbose"
                 echo "${cur%/*}/warn"
                 echo "${cur%/*}/error"
+            elif [[ "$cur" =~ ^\+ ]]; then
+                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk '{ print "+" $0; }'
+            elif [[ "$cur" =~ ^\- ]]; then
+                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk '{ print "-" $0; }'
             else
-                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 # | awk '{ print "+" $0; print "-" $0; }'
+                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk -v cur="$cur" '
+                    BEGIN { arr_len=0; }
+                    $0~"^"cur{
+                        arr_len += 1
+                        arr[arr_len] = $0; 
+                        if ( $0 !~ /\/$/ ) arr[arr_len] = arr[arr_len] "/"
+                    }
+                    END {
+                        if (arr_len != 1) {
+                            for (i=1; i<=arr_len; ++i) print arr[i]
+                        } else {
+                            # It is useful! The completion seemed to pause before "/"
+                            print arr[1] "verbose"
+                            print arr[1] "debug"
+                            print arr[1] "warn"
+                            print arr[1] "error"
+                        }
+                    }
+                '
             fi
 
         }
@@ -381,7 +428,7 @@ A
             "on": {},
             "off": {}
         },
-        "#n": "_com"
+        "#n": "_xrc_log_completer"
     },
     "mirror": {
         "#n": [

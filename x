@@ -1,4 +1,53 @@
-# shellcheck shell=sh
+# shellcheck shell=sh disable=SC3043
+
+
+_x_search_path(){
+    local cur="${1:?Provide starting path}"
+    local relative_filepath="${2:?Provide relative filepath}"
+    while [ ! "$cur" = "" ]; do
+        if [ -f "$cur/.x-cmd/$relative_filepath" ]; then
+            echo "$cur"
+            return 0
+        fi
+        cur=${cur%/*}
+    done
+    return 1
+}
+
+_x_mirror(){
+    "https://x-cmd.github.io/x-official"
+    "https://x-cmd.gitee.io/x-official"
+}
+
+# TODO: optimization. Consider sharing the big binary in a common folder.
+# But that will introduce risk.
+# How? 
+# 1. Local user $HOME/.x-cmd
+# 2. Global sharing folder.
+# Consider using the sha512 to calculate the file hash for this purpose.
+
+_x_official_which(){
+    X_CMD_SRC_PATH="$HOME/.x-cmd"
+    local target="${1:-Provide target path}"
+    local cache="$X_CMD_SRC_PATH/$target"
+
+    local target2="${target#@}"
+    if [ "$target2" != "$target" ]; then
+        target=target2
+        cache="$X_CMD_SRC_PATH/___users/$target"
+        echo "Not supported yet." >&2
+        return 1
+    fi
+
+    if CACHE="$cache" _xrc_curl_gitx "$target" <<A
+$(_x_mirror)
+A
+    then
+        :
+    fi
+
+}
+
 
 x(){
     case "${1:?Provide Sub Command}" in
@@ -7,28 +56,82 @@ x(){
         python|py) 
             shift;
             # Install python using pyenv
-            xrc pyenv
-            python "$(xrc_curl which "$2")" "$@" ;;
+            # xrc pyenv
+            python "$(_x_official_which "$2")" "$@" ;;
         javascript|js)
             shift;
             # Install node using nvm
-            node "$(xrc which "$2")" "$@" ;;
+            node "$(_x_official_which "$2")" "$@" ;;
         typescript|ts)
             shift;
             # Install node using nvm
-            ts-node "$(xrc which "$2")" "$@" ;;
+            ts-node "$(_x_official_which "$2")" "$@" ;;
         ruby|rb)
             shift;
-            python "$(xrc which "$2")" "$@" ;;
-        lua) 
+            python "$(_x_official_which "$2")" "$@" ;;
+        lua)
             shift
             ;;
-        *)  if [ -z "$X_CMD_PATH" ] && ! X_CMD_PATH="$(command -v x)"; then
-                if ! eval "$(curl https://get.x-cmd.com/x-cmd-binary)" || ! X_CMD_PATH="$(command -v x)"; then
-                    echo "Installation of x-cmd binary failed. Please retry again." >&2
-                    return 1
-                fi
+        exe)
+            if [ ! -x "$fp" ]; then
+                printf "=> \033[33m%s\033[0m:\n   %s\n\n" "Target file is NOT an excuatable" "$fp"
+                local action
+                while true; do
+                    printf "%s" "=> Change its mode to +x? (y/n, default is y)? " >&2
+                    read action
+                    case $action in
+                        y)  if chmod +x "$fp"; then
+                                printf "\033[32m%s\033[0m\n\n" "Successfully grant execute permission." >&2
+                            else
+                                local code=$?
+                                printf "\033[31m%s\033[0m\n\n" "Failed to grant execute permission." >&2
+                                return "$code"
+                            fi
+                            break ;;
+                        n)  echo -e "
+=> Sorry. \033[31;1mCANNOT execute an non-executable file \033[0m. You could grant the permission as following:
+\033[32m    chmod +x \"$fp\" \033[;0m
+"
+                            return 1  
+                            ;;
+                        "") chmod +x "$fp" ;;
+                        *)  continue ;;
+                    esac
+                done
             fi
-            "$X_CMD_PATH" "$@"  ;;
+            "$fp" ${1:+"$@"}            
+            ;;
+        run)
+            local fp="$2"; shift 2
+            case "$fp" in
+                *.py)       x python "$fp" ${1:+"$@"}   ;;
+                *.rb)       x ruby "$fp" ${1:+"$@"}     ;;
+                *.lua)      x lua "$fp" ${1:+"$@"}      ;;
+                *.ts)       x ts "$fp" ${1:+"$@"}       ;;
+                *)          x exe "$fp" ${1:+"$@"}      ;;
+            esac
+            ;;
+        *)  
+            local p
+            local relative_path="$1"
+            if p="$(_x_search_path "$(pwd)" "$relative_path")"; then
+                shift
+                x run "$p/.x-cmd/$relative_path" ${1:+"$@"}
+                return 0
+            fi
+
+            echo "$p"
+
+            # if [ -z "$X_CMD_PATH" ] && ! X_CMD_PATH="$(command -v x)"; then
+            #     if ! eval "$(curl https://get.x-cmd.com/x-cmd-binary)" || ! X_CMD_PATH="$(command -v x)"; then
+            #         echo "Installation of x-cmd binary failed. Please retry again." >&2
+            #         return 1
+            #     fi
+            # fi
+            # "$X_CMD_PATH" "$@"  ;;
     esac
 }
+
+if [ ! "$#" = 0 ]; then
+    x "$@"
+fi
