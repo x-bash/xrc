@@ -361,13 +361,12 @@ A
     "cache": {},
     "clear": {},
     "log": {
-        "-json": null,
-        "+json": null,
         "init": {},
         "timestamp": {
             "on": {},
             "off": {}
-        }
+        },
+        "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk '{ print \"+\" \$0; print \"-\" \$0; }'"
     },
     "mirror": {
         "#n": [
