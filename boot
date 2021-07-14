@@ -344,11 +344,9 @@ A
         fi
         echo "$TGT"
     }
-    
-    echo "hi" >&2
 
     if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
-        echo "Using advise json" >&2
+        xrc_log debug "Using module advise for completion."
         xrc advise/v0
         advise xrc - <<A
 {
