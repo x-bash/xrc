@@ -353,10 +353,10 @@ A
         advise xrc - <<A
 {
     "cat|c": {
-        "#n": "ls /Users/edwinjhlee/.x-cmd/"
+        "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64"
     },
     "which|w": {
-        "#n": "ls /Users/edwinjhlee/.x-cmd/"
+        "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64"
     },
     "update|u": {},
     "upgrade": {},
