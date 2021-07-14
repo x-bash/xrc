@@ -348,6 +348,21 @@ A
     if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
         xrc_log debug "Using module advise for completion."
         xrc advise/v0
+
+        _com(){
+            if [ "$cur" == "" ]; then
+                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 # | awk '{ print "+" $0; }'
+            elif [[ "$cur" = */* ]]; then
+                echo "${cur%/*}/debug"
+                echo "${cur%/*}/verbose"
+                echo "${cur%/*}/warn"
+                echo "${cur%/*}/error"
+            else
+                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 # | awk '{ print "+" $0; print "-" $0; }'
+            fi
+
+        }
+
         advise xrc - <<A
 {
     "cat|c": {
@@ -366,7 +381,7 @@ A
             "on": {},
             "off": {}
         },
-        "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk '{ print \"+\" \$0; print \"-\" \$0; }'"
+        "#n": "_com"
     },
     "mirror": {
         "#n": [
