@@ -1,9 +1,9 @@
 {
     "cat|c": {
-        "#n": "xrc list-index"
+        "#n": "ls /Users/edwinjhlee/.x-cmd/"
     },
     "which|w": {
-        "#n": "xrc list-index"
+        "#n": "ls /Users/edwinjhlee/.x-cmd/"
     },
     "update|u": {},
     "upgrade": {},

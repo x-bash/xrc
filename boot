@@ -114,7 +114,7 @@ A
                         cat >&2 <<A
 xrc which  Download lib files and print the local path.
         Uasge:  xrc which <lib> [<lib>...]
-        Example: source "$(xrc_which std/str)"
+        Example: source "$(xrc which std/str)"
 A
                         return 1
                     fi
@@ -344,10 +344,13 @@ A
         fi
         echo "$TGT"
     }
+    
+    echo "hi" >&2
 
     if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
-        # xrc advise/v0
-        # advise xrc <"$(xrc w boot.advise.json)"
+        echo "Using advise json" >&2
+        xrc advise/v0
+        advise xrc <"$(xrc w boot_advise_json)"
         :
     fi
     
