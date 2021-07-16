@@ -48,6 +48,11 @@ A
 
 }
 
+# x py install/cdn
+
+# xenv go in
+# xenv j in
+# xenv 
 
 x(){
     case "${1:?Provide Sub Command}" in
@@ -57,18 +62,18 @@ x(){
             shift;
             # Install python using pyenv
             # xrc pyenv
-            python "$(_x_official_which "$2")" "$@" ;;
+            python "$(_x_official_which "$2")" "$@"     ;;
         javascript|js)
             shift;
             # Install node using nvm
-            node "$(_x_official_which "$2")" "$@" ;;
+            node "$(_x_official_which "$2")" "$@"       ;;
         typescript|ts)
             shift;
             # Install node using nvm
-            ts-node "$(_x_official_which "$2")" "$@" ;;
+            ts-node "$(_x_official_which "$2")" "$@"    ;;
         ruby|rb)
             shift;
-            python "$(_x_official_which "$2")" "$@" ;;
+            python "$(_x_official_which "$2")" "$@"     ;;
         lua)
             shift
             ;;
