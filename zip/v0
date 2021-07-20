@@ -3,7 +3,6 @@
 # author:       Li Junhao           l@x-cmd.com    edwinjhlee.github.io
 # maintainer:   Li Junhao
 
-
 if ! command -v 7z; then
 
 # code from nvm
@@ -60,52 +59,50 @@ _xrc_sys_get_arch() {
     echo "${ARCH}"
 }
 
-_zip_bin() {
-    if command -v 7z; then
-        _zip_bin() { 7z ${1:+"$@"}; }
-    else
-        local target="$HOME/.x-cmd/.bin/7z"
-        mkdir -p "$target"
+_zip_init(){
+    local target="$HOME/.x-cmd/.bin/7z"
+    mkdir -p "$target"
 
-        local arch="$(_xrc_sys_get_arch)"
+    local arch="$(_xrc_sys_get_arch)"
 
-        local os="$(_xrc_sys_get_os)"
+    local os="$(_xrc_sys_get_os)"
 
-        if [ "$os" = "win" ]; then
-            if CACHE="$target/7za.exe" xrc_curl "https://gitee.com/static-build/p7zip/blob/master/bin/7za.exe"; then   
-                chmod +x "$target/7za.exe"
-                eval "
-                    _zip_bin() { $target/7za.exe \${1:+\"\$@\"}; }
-                "
-            else
-                echo "Failed!" >&2
-                return 1
-            fi
-        else
-            case "$os" in
-                linux|darwin)      
-                    if  CACHE="$target/7zr" xrc_curl "https://gitee.com/static-build/p7zip/raw/master/bin/7zr.$os.$arch" && \
-                        CACHE="$target/7za.7z" xrc_curl "https://gitee.com/static-build/p7zip/raw/master/bin/7za.$os.$arch.7z";
-                    then
-                        chmod +x "$target/7zr"
-                        (
-                            cd "$target" && ./7zr x 7za.7z && mv "7za.$os.$arch" 7za
-                        )
-                        chmod +x "$target/7za"
-                    else
-                        echo "Failed!" >&2
-                    fi
-                ;;
-                *)  echo "Unsupported!" >&2; return 1 ;;
-            esac
+    if [ "$os" = "win" ]; then
+        if CACHE="$target/7za.exe" xrc_curl "https://gitee.com/static-build/p7zip/blob/master/bin/7za.exe"; then   
+            chmod +x "$target/7za.exe"
             eval "
-                _zip_bin() { $target/7za \${1:+\"\$@\"}; }
+                _zip_bin() { $target/7za.exe \${1:+\"\$@\"}; }
             "
+        else
+            echo "Failed!" >&2
+            return 1
         fi
+    else
+        case "$os" in
+            linux|darwin)      
+                if  CACHE="$target/7zr" xrc_curl "https://gitee.com/static-build/p7zip/raw/master/bin/7zr.$os.$arch" && \
+                    CACHE="$target/7za.7z" xrc_curl "https://gitee.com/static-build/p7zip/raw/master/bin/7za.$os.$arch.7z";
+                then
+                    chmod +x "$target/7zr"
+                    (
+                        cd "$target" && {
+                            [ ! -f ./7za ] && ./7zr x -y 7za.7z && mv "7za.$os.$arch" 7za
+                        }
+                    )
+                    chmod +x "$target/7za"
+                else
+                    echo "Failed!" >&2
+                fi
+            ;;
+            *)  echo "Unsupported!" >&2; return 1 ;;
+        esac
+        eval "
+            _zip_bin() { $target/7za \${1:+\"\$@\"}; }
+        "
     fi
-
-    _zip_bin ${1:+"$@"}
 }
+
+_zip_init || return 1 >&2
 
 _7z(){
     _zip_bin ${1:+"$@"}
