@@ -86,7 +86,7 @@ _zip_init(){
                     chmod +x "$target/7zr"
                     (
                         cd "$target" && {
-                            [ ! -f ./7za ] && ./7zr x -y 7za.7z && mv "7za.$os.$arch" 7za
+                            [ ! -f ./7za ] && ./7zr x -y 7za.7z 1>/dev/null 2>&1 && mv "7za.$os.$arch" 7za
                         }
                     )
                     chmod +x "$target/7za"
