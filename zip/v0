@@ -1,0 +1,135 @@
+# shellcheck shell=sh disable=SC3043
+
+# author:       Li Junhao           l@x-cmd.com    edwinjhlee.github.io
+# maintainer:   Li Junhao
+
+
+if ! command -v 7z; then
+
+# code from nvm
+_xrc_sys_get_os() {
+    case "$(command uname -a)" in
+        Linux\ *)                   echo linux ;;
+        Darwin\ *)                  echo darwin ;;
+        SunOS\ *)                   echo sunos ;;
+        FreeBSD\ *)                 echo freebsd ;;
+        OpenBSD\ *)                 echo openbsd ;;         # TODO: Netbsd?
+        AIX\ *)                     echo aix ;;
+        CYGWIN* | MSYS* | MINGW*)   echo win ;;
+    esac
+}
+
+# code from nvm
+_xrc_sys_get_arch() {
+    local HOST_ARCH
+    local OS
+
+    OS="$(_xrc_sys_get_os)"
+    if [ "${OS}" = "sunos" ]; then
+        # first try to use pkgsrc to guess the most appropriate arch. 
+        if HOST_ARCH=$(pkg_info -Q MACHINE_ARCH pkg_install 2>/dev/null); then
+            HOST_ARCH=$(echo "${HOST_ARCH}" | command tail -1)
+        else
+            # If it's not available, use isainfo to get the instruction set supported by the kernel.
+            HOST_ARCH=$(isainfo -n)
+        fi
+    elif [ "${OS}" = "aix" ]; then
+        HOST_ARCH=ppc64
+    else
+        HOST_ARCH="$(command uname -m)"
+    fi
+
+    local ARCH
+    case "${HOST_ARCH}" in
+        x86_64 | amd64)     ARCH="x64" ;;
+        i*86)               ARCH="x86" ;;
+        aarch64)            ARCH="arm64" ;;
+        *)                  ARCH="${HOST_ARCH}" ;;     # TODO: Consider 32bit arm? For router or raspberry pi 3?
+    esac
+
+    # If running a 64bit ARM kernel but a 32bit ARM userland, change ARCH to 32bit ARM (armv7l)
+    if [ "$OS" = "Linux" ] && [ "${ARCH}" = arm64 ]; then
+        local L
+        L=$(ls -dl /sbin/init 2>/dev/null) #                                         if /sbin/init is 32bit executable
+        if [ "$(od -An -t x1 -j 4 -N 1 "${L#*-> }")" = ' 01' ]; then
+            ARCH=armv7l
+            HOST_ARCH=armv7l
+        fi
+    fi
+
+    echo "${ARCH}"
+}
+
+_zip_bin() {
+    if command -v 7z; then
+        _zip_bin() { 7z ${1:+"$@"}; }
+    else
+        local target="$HOME/.x-cmd/.bin/7z"
+        mkdir -p "$target"
+
+        local arch="$(_xrc_sys_get_arch)"
+
+        local os="$(_xrc_sys_get_os)"
+
+        if [ "$os" = "win" ]; then
+            if CACHE="$target/7za.exe" xrc_curl "https://gitee.com/static-build/p7zip/blob/master/bin/7za.exe"; then   
+                chmod +x "$target/7za.exe"
+                eval "
+                    _zip_bin() { $target/7za.exe \${1:+\"\$@\"}; }
+                "
+            else
+                echo "Failed!" >&2
+                return 1
+            fi
+        else
+            case "$os" in
+                linux|darwin)      
+                    if  CACHE="$target/7zr" xrc_curl "https://gitee.com/static-build/p7zip/raw/master/bin/7zr.$os.$arch" && \
+                        CACHE="$target/7za.7z" xrc_curl "https://gitee.com/static-build/p7zip/raw/master/bin/7za.$os.$arch.7z";
+                    then
+                        chmod +x "$target/7zr"
+                        (
+                            cd "$target" && ./7zr x 7za.7z && mv "7za.$os.$arch" 7za
+                        )
+                        chmod +x "$target/7za"
+                    else
+                        echo "Failed!" >&2
+                    fi
+                ;;
+                *)  echo "Unsupported!" >&2; return 1 ;;
+            esac
+            eval "
+                _zip_bin() { $target/7za \${1:+\"\$@\"}; }
+            "
+        fi
+    fi
+
+    _zip_bin ${1:+"$@"}
+}
+
+_7z(){
+    _zip_bin ${1:+"$@"}
+}
+
+alias 7z=_7z
+
+fi
+
+# shellcheck disable=SC2139
+# zipx() {
+#     local op="${1}"
+#     shift
+#     case "$op" in
+#         *.zip|*.7z)
+#             _zip_bin x "$op"
+#             ;;
+#         *.tar)
+#             local dest=${op%.tar}
+#             _zip_bin x "$op" "-o$dest"
+#             ;;
+#         *.tar.gz) ;;
+#         *.tar.bz2) ;;
+
+#     esac
+
+# }
