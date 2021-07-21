@@ -81,7 +81,13 @@ x(){
             shift
             ( 
                 xrc 7z
-                7z ${1:+"$@"}
+                _7z ${1:+"$@"}
+            ) ;;
+        ps)
+            shift
+            (
+                xrc procs
+                procs ${1:+"$@"}
             ) ;;
         du|dust)
             shift
