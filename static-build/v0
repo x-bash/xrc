@@ -1,0 +1,111 @@
+# shellcheck shell=sh disable=SC3043
+
+# author:       Li Junhao           l@x-cmd.com    edwinjhlee.github.io
+# maintainer:   Li Junhao
+
+# code from nvm
+_xrc_sys_get_os() {
+    case "$(command uname -a)" in
+        Linux\ *)                   echo linux ;;
+        Darwin\ *)                  echo darwin ;;
+        SunOS\ *)                   echo sunos ;;
+        FreeBSD\ *)                 echo freebsd ;;
+        OpenBSD\ *)                 echo openbsd ;;         # TODO: Netbsd?
+        AIX\ *)                     echo aix ;;
+        CYGWIN* | MSYS* | MINGW*)   echo win ;;
+    esac
+}
+
+# code from nvm
+_xrc_sys_get_arch() {
+    local HOST_ARCH
+    local OS
+
+    OS="$(_xrc_sys_get_os)"
+    if [ "${OS}" = "sunos" ]; then
+        # first try to use pkgsrc to guess the most appropriate arch. 
+        if HOST_ARCH=$(pkg_info -Q MACHINE_ARCH pkg_install 2>/dev/null); then
+            HOST_ARCH=$(echo "${HOST_ARCH}" | command tail -1)
+        else
+            # If it's not available, use isainfo to get the instruction set supported by the kernel.
+            HOST_ARCH=$(isainfo -n)
+        fi
+    elif [ "${OS}" = "aix" ]; then
+        HOST_ARCH=ppc64
+    else
+        HOST_ARCH="$(command uname -m)"
+    fi
+
+    local ARCH
+    case "${HOST_ARCH}" in
+        x86_64 | amd64)     ARCH="x64" ;;
+        i*86)               ARCH="x86" ;;
+        aarch64)            ARCH="arm64" ;;
+        *)                  ARCH="${HOST_ARCH}" ;;     # TODO: Consider 32bit arm? For router or raspberry pi 3?
+    esac
+
+    # If running a 64bit ARM kernel but a 32bit ARM userland, change ARCH to 32bit ARM (armv7l)
+    if [ "$OS" = "Linux" ] && [ "${ARCH}" = arm64 ]; then
+        local L
+        L=$(ls -dl /sbin/init 2>/dev/null) #                                         if /sbin/init is 32bit executable
+        if [ "$(od -An -t x1 -j 4 -N 1 "${L#*-> }")" = ' 01' ]; then
+            ARCH=armv7l
+            HOST_ARCH=armv7l
+        fi
+    fi
+
+    echo "${ARCH}"
+}
+
+static_build_init(){
+    local appname="${1:?Provide app name, like dust}"
+
+    if command -v "_${appname}_bin"; then
+        return 0
+    fi
+
+    local target="$HOME/.x-cmd/.bin/$appname"
+    mkdir -p "$target"
+
+    local arch="$(_xrc_sys_get_arch)"
+    local os="$(_xrc_sys_get_os)"
+
+    local exe
+    case "$os" in
+        win)    exe=dust.x64.exe        ;;
+        *)      exe=dust.${os}.${arch}  ;;
+    esac
+
+    # Rely
+    if [ ! -f "$target/$exe" ]; then
+        # TODO: Use github, gitlab if gitee failed.
+        if ! CACHE="$target/$exe.7z" xrc_curl "https://gitee.com/static-build/${appname}/raw/master/bin/$exe.7z"; then
+            echo "Unsupported: $exe" >&2
+            return 1
+        fi
+
+        (
+            cd "$target" && {
+                xrc 7z
+                _7z x "$exe.7z" 2>/dev/null && chmod +x "$exe"
+            }
+        )
+    fi && eval "
+        _${appname}_bin() { $target/$exe \${1:+\"\$@\"}; }
+    "
+}
+
+static_build_run(){
+    static_build_init "${1:?Provide app name, like dust}" && \
+        "_${appname}_bin" ${1:+"$@"}
+}
+
+static_build_xrc(){
+    static_build_init "$1" && {
+        eval "
+$appname(){
+    _${appname}_bin \${1:+\"\$@\"}
+}
+    "
+    }
+}
