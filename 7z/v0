@@ -68,7 +68,7 @@ _zip_init(){
     local os="$(_xrc_sys_get_os)"
 
     if [ "$os" = "win" ]; then
-        if CACHE="$target/7za.exe" xrc_curl "https://gitee.com/static-build/p7zip/blob/master/bin/7za.exe"; then   
+        if CACHE="$target/7za.exe" xrc_curl "https://gitee.com/static-build/p7zip/raw/master/bin/7za.exe"; then   
             chmod +x "$target/7za.exe"
             eval "
                 _zip_bin() { $target/7za.exe \${1:+\"\$@\"}; }
