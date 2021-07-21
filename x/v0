@@ -83,7 +83,7 @@ x(){
                 xrc 7z
                 _7z ${1:+"$@"}
             ) ;;
-        ps)
+        ps|procs)
             shift
             (
                 xrc procs
