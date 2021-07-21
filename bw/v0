@@ -9,7 +9,7 @@ xrc static-build
 static_build_init bandwhich
 
 bw(){
-    _bandwhich_bin ${1:+"$@"}
+    _bandwhich_bin ${1:+"$@"} 2>/dev/null
 }
 
 
