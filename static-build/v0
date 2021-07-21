@@ -60,7 +60,7 @@ _xrc_sys_get_arch() {
 static_build_init(){
     local appname="${1:?Provide app name, like dust}"
 
-    if command -v "_${appname}_bin"; then
+    if command -v "_${appname}_bin" 1>/dev/null; then
         return 0
     fi
 
@@ -96,15 +96,19 @@ static_build_init(){
 }
 
 static_build_run(){
-    static_build_init "${1:?Provide app name, like dust}" && \
-        "_${appname}_bin" ${1:+"$@"}
+    local _appname="${1:?Provide app name, like dust}"
+    shift
+    static_build_init "$_appname" && \
+        "_${_appname}_bin" ${1:+"$@"}
 }
 
 static_build_xrc(){
-    static_build_init "$1" && {
+    local _appname="${1:?Provide app name, like dust}"
+    shift
+    static_build_init "$_appname" && {
         eval "
-$appname(){
-    _${appname}_bin \${1:+\"\$@\"}
+$_appname(){
+    _${_appname}_bin \${1:+\"\$@\"}
 }
     "
     }
