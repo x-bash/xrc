@@ -72,8 +72,8 @@ static_build_init(){
 
     local exe
     case "$os" in
-        win)    exe=dust.x64.exe        ;;
-        *)      exe=dust.${os}.${arch}  ;;
+        win)    exe=$appname.x64.exe        ;;
+        *)      exe=$appname.${os}.${arch}  ;;
     esac
 
     # Rely
