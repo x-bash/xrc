@@ -87,7 +87,7 @@ static_build_init(){
         (
             cd "$target" && {
                 xrc 7z
-                _7z x "$exe.7z" 2>/dev/null && chmod +x "$exe"
+                _7z x "$exe.7z" 1>/dev/null 2>/dev/null && chmod +x "$exe"
             }
         )
     fi && eval "
