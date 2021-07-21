@@ -231,6 +231,7 @@ A
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
 
     xrc_log debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
+    X_CMD_SRC_PATH="$HOME/.x-cmd/"                  # TODO: Using X_CMD_SRC_PATH
     X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"

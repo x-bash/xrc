@@ -77,6 +77,18 @@ x(){
         lua)
             shift
             ;;
+        7z)
+            shift
+            ( 
+                xrc 7z
+                7z ${1:+"$@"}
+            ) ;;
+        du|dust)
+            shift
+            (
+                xrc dust
+                dust ${1:+"$@"}
+            ) ;;
         exe)
             if [ ! -x "$fp" ]; then
                 printf "=> \033[33m%s\033[0m:\n   %s\n\n" "Target file is NOT an excuatable" "$fp"
