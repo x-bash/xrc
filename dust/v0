@@ -3,7 +3,7 @@
 # author:       Li Junhao           l@x-cmd.com    edwinjhlee.github.io
 # maintainer:   Li Junhao
 
-# xrc static-build
-. ../static-build/v0
+xrc static-build
+# . ../static-build/v0
 
 static_build_xrc dust
