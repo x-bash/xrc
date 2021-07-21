@@ -1,0 +1,8 @@
+# shellcheck shell=sh disable=SC3043
+
+# author:       Li Junhao           l@x-cmd.com    edwinjhlee.github.io
+# maintainer:   Li Junhao
+
+xrc static-build
+
+static_build_xrx dust
