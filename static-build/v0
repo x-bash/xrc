@@ -86,8 +86,28 @@ static_build_init(){
 
         (
             cd "$target" && {
+                local size
+
+                size=$(wc -c "$exe.7z")
+                size=${size% *}
+                size=$(printf "%s" $size)   # Notice: Intentionary let it unquoted.
+
                 xrc 7z
-                _7z x "$exe.7z" 1>/dev/null 2>/dev/null && chmod +x "$exe"
+                if [ "$size" -gt 20 ]; then
+                    _7z x "$exe.7z" 1>/dev/null 2>/dev/null
+                else
+                    size="$(cat "$exe.7z")"
+                    local i
+                    local suffix
+                    for i in $(seq "$size"); do
+                        suffix="$(printf "%03s" "$i")"
+                        CACHE="$exe.7z.$suffix" xrc_curl "https://gitee.com/static-build/${appname}/raw/master/bin/$exe.7z.$suffix" || {
+                            echo "Fail in $exe.7z.$suffix" >&2
+                            return 1
+                        }
+                    done
+                    _7z x "$exe.7z.001" 1>/dev/null 2>/dev/null
+                fi && chmod +x "$exe"
             }
         )
     fi && eval "
