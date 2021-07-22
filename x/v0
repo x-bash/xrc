@@ -48,6 +48,12 @@ A
 
 }
 
+_x_xrc_run()(
+    local name=$1;  shift
+    xrc "$name"
+    $name ${1:+"$@"}
+)
+
 # x py install/cdn
 
 # xenv go in
@@ -84,29 +90,17 @@ x(){
                 _7z ${1:+"$@"}
             ) ;;
         ps|procs)
-            shift
-            (
-                xrc procs
-                procs ${1:+"$@"}
-            ) ;;
+            shift;  _x_xrc_run procs "$@" ;;
         du|dust)
-            shift
-            (
-                xrc dust
-                dust ${1:+"$@"}
-            ) ;;
+            shift;  _x_xrc_run dust  "$@" ;;
         ls)
-            shift
-            (
-                xrc exa
-                exa ${1:+"$@"}
-            ) ;;
+            shift;  _x_xrc_run exa   "$@" ;;
         ll)
-            shift
-            (
-                xrc exa
-                exa -l ${1:+"$@"}
-            ) ;;
+            shift;  _x_xrc_run exa   "$@" ;;
+        bat|cat)
+            shift;  _x_xrc_run bat   "$@" ;;
+        bw)
+            shift;  _x_xrc_run bw   "$@" ;;
         exe)
             if [ ! -x "$fp" ]; then
                 printf "=> \033[33m%s\033[0m:\n   %s\n\n" "Target file is NOT an excuatable" "$fp"
