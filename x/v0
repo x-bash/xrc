@@ -96,7 +96,7 @@ x(){
         ls)
             shift;  _x_xrc_run exa   "$@" ;;
         ll)
-            shift; x ls -l ${1:+"$@"} ;;
+            shift;  x ls -l ${1:+"$@"} ;;
         bat|cat)
             shift;  _x_xrc_run bat   "$@" ;;
         bw)
