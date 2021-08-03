@@ -122,6 +122,21 @@ A
             update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null         ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
+            export-all)
+                    export -f xrc
+                    export -f x
+                    export -f _xrc_curl_gitx
+                    export -f _xrc_http_get
+                    export -f _xrc_logger
+                    export -f _xrc_source_file_list_code
+                    export -f xrc_curl
+
+                    export X_CMD_SRC_SHELL
+                    export X_BASH_SRC_PATH
+                    export XRC_LOG_COLOR
+                    export XRC_LOG_TIMESTAMP
+                    export TMPDIR
+                    ;;
             clear)  shift;
                     if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
                         xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"

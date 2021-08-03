@@ -60,10 +60,132 @@ _x_xrc_run()(
 # xenv j in
 # xenv 
 
+_x_header(){
+    local filepath="${1:?filepath}"; shift
+    case "$(head -n1 filepath)" in
+        *python*)       x python ${1:+"$@"}         ;;
+        *ruby*)         x python ${1:+"$@"}         ;;
+        *node*)         x node ${1:+"$@"}           ;;
+        *ts*)           x ts ${1:+"$@"}             ;;
+        *)              return 127
+    esac
+}
+
+_x_guest(){
+    local filepath="${1:?filepath}"; shift
+    local ext="${filepath##*.}"
+    case "$ext" in
+        py)     x python    "$filepath" ${1:+"$@"}      ;;
+        rb)     x ruby      "$filepath" ${1:+"$@"}      ;;
+        ts)     x ts        "$filepath" ${1:+"$@"}      ;;
+        js)     x node      "$filepath" ${1:+"$@"}      ;;
+        *)      return 126 ;;
+    esac
+}
+
+_x_exe(){
+    local filepath="${1:?filepath}"
+    if [ -L "$filepath" ]; then
+        local target_path
+        target_path="$(dirname "$filepath")/$(readlink -f "$filepath")"
+        filepath="$(cd "$(dirname "$target_path")" && pwd)/$(basename "$target_path")"
+    fi
+
+    shift
+    if [ -x "$filepath" ]; then
+        "$filepath" ${1:+"$@"}
+        local code=$?
+
+        if [ $code != 126 ] && [ $code != 127 ]; then
+            _x_guest "$filepath" ${1:+"$@"}
+            return
+        fi
+    fi
+
+    if _x_guest "$filepath" ${1:+"$@"}; then
+        if [ $? = 126 ]; then
+            if file "$filepath" | grep -iq "ASCII"; then
+                cat "$filepath"
+            else
+                x hex "$filepath" ${1:+"$@"}
+            fi
+        fi
+    fi
+
+}
+
+
+_x_run_service(){
+    local filepath="${1:?filepath}"
+    echo "https://kv.x-cmd.com/$filepath"
+}
+
+_x_run(){
+    local filepath="${1:?filepath}";
+    shift
+    # @git/
+    # @x/
+    # x/work    # local filepath?
+    # ./x-cmd   # how to
+    case "$filepath" in
+        @github/*|@gh/*)             # using github service
+            ;;
+        @gt/*|@gitee/*)             # using github service
+            ;;
+        @x/*)
+            _x_run_service "official/${filepath#@x/}" ;;
+        @*/*)
+            _x_run_service "${filepath#@}"            ;;
+        http://*|https://*) 
+            # Slow down? 
+            # - Unknown script. May contains malicous code. Is it in the whitelist. SHA512 in the whitelist.
+            # - Unknown script. 
+            ;;
+        # *:*)
+        #     # for ssh
+        #     ;;
+        *)        
+            local fp
+            if fp=$(_x_uproot_find . "$filepath"); then
+                # Slow down? Unknown malicious script. Is it in the whitelist?
+                # - Put it in the whitelist: yes
+                # - Reject: n
+                # - Put this all files in .x-cmd in the whitelist? all
+                _x_exe "$fp" ${1:+"$@"}
+            else
+                _x_run_service "$filepath" ${1:+"$@"}
+            fi
+            ;;
+    esac
+}
+
+_x_uproot_find(){
+    local cur="${1:?Provide starting path}"
+    local relative_filepath="${2:?Provide relative filepath}"
+    while [ ! "$cur" = "" ]; do
+        if [ -f "$cur/$relative_filepath" ]; then
+            echo "$cur"
+            return 0
+        fi
+        cur=${cur%/*}
+    done
+    return 1
+}
+
 x(){
     case "${1:?Provide Sub Command}" in
         rc|src) SRC_LOADER=bash eval "$(_xrc_print_code "$@")" ;;
         # java | jar);;
+
+        ubu|alp|deb|cen|bus) (
+                xrc xdk
+                xdk ${1:+"$@"}
+            ) ;;
+        docker|dk|xdk) (
+                xrc xdk
+                shift 1
+                xdk ${1:+"$@"}
+            ) ;;
         python|py) 
             shift;
             # Install python using pyenv
@@ -145,7 +267,7 @@ x(){
             local relative_path="$1"
             if p="$(_x_search_path "$(pwd)" "$relative_path")"; then
                 shift
-                x run "$p/.x-cmd/$relative_path" ${1:+"$@"}
+                _x_exe "$p/.x-cmd/$relative_path" ${1:+"$@"}
                 return 0
             fi
 

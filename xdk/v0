@@ -20,7 +20,7 @@ _xdk_accept_os(){
         ubuntu*|ubu*)       echo ubuntu         ;;
         debian*|deb*)       echo debian         ;;
         centos*|cen*)       echo centos         ;;
-        busybox*|bbox*)     echo busybox        ;;
+        busybox*|bus|bbox*) echo busybox        ;;
         alpine*|alp*)       echo alpine         ;;
         *)                  return 1            ;;
     esac
