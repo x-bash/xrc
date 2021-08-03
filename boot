@@ -347,6 +347,25 @@ $file\""
         local TGT
         if [ "${RESOURCE_NAME#http://}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" != "$RESOURCE_NAME" ]; then
             xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
+            if [ -z "$NOWARN" ]; then
+                echo "Sourcing script from unknown location: " "$RESOURCE_NAME"
+                cat >&2 <<A
+SECURITY WARNING! Sourcing script from unknown location: $RESOURCE_NAME
+If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
+    > NOWARN=1 xrc "$RESOURCE_NAME"
+
+A
+                printf "Input yes to continue. Otherwise exit > " >&2
+                local input
+                read input
+
+                if [ "$input" != "yes" ]; then
+                    echo "Exit becaause detect a non yes output: $input" >&2
+                    return 1
+                fi
+            fi
+            
+            # TODO: It seems base64 is everywhere. Find out whether it could be a reasonable dependency.
             TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
                 xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
