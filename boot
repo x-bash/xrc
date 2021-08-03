@@ -227,7 +227,13 @@ A
                         return
                     fi
                     if [ ! -f "$fp" ]; then
-                        xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
+                        # xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
+
+                        xrc mirror \
+                            "https://raw.githubusercontent.com/x-bash/%s/master/%s" \
+                            "https://gitee.com/x-bash/%s/raw/master/%s" \
+                            "https://x-bash.github.io/%s/%s" \
+                            "https://x-bash.gitee.io/%s/%s"
                     fi
                     cat "$fp"
                     return ;;
@@ -282,7 +288,8 @@ $file\""
     }
 
     xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
-    xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
+    # xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
+    xrc mirror
 
 #     _xrc_curl_gitx(){   # Simple strategy
 #         local i=1
@@ -308,11 +315,24 @@ $file\""
 #     }
 
     _xrc_curl_gitx(){   # Simple strategy
-        local i=1
-        local mirror
         local mod="${1:?Provide location like str}"
-        while IFS= read -r mirror; do    # It is said '-r' not supported in Bourne shell
-            xrc_curl "$mirror/$mod"
+        local mod_repo=${mod%%/*}
+        local mod_subpath=${mod#*/}
+
+        local IFS
+
+        local mirror_list
+        mirror_list="$(cat)"
+
+        local mirror
+        local i=1   # renamed to lineno
+        local urlpath
+        for mirror in $mirror_list; do
+            # shellcheck disable=SC2059
+            urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
+            xrc_log debug "Trying: $urlpath"
+            xrc_curl "$urlpath"
+
             case $? in
                 0)  if [ "$i" -ne 1 ]; then
                         xrc_log debug "Current default mirror is $mirror"
@@ -320,6 +340,7 @@ $file\""
                     fi
                     return 0;;
                 4)  return 4;;
+                *)  xrc_log debug "Mirror down: $mirror"
             esac
             i=$((i+1))  # Support both ash, dash, bash
         done
