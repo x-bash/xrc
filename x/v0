@@ -208,8 +208,8 @@ x(){
         7z)
             shift
             ( 
-                xrc 7z
-                _7z ${1:+"$@"}
+                xrc p7z
+                p7z ${1:+"$@"}
             ) ;;
         ps|procs)
             shift;  _x_xrc_run procs "$@" ;;
