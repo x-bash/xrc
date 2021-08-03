@@ -322,10 +322,10 @@ $file\""
         local IFS
 
         local mirror_list
-        mirror_list="$(cat)"
+        mirror_list="$(xrc mirror)"
 
         local mirror
-        local i=1   # renamed to lineno
+        local lineno=1
         local urlpath
         for mirror in $mirror_list; do
             # shellcheck disable=SC2059
@@ -334,15 +334,16 @@ $file\""
             xrc_curl "$urlpath"
 
             case $? in
-                0)  if [ "$i" -ne 1 ]; then
+                0)  if [ "$lineno" -ne 1 ]; then
                         xrc_log debug "Current default mirror is $mirror"
-                        xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
+                        xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
                     fi
                     return 0;;
-                4)  return 4;;
-                *)  xrc_log debug "Mirror down: $mirror"
+                4)  xrc_log debug "Network unavailable."
+                    return 4;;
+                *)  xrc_log debug "Mirror down is down.: $mirror"
             esac
-            i=$((i+1))  # Support both ash, dash, bash
+            lineno=$((lineno+1))  # Support both ash, dash, bash
         done
         return 1
     }
@@ -394,10 +395,7 @@ $file\""
         fi
 
         xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-        if ! CACHE="$TGT" _xrc_curl_gitx "$module"<<A
-$(xrc mirror)
-A
-        then
+        if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
             xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
