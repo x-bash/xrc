@@ -11,6 +11,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         }
     elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
+        # TODO: Under the situation of container
         alias _xrc_http_get="x cat"
     else
         printf "boot[ERR]: Cannot found curl or x-cmd binary for web resource downloader." >&2
