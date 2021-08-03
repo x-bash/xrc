@@ -288,31 +288,6 @@ $file\""
     }
 
     xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
-    # xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
-    xrc mirror
-
-#     _xrc_curl_gitx(){   # Simple strategy
-#         local i=1
-#         local mirror
-#         local mod="${1:?Provide location like str}"
-#         local mirror_list
-#         mirror_list="$(xrc mirror)"
-#         while IFS= read -r mirror; do    # It is said '-r' not supported in Bourne shell
-#             xrc_curl "$mirror/$mod"
-#             case $? in
-#                 0)  if [ "$i" -ne 1 ]; then
-#                         xrc_log debug "Current default mirror is $mirror"
-#                         xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$i{ print \$0 }" )"
-#                     fi
-#                     return 0;;
-#                 4)  return 4;;
-#             esac
-#             i=$((i+1))  # Support both ash, dash, bash
-#         done <<A
-# $mirror_list
-# A
-#         return 1
-#     }
 
     _xrc_curl_gitx(){   # Simple strategy
         local mod="${1:?Provide location like str}"
