@@ -474,7 +474,7 @@ A
     fi
     
     x(){
-        xrc x/v0
+        xrc x-cmd/v0
         x ${1:+"$@"}
     }
 
