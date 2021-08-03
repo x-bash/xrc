@@ -401,6 +401,7 @@ A
         xrc_log debug "Using module advise for completion."
         xrc advise/v0
 
+        # shellcheck disable=SC3010,SC2154
         _xrc_log_completer(){
             if [ "$cur" = "" ]; then
                 echo "+"
