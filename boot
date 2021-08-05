@@ -232,9 +232,9 @@ A
 
                         xrc mirror \
                             "https://raw.githubusercontent.com/x-bash/%s/master/%s" \
-                            "https://gitee.com/x-bash/%s/raw/master/%s" \
-                            "https://x-bash.github.io/%s/%s" \
-                            "https://x-bash.gitee.io/%s/%s"
+                            "https://gitee.com/x-bash/%s/raw/master/%s"
+                            # "https://x-bash.github.io/%s/%s"
+                            # "https://x-bash.gitee.io/%s/%s"
                     fi
                     cat "$fp"
                     return ;;
