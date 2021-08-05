@@ -305,7 +305,7 @@ $file\""
         local urlpath
         for mirror in $mirror_list; do
             # shellcheck disable=SC2059
-            urlpath="$(printf "%s/%s/%s" "$mirror" "$mod_repo" "$mod_subpath")"
+            urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
             xrc_log debug "Trying: $urlpath"
             xrc_curl "$urlpath"
 
@@ -317,7 +317,7 @@ $file\""
                     return 0;;
                 4)  xrc_log debug "Network unavailable."
                     return 4;;
-                *)  xrc_log debug "Mirror down is down.: $mirror"
+                *)  xrc_log debug "Mirror is down.: $urlpath"
             esac
             lineno=$((lineno+1))  # Support both ash, dash, bash
         done
