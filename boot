@@ -305,7 +305,7 @@ $file\""
         local urlpath
         for mirror in $mirror_list; do
             # shellcheck disable=SC2059
-            urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
+            urlpath="$(printf "%s/%s/%s" "$mirror" "$mod_repo" "$mod_subpath")"
             xrc_log debug "Trying: $urlpath"
             xrc_curl "$urlpath"
 
