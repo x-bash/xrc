@@ -238,6 +238,7 @@ A
                     fi
                     cat "$fp"
                     return ;;
+            reload) shift; eval "$(RELOAD=1 t="." _xrc_source_file_list_code "$@")" ;;
             *)      eval "$(t="." _xrc_source_file_list_code "$@")"
         esac
     }
@@ -274,9 +275,11 @@ A
                 code="$code
 $exec \"$file\""
             else
-                if [ "${X_CMD_SH_IN_USED#*$file}" != "${X_CMD_SH_IN_USED}" ]; then
-                    shift
-                    continue;   # exixted already. skip
+                if [ -z "$RELOAD" ]; then
+                    if [ "${X_CMD_SH_IN_USED#*$file}" != "${X_CMD_SH_IN_USED}" ]; then
+                        shift
+                        continue    # exixted already. skip
+                    fi
                 fi
                 code="$code
 $exec \"$file\" && \
@@ -321,7 +324,7 @@ $file\""
             esac
             lineno=$((lineno+1))  # Support both ash, dash, bash
         done <<A
-$(mirror_list)
+${mirror_list}
 A
         return 1
     }
@@ -359,7 +362,7 @@ If you confirm this script is secure and want to skip this warning for some purp
 A
                 printf "Input yes to continue. Otherwise exit > " >&2
                 local input
-                read input
+                read -r input
 
                 if [ "$input" != "yes" ]; then
                     echo "Exit becaause detect a non yes output: $input" >&2
