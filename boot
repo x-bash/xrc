@@ -238,7 +238,7 @@ A
                     fi
                     cat "$fp"
                     return ;;
-            reload) shift; eval "$(RELOAD=1 t="." _xrc_source_file_list_code "$@")" ;;
+            reload) shift; eval "$(___XRC_RELOAD=1 t="." _xrc_source_file_list_code "$@")" ;;
             *)      eval "$(t="." _xrc_source_file_list_code "$@")"
         esac
     }
@@ -275,7 +275,7 @@ A
                 code="$code
 $exec \"$file\""
             else
-                if [ -z "$RELOAD" ]; then
+                if [ -z "$___XRC_RELOAD" ]; then
                     if [ "${X_CMD_SH_IN_USED#*$file}" != "${X_CMD_SH_IN_USED}" ]; then
                         shift
                         continue    # exixted already. skip
@@ -480,8 +480,7 @@ A
     fi
     
     x(){
-        xrc x-cmd/v0
-        x ${1:+"$@"}
+        xrc reload x-cmd/v0 && x ${1:+"$@"}
     }
 
 fi
