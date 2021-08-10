@@ -303,7 +303,7 @@ $file\""
         local mirror
         local lineno=1
         local urlpath
-        for mirror in $mirror_list; do
+        while read -r mirror; do
             # shellcheck disable=SC2059
             urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
             xrc_log debug "Trying: $urlpath"
@@ -320,7 +320,9 @@ $file\""
                 *)  xrc_log debug "Mirror is down.: $urlpath"
             esac
             lineno=$((lineno+1))  # Support both ash, dash, bash
-        done
+        done <<A
+$(mirror_list)
+A
         return 1
     }
 
