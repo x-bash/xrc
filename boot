@@ -139,11 +139,14 @@ A
                     export TMPDIR
                     ;;
             clear)  shift;
-                    if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
+                    if ! grep "_xrc_http_get()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
                         xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
                         return 1
                     fi
                     rm -rf "$X_BASH_SRC_PATH" ;;
+            reinstall)
+                    xrc clear && RELOAD=1 xrc upgrade
+                    ;;
             log)    shift;
                     if [ $# -eq 0 ]; then
                         cat >&2 <<A
@@ -237,7 +240,13 @@ A
                     fi
                     cat "$fp"
                     return ;;
-            reload) shift; eval "$(___XRC_RELOAD=1 t="." _xrc_source_file_list_code "$@")" ;;
+            reload) shift
+                    if [ $# != 0 ]; then
+                        eval "$(___XRC_RELOAD=1 t="." _xrc_source_file_list_code "$@")" 
+                    else
+                        RELOAD=1 . "$X_BASH_SRC_PATH/../boot"
+                    fi
+                    ;;
             *)      eval "$(t="." _xrc_source_file_list_code "$@")"
         esac
     }
@@ -456,6 +465,7 @@ A
     },
     "update|u": {},
     "upgrade": {},
+    "reinstall": {},
     "cache": {},
     "clear": {},
     "log": {
