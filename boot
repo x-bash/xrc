@@ -243,7 +243,8 @@ A
                     return ;;
             reload) shift
                     if [ $# != 0 ]; then
-                        eval "$(___XRC_RELOAD=1 t="." _xrc_source_file_list_code "$@")" 
+                        local ___XRC_RELOAD=1
+                        eval "$(t="." _xrc_source_file_list_code "$@")" 
                     else
                         RELOAD=1 . "$X_BASH_SRC_PATH/../boot"
                     fi
