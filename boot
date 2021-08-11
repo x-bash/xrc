@@ -21,7 +21,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     xrc_curl() {
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
-            if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
+            if [ -z "$___XRC_UPDATE" ] && [ -f "$CACHE" ]; then
                 xrc_log debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
@@ -120,8 +120,9 @@ A
                         return 1
                     fi
                     eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
-            update) # shift;  UPDATE=1 xrc which "$@" 1>/dev/null         ;;
-                    shift;    ( UPDATE=1 ___XRC_RELOAD=1 xrc "$@" ) ;;
+            update) # shift;  ___XRC_UPDATE=1 xrc which "$@" 1>/dev/null       ;;
+                    # TODO: reload advise
+                    shift;  ( ___XRC_UPDATE=1 ___XRC_RELOAD=1 xrc "$@" ) ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
             export-all)
@@ -401,7 +402,7 @@ A
         fi
         TGT="$X_BASH_SRC_PATH/$module"
 
-        if [ -z "$UPDATE" ] && [ -f "$TGT" ]; then
+        if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
             echo "$TGT"
             return
         fi
