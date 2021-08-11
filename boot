@@ -228,13 +228,12 @@ A
                         return
                     fi
                     if [ ! -f "$fp" ]; then
-                        # xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
-
                         xrc mirror \
-                            "https://raw.githubusercontent.com/x-bash/%s/master/%s" \
-                            "https://gitee.com/x-bash/%s/raw/master/%s"
+                            "https://raw.githubusercontent.com/%s/%s/master/%s" \
+                            "https://gitee.com/%s/%s/raw/master/%s"
                             # "https://x-bash.github.io/%s/%s"
                             # "https://x-bash.gitee.io/%s/%s"
+                            # "https://sh.x-cmd.com"
                     fi
                     cat "$fp"
                     return ;;
@@ -294,7 +293,8 @@ $file\""
     xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
 
     _xrc_curl_gitx(){   # Simple strategy
-        local mod="${1:?Provide location like str}"
+        local repo="${1:?Provide reponame}"
+        local mod="${2:?Provide location like str}"
         local mod_repo=${mod%%/*}
         local mod_subpath=${mod#*/}
 
@@ -308,7 +308,7 @@ $file\""
         local urlpath
         while read -r mirror; do
             # shellcheck disable=SC2059
-            urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
+            urlpath="$(printf "$mirror" "$repo" "$mod_repo" "$mod_subpath")"
             xrc_log debug "Trying: $urlpath"
             xrc_curl "$urlpath"
 
@@ -395,7 +395,7 @@ A
         fi
 
         xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-        if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
+        if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
             xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
