@@ -145,7 +145,8 @@ A
                     fi
                     rm -rf "$X_BASH_SRC_PATH" ;;
             reinstall)
-                    xrc clear && RELOAD=1 xrc upgrade
+                    xrc clear
+                    RELOAD=1 xrc upgrade
                     ;;
             log)    shift;
                     if [ $# -eq 0 ]; then
