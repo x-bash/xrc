@@ -120,7 +120,8 @@ A
                         return 1
                     fi
                     eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
-            update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null         ;;
+            update) # shift;  UPDATE=1 xrc which "$@" 1>/dev/null         ;;
+                    shift;    ( UPDATE=1 ___XRC_RELOAD=1 xrc "$@" ) ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
             export-all)
