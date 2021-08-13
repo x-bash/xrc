@@ -3,9 +3,9 @@
 (
     git remote remove gitee 2>/dev/null
     git remote add gitee git@gitee.com:x-bash/x-bash.git
-    git pull gitee
+    git pull gitee "$(git branch | awk '$1="*"{ print $2 }')"
 ) || (
     git remote remove github 2>/dev/null
     git remote add github git@github.com:x-bash/x-bash.github.io.git
-    git pull github
+    git pull github "$(git branch | awk '$1="*"{ print $2 }')"
 )
