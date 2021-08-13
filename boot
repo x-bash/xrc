@@ -21,7 +21,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     xrc_curl() {
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
-            if [ -z "$UPDATE" ] && [ -f "$CACHE" ]; then
+            if [ -z "$___XRC_UPDATE" ] && [ -f "$CACHE" ]; then
                 xrc_log debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
@@ -120,7 +120,9 @@ A
                         return 1
                     fi
                     eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
-            update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null         ;;
+            update) # shift;  ___XRC_UPDATE=1 xrc which "$@" 1>/dev/null       ;;
+                    # TODO: reload advise
+                    shift;  ( ___XRC_UPDATE=1 ___XRC_RELOAD=1 xrc "$@" ) ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
             initrc) shift;              
@@ -167,11 +169,15 @@ A
                     export TMPDIR
                     ;;
             clear)  shift;
-                    if ! grep "xrc_clear()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
+                    if ! grep "_xrc_http_get()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
                         xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
                         return 1
                     fi
                     rm -rf "$X_BASH_SRC_PATH" ;;
+            reinstall)
+                    xrc clear
+                    RELOAD=1 xrc upgrade
+                    ;;
             log)    shift;
                     if [ $# -eq 0 ]; then
                         cat >&2 <<A
@@ -256,17 +262,23 @@ A
                         return
                     fi
                     if [ ! -f "$fp" ]; then
-                        # xrc mirror "https://x-bash.github.io" "https://x-bash.gitee.io" # "https://sh.x-cmd.com"
-
                         xrc mirror \
-                            "https://raw.githubusercontent.com/x-bash/%s/master/%s" \
-                            "https://gitee.com/x-bash/%s/raw/master/%s"
+                            "https://raw.githubusercontent.com/%s/%s/master/%s" \
+                            "https://gitee.com/%s/%s/raw/master/%s"
                             # "https://x-bash.github.io/%s/%s"
                             # "https://x-bash.gitee.io/%s/%s"
+                            # "https://sh.x-cmd.com"
                     fi
                     cat "$fp"
                     return ;;
-            reload) shift; eval "$(___XRC_RELOAD=1 t="." _xrc_source_file_list_code "$@")" ;;
+            reload) shift
+                    if [ $# != 0 ]; then
+                        local ___XRC_RELOAD=1
+                        eval "$(t="." _xrc_source_file_list_code "$@")" 
+                    else
+                        RELOAD=1 . "$X_BASH_SRC_PATH/../boot"
+                    fi
+                    ;;
             *)      eval "$(t="." _xrc_source_file_list_code "$@")"
         esac
     }
@@ -322,7 +334,8 @@ $file\""
     xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
 
     _xrc_curl_gitx(){   # Simple strategy
-        local mod="${1:?Provide location like str}"
+        local repo="${1:?Provide reponame}"
+        local mod="${2:?Provide location like str}"
         local mod_repo=${mod%%/*}
         local mod_subpath=${mod#*/}
 
@@ -336,7 +349,7 @@ $file\""
         local urlpath
         while read -r mirror; do
             # shellcheck disable=SC2059
-            urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
+            urlpath="$(printf "$mirror" "$repo" "$mod_repo" "$mod_subpath")"
             xrc_log debug "Trying: $urlpath"
             xrc_curl "$urlpath"
 
@@ -417,13 +430,13 @@ A
         fi
         TGT="$X_BASH_SRC_PATH/$module"
 
-        if [ -z "$UPDATE" ] && [ -f "$TGT" ]; then
+        if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
             echo "$TGT"
             return
         fi
 
         xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-        if ! CACHE="$TGT" _xrc_curl_gitx "$module"; then
+        if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
             xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
         fi
@@ -484,6 +497,7 @@ A
     },
     "update|u": {},
     "upgrade": {},
+    "reinstall": {},
     "cache": {},
     "clear": {},
     "log": {
