@@ -123,6 +123,34 @@ A
             update) shift;  UPDATE=1 xrc which "$@" 1>/dev/null         ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
+            initrc) shift;              
+                    case "$1" in
+                        add)    shift;
+                                (
+                                    for i in "$@"; do
+                                        s="$(printf "xrc %s # auto generated\n" "$1")"
+                                        if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc"; then
+                                            printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
+                                        fi
+                                    done
+                                )
+                                ;;
+                        del)    shift
+                                (
+                                    s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
+                                    for i in "$@"; do
+                                        s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
+                                    done
+                                    printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
+                                )
+                                ;;
+                        which)  printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
+                        mod)    shift
+                                awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
+                                ;;
+                        *)      cat "$X_CMD_SRC_PATH/.init.rc"
+                    esac
+                    ;;
             export-all)
                     export -f xrc
                     export -f x
@@ -254,7 +282,7 @@ A
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
 
     xrc_log debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
-    X_CMD_SRC_PATH="$HOME/.x-cmd/"                  # TODO: Using X_CMD_SRC_PATH
+    X_CMD_SRC_PATH="$HOME/.x-cmd"                  # TODO: Using X_CMD_SRC_PATH
     X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
@@ -483,4 +511,5 @@ A
         xrc reload x-cmd/v0 && x ${1:+"$@"}
     }
 
+    [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
 fi
