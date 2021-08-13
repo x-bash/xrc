@@ -443,7 +443,7 @@ A
         echo "$TGT"
     }
 
-    if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
+    if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
         xrc_log debug "Using module advise for completion."
         xrc advise/v0
 
