@@ -361,7 +361,7 @@ $file\""
                     return 0;;
                 4)  xrc_log debug "Network unavailable."
                     return 4;;
-                *)  xrc_log debug "Mirror is down.: $urlpath"
+                *)  xrc_log debug "Mirror is down: $urlpath"
             esac
             lineno=$((lineno+1))  # Support both ash, dash, bash
         done <<A
