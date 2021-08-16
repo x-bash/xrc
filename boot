@@ -130,8 +130,8 @@ A
                         add)    shift;
                                 (
                                     for i in "$@"; do
-                                        s="$(printf "xrc %s # auto generated\n" "$1")"
-                                        if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc"; then
+                                        s="$(printf "xrc %s # auto generated" "$i")"
+                                        if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
                                             printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
                                         fi
                                     done
@@ -146,7 +146,8 @@ A
                                     printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
                                 )
                                 ;;
-                        which)  printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
+                        which|w)  
+                                printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
                         mod)    shift
                                 awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
                                 ;;
