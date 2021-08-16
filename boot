@@ -57,7 +57,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             info|INFO)              level="INF";    level_code=1;   color="\e[36m";     shift ;;
             warn|WARN)              level="WRN";    level_code=2;   color="\e[33m";     shift ;;
             error|ERROR)            level="ERR";    level_code=3;   color="\e[31m";     shift ;;
-            *)                      level="verbose"           ;;
+            *)                      level="DBG"     ;;
         esac
 
         eval "[ $level_code -lt \"\${$FLAG_NAME:-1}\" ]" && return 0
