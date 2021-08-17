@@ -4,7 +4,8 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     if curl --version 1>/dev/null 2>&1; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
         _xrc_http_get(){
-            curl --fail "${1:?Provide target URL}"; 
+            # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
+            curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "${1:?Provide target URL}"; 
             local code=$?
             [ $code -eq 28 ] && return 4
             return $code
@@ -305,6 +306,7 @@ A
         while [ $# -ne 0 ]; do
             # What if the _xrc_which_one contains '"'
 
+            local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
             if ! file="$(_xrc_which_one "$1")"; then
                 echo "return 1"
                 return 0
