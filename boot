@@ -490,7 +490,7 @@ A
 
         }
 
-        advise xrc - <<A
+        advise init xrc - <<A
 {
     "cat|c": {
         "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64"
