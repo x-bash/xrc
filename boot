@@ -5,9 +5,11 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
         _xrc_http_get(){
             # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
-            curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "${1:?Provide target URL}"; 
+            xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
+            curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "${1:?Provide target URL}" 2>/dev/null
             local code=$?
-            [ $code -eq 28 ] && return 4
+            # TODO: figure out a way to distinguish timeout or network failure
+            # [ $code -eq 28 ] && return 4
             return $code
         }
     elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
@@ -29,7 +31,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
         fi
 
-        if _xrc_http_get "$1" 1>"$REDIRECT" 2>/dev/null; then
+        if _xrc_http_get "$1" 1>"$REDIRECT"; then
             if [ -n "$CACHE" ]; then
                 xrc_log debug "Copy the temp file to CACHE file: $CACHE"
                 mkdir -p "$(dirname "$CACHE")"
