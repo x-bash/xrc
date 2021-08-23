@@ -4,9 +4,12 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     if curl --version 1>/dev/null 2>&1; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
         _xrc_http_get(){
-            curl --fail "${1:?Provide target URL}"; 
+            # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
+            xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
+            curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "${1:?Provide target URL}" 2>/dev/null
             local code=$?
-            [ $code -eq 28 ] && return 4
+            # TODO: figure out a way to distinguish timeout or network failure
+            # [ $code -eq 28 ] && return 4
             return $code
         }
     elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
@@ -28,7 +31,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
         fi
 
-        if _xrc_http_get "$1" 1>"$REDIRECT" 2>/dev/null; then
+        if _xrc_http_get "$1" 1>"$REDIRECT"; then
             if [ -n "$CACHE" ]; then
                 xrc_log debug "Copy the temp file to CACHE file: $CACHE"
                 mkdir -p "$(dirname "$CACHE")"
@@ -57,7 +60,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             info|INFO)              level="INF";    level_code=1;   color="\e[36m";     shift ;;
             warn|WARN)              level="WRN";    level_code=2;   color="\e[33m";     shift ;;
             error|ERROR)            level="ERR";    level_code=3;   color="\e[31m";     shift ;;
-            *)                      level="verbose"           ;;
+            *)                      level="DBG"     ;;
         esac
 
         eval "[ $level_code -lt \"\${$FLAG_NAME:-1}\" ]" && return 0
@@ -125,11 +128,38 @@ A
                         return 1
                     fi
                     eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
-            update) # shift;  ___XRC_UPDATE=1 xrc which "$@" 1>/dev/null       ;;
-                    # TODO: reload advise
-                    shift;  ( ___XRC_UPDATE=1 ___XRC_RELOAD=1 xrc "$@" ) ;;
+            update) shift;  ( ___XRC_UPDATE=1 ___XRC_RELOAD=1 xrc "$@" ) ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
+            initrc) shift;              
+                    case "$1" in
+                        add)    shift;
+                                (
+                                    for i in "$@"; do
+                                        s="$(printf "xrc %s # auto generated" "$i")"
+                                        if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
+                                            printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
+                                        fi
+                                    done
+                                )
+                                ;;
+                        del)    shift
+                                (
+                                    s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
+                                    for i in "$@"; do
+                                        s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
+                                    done
+                                    printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
+                                )
+                                ;;
+                        which|w)  
+                                printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
+                        mod)    shift
+                                awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
+                                ;;
+                        *)      cat "$X_CMD_SRC_PATH/.init.rc"
+                    esac
+                    ;;
             export-all)
                     export -f xrc
                     export -f x
@@ -271,7 +301,7 @@ A
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
 
     xrc_log debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
-    X_CMD_SRC_PATH="$HOME/.x-cmd/"                  # TODO: Using X_CMD_SRC_PATH
+    X_CMD_SRC_PATH="$HOME/.x-cmd"                  # TODO: Using X_CMD_SRC_PATH
     X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
@@ -283,6 +313,7 @@ A
         while [ $# -ne 0 ]; do
             # What if the _xrc_which_one contains '"'
 
+            local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
             if ! file="$(_xrc_which_one "$1")"; then
                 echo "return 1"
                 return 0
@@ -344,7 +375,7 @@ $file\""
                     return 0;;
                 4)  xrc_log debug "Network unavailable."
                     return 4;;
-                *)  xrc_log debug "Mirror is down.: $urlpath"
+                *)  xrc_log debug "Mirror is down: $urlpath"
             esac
             lineno=$((lineno+1))  # Support both ash, dash, bash
         done <<A
@@ -426,7 +457,7 @@ A
         echo "$TGT"
     }
 
-    if [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
+    if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
         xrc_log debug "Using module advise for completion."
         xrc advise/v0
 
@@ -470,7 +501,7 @@ A
 
         }
 
-        advise xrc - <<A
+        advise init xrc - <<A
 {
     "cat|c": {
         "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64"
@@ -508,4 +539,5 @@ A
         xrc reload x-cmd/v0 && x ${1:+"$@"}
     }
 
+    [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
 fi
