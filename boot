@@ -84,6 +84,11 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             fi
         fi >&2
     }
+
+    case "$(xrc mirror|head -n1)" in
+        *gitee*)    XRC_CHINA_NET=1 ;;
+        *)          XRC_CHINA_NET=
+    esac
     
     xrc(){
         [ $# -eq 0 ] && set -- "help"
@@ -329,6 +334,12 @@ $file\""
                 0)  if [ "$lineno" -ne 1 ]; then
                         xrc_log debug "Current default mirror is $mirror"
                         xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
+
+                        # Set CHINA_NET FLAG
+                        case "$mirror" in
+                            *gitee*)    XRC_CHINA_NET=1 ;;
+                            *)          XRC_CHINA_NET=
+                        esac
                     fi
                     return 0;;
                 4)  xrc_log debug "Network unavailable."
