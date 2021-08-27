@@ -72,16 +72,14 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
             if [ $# -eq 0 ]; then
                 printf "${color}%s[%s]${timestamp}: " "$logger" "$level"
-                cat
-                printf "\e[0m\n"
+                cat | awk 'NR==1{ print($0) }; NR>=2{ print("> " $0); }; END{ printf("%s", "\033[0m"); }'
             else
                 printf "${color}%s[%s]${timestamp}: %s\e[0m\n" "$logger" "$level" "$*"
             fi
         else
             if [ $# -eq 0 ]; then
                 printf "%s[%s]${timestamp}: " "$logger" "$level"
-                cat
-                printf "\n"
+                cat | awk 'NR==1{ print($0) }; NR>=2{ print("> " $0); }; }'
             else
                 printf "%s[%s]${timestamp}: %s\n" "$logger" "$level" "$*"
             fi
