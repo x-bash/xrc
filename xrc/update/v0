@@ -1,4 +1,8 @@
 
+xrc_update_list_dependency(){
+    xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$(xrc which x-bash/xrc/update/awk.awk)"
+}
+
 xrc_update()(
     local IFS
     local line
@@ -7,21 +11,29 @@ xrc_update()(
     local queue="$1
 "
 
+    local aliasname
     while true; do
-        elem="${queue%%\n*}"
+        elem="${queue%%
+*}"
+        echo "|$elem|"
+        
+        [ "$elem" = "$queue" ] && break
         [ "$elem" = "" ] && break
-        queue="${queue#*\n}"
+        queue="${queue#*
+}"
+
 
         while read -r line; do
             [ "$line" = "" ] && break
-            if alias "xrc?$elem" 2>/dev/null 1>&2; then
+            aliasname=$(printf "%s" "$line" | tr "/" "?")
+            if alias "xrc?$aliasname" 1>/dev/null 2>&1; then
                 continue
             fi
-            alias "xrc?$elem"=1
+            alias "xrc?$aliasname"=1
             queue="${queue}${line}
 "
         done <<A
-$(xrc cat "$elem" | x which "$(xrc xrc/update/awk.awk)")
+$( ___XRC_UPDATE=1 ___XRC_RELOAD=1 xrc_update_list_dependency "$elem" )
 A
 
     done

@@ -10,6 +10,7 @@
         "**/con/*": "shellscript",
         "**/net/*": "shellscript",
         "**/el/*": "shellscript",
+        "**/*.awk": "awk",
         "*": "shellscript",
         "*install*": "shellscript"
     }
