@@ -520,6 +520,12 @@ A
         },
         "#n": "_xrc_log_completer"
     },
+    "initrc": {
+        "add": null,
+        "del": null,
+        "which|w": null,
+        "mod": null
+    },
     "mirror": {
         "#n": [
             "https://x-bash.gitee.io",
