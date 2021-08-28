@@ -129,7 +129,7 @@ A
             update) shift;  ( xrc x-bash/xrc/update/v0;  xrc_update "$@" ) ;;
             upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
-            initrc) shift;              
+            initrc) shift;
                     case "$1" in
                         add)    shift;
                                 (
