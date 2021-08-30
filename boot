@@ -464,7 +464,7 @@ A
             if [ "$cur" = "" ]; then
                 echo "+"
                 echo "-"
-                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64  | awk '{ print $0 "/"; }'
+                ls $X_BASH_SRC_PATH | grep -v BASE64  | awk '{ print $0 "/"; }'
                 # echo "$X_CMD_SH_IN_USED"  | awk '{ print $0 "/"; }'
             elif [[ "$cur" = */* ]]; then
                 echo "${cur%/*}/debug"
@@ -472,11 +472,11 @@ A
                 echo "${cur%/*}/warn"
                 echo "${cur%/*}/error"
             elif [[ "$cur" =~ ^\+ ]]; then
-                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk '{ print "+" $0; }'
+                ls $X_BASH_SRC_PATH | grep -v BASE64 | awk '{ print "+" $0; }'
             elif [[ "$cur" =~ ^\- ]]; then
-                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk '{ print "-" $0; }'
+                ls $X_BASH_SRC_PATH | grep -v BASE64 | awk '{ print "-" $0; }'
             else
-                ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64 | awk -v cur="$cur" '
+                ls $X_BASH_SRC_PATH | grep -v BASE64 | awk -v cur="$cur" '
                     BEGIN { arr_len=0; }
                     $0~"^"cur{
                         arr_len += 1
@@ -502,10 +502,10 @@ A
         advise init xrc - <<A
 {
     "cat|c": {
-        "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64"
+        "#n": "ls $X_BASH_SRC_PATH | grep -v BASE64"
     },
     "which|w": {
-        "#n": "ls /Users/edwinjhlee/.x-cmd/x-bash | grep -v BASE64"
+        "#n": "ls $X_BASH_SRC_PATH | grep -v BASE64"
     },
     "update|u": {},
     "upgrade": {},
