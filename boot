@@ -86,11 +86,6 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         fi >&2
     }
 
-    case "$(xrc mirror|head -n1)" in
-        *gitee*)    XRC_CHINA_NET=1 ;;
-        *)          XRC_CHINA_NET=
-    esac
-    
     xrc(){
         [ $# -eq 0 ] && set -- "help"
         case "$1" in
@@ -336,6 +331,11 @@ $file\""
         done
         echo "$code"
     }
+
+    case "$(xrc mirror|head -n1)" in
+        *gitee*)    XRC_CHINA_NET=1 ;;
+        *)          XRC_CHINA_NET=
+    esac
 
     xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
 
