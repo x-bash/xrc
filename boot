@@ -539,9 +539,9 @@ A
         :
     fi
     
+    [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
+
     x(){
         xrc reload x-cmd/v0 && x ${1:+"$@"}
     }
-
-    [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
 fi
