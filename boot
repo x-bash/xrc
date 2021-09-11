@@ -6,7 +6,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         _xrc_http_get(){
             # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
             xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
-            curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "${1:?Provide target URL}" 2>/dev/null
+            eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\""
             local code=$?
             # TODO: figure out a way to distinguish timeout or network failure
             # [ $code -eq 28 ] && return 4
@@ -542,6 +542,6 @@ A
     [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
 
     x(){
-        xrc reload x-cmd/v0 && x ${1:+"$@"}
+        xrc reload xcmd/v0 && x ${1:+"$@"}
     }
 fi
