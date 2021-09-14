@@ -28,7 +28,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
                 xrc_log debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
-            REDIRECT=$TMPDIR.x-bash-temp-download.$RANDOM
+            REDIRECT=$TMPDIR/x-bash-temp-download.$RANDOM
         fi
 
         if _xrc_http_get "$1" 1>"$REDIRECT"; then
