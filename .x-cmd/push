@@ -12,6 +12,10 @@ git remote remove github 2>/dev/null
 git remote add github git@github.com:x-bash/x-bash.github.io.git
 git push github
 
+git remote remove github2 2>/dev/null
+git remote add github2 git@github.com:x-bash/x-bash.git
+git push github2
+
 git remote remove github-mirror 2>/dev/null
 git remote add github-mirror git@github.com:x-bash/x-bash-boot-mirror.git
 git push github-mirror
