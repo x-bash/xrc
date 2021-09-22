@@ -265,6 +265,27 @@ A
                 xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
                 echo "$RESOURCE_NAME"; return 0
                 ;;
+            @x/*)
+                xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
+                local module="$RESOURCE_NAME"
+                if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
+                    module="$module/latest"         # If it is short alias like str (short for str/latest)
+                    xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
+                fi
+                TGT="$X_BASH_SRC_PATH/$module"
+
+                if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
+                    echo "$TGT"
+                    return
+                fi
+
+                xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
+                if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
+                    xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+                    return 1
+                fi
+                echo "$TGT"
+                ;;
             ./*|../*)
                 xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
                 local tmp
@@ -311,33 +332,12 @@ A
                 ;;
             @/*)    ;;
             @*/*)   ;;
-            *)
-                local fp
+            *)  local fp
                 if _xrc_search_path . "$RESOURCE_NAME"; then
                     return
                 fi
-
-                xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
-                local module="$RESOURCE_NAME"
-                if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
-                    module="$module/latest"         # If it is short alias like str (short for str/latest)
-                    xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
-                fi
-                TGT="$X_BASH_SRC_PATH/$module"
-
-                if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
-                    echo "$TGT"
-                    return
-                fi
-
-                xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-                if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
-                    xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
-                    return 1
-                fi
-                echo "$TGT"
+                _xrc_which_one "@x/$RESOURCE_NAME"
         esac
-
     }
 
     # Section: export-all
