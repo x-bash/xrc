@@ -2,7 +2,7 @@
 
 if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
-# Section: network
+    # Section: network
 
     if curl --version 1>/dev/null 2>&1; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
@@ -48,7 +48,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         fi
     }
 
-# EndSection
+    # EndSection
 
     _xrc_search_path(){
         local cur="${1:?Provide starting path}"
@@ -63,7 +63,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         return 1
     }
 
-# Section: log
+    # Section: log
 
     XRC_LOG_COLOR=1
     XRC_LOG_TIMESTAMP=      # "+%H:%M:%S"      # Enable Timestamp.
@@ -84,7 +84,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         esac
 
         eval "[ $level_code -lt \"\${$FLAG_NAME:-1}\" ]" && return 0
-        
+
         local timestamp=
         [ -n "$XRC_LOG_TIMESTAMP" ] && timestamp=" [$(date "${XRC_LOG_TIMESTAMP}")]"
 
@@ -105,7 +105,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             fi
         fi >&2
     }
-# EndSection
+    # EndSection
 
     xrc(){
         [ $# -eq 0 ] && set -- "help"
@@ -147,7 +147,7 @@ A
                                     printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
                                 )
                                 ;;
-                        which|w)  
+                        which|w)
                                 printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
                         mod)    shift
                                 awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
@@ -184,13 +184,13 @@ A
                     if [ $# -eq 0 ]; then
                         cat >&2 <<A
 xrc log     log control facility
-        Usage: 
+        Usage:
             xrc log init [ module ]
             xrc log [... +module | -module | module/log-level ]
 Subcommand:
         init <module>:                  Generate function '<module>_log'
         timestamp < on | off | <format> >:
-                                        off, default setting. shutdown the timestamp output in log 
+                                        off, default setting. shutdown the timestamp output in log
                                         on, default format is +%H:%M:%S
                                         <format>, customized timestamp format like "+%H:%M:%S", "+%m/%d-%H:%M:%S"
 Example:
@@ -213,7 +213,7 @@ A
                             for i in "$@"; do
                                 var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
                                 eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
-                            done 
+                            done
                             return 0 ;;
                         timestamp)
                             case "$2" in
@@ -232,10 +232,10 @@ A
                     while [ $# -ne 0 ]; do
                         case "$1" in
                             -*) var="$(echo "XRC_LOG_LEVEL_${1#-}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=1"   
+                                eval "$var=1"
                                 xrc_log info "Level of logger [${1#-} is set to [info]" ;;
                             +*) var="$(echo "XRC_LOG_LEVEL_${1#+}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=0"   
+                                eval "$var=0"
                                 xrc_log info "Level of logger [${1#+}] is set to [debug]" ;;
                             *)
                                 level="${1#*/}"
@@ -248,7 +248,7 @@ A
                                     none|n|no)                  level=none;     level_code=4 ;;
                                     *)                          level=debug;    level_code=0 ;;
                                 esac
-                                xrc_log info "Level of logger [$var] is set to [$level]" 
+                                xrc_log info "Level of logger [$var] is set to [$level]"
                                 var="$(echo "XRC_LOG_LEVEL_${var}" | tr "[:lower:]" "[:upper:]")"
                                 eval "$var=$level_code" ;;
                         esac
@@ -276,7 +276,7 @@ A
             reload) shift
                     if [ $# != 0 ]; then
                         local ___XRC_RELOAD=1
-                        eval "$(t="." _xrc_source_file_list_code "$@")" 
+                        eval "$(t="." _xrc_source_file_list_code "$@")"
                     else
                         RELOAD=1 . "$X_BASH_SRC_PATH/../boot"
                     fi
@@ -424,8 +424,7 @@ A
                     return 1
                 fi
             fi
-            
-            # TODO: It seems base64 is everywhere. Find out whether it could be a reasonable dependency.
+
             TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
                 xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
@@ -482,7 +481,7 @@ A
                     BEGIN { arr_len=0; }
                     $0~"^"cur{
                         arr_len += 1
-                        arr[arr_len] = $0; 
+                        arr[arr_len] = $0;
                         if ( $0 !~ /\/$/ ) arr[arr_len] = arr[arr_len] "/"
                     }
                     END {
@@ -501,6 +500,7 @@ A
 
         }
 
+    # Section: advise and help
         advise init xrc - <<A
 {
     "cat|c": {
@@ -561,7 +561,8 @@ Subcommand:
         debug|d         Control debug flags.
 " >&2
     }
-    
+    # EndSection
+
     [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
 
     x(){
