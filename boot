@@ -110,178 +110,59 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     xrc(){
         [ $# -eq 0 ] && set -- "help"
         case "$1" in
-            help)   _xrc_help;  return ;;
-            c|cat)  shift;
-                    eval "$(t="cat" _xrc_source_file_list_code "$@")" ;;
-            w|which)  shift;
-                    if [ $# -eq 0 ]; then
-                        cat >&2 <<A
+            help)       _xrc_help;  return ;;
+            c|cat)      shift;
+                        eval "$(t="cat" _xrc_source_file_list_code "$@")" ;;
+            w|which)    shift;
+                        if [ $# -eq 0 ]; then
+                            cat >&2 <<A
 xrc which  Download lib files and print the local path.
         Uasge:  xrc which <lib> [<lib>...]
         Example: source "$(xrc which std/str)"
 A
-                        return 1
-                    fi
-                    eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
-            update) shift;  ( xrc x-bash/xrc/update/v0;  xrc_update "$@" ) ;;
-            upgrade)shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
-            cache)  shift;  echo "$X_BASH_SRC_PATH" ;;
-            initrc) shift;
-                    case "$1" in
-                        add)    shift;
-                                (
-                                    for i in "$@"; do
-                                        s="$(printf "xrc %s # auto generated" "$i")"
-                                        if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
-                                            printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
-                                        fi
-                                    done
-                                )
-                                ;;
-                        del)    shift
-                                (
-                                    s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
-                                    for i in "$@"; do
-                                        s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
-                                    done
-                                    printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
-                                )
-                                ;;
-                        which|w)
-                                printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
-                        mod)    shift
-                                awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
-                                ;;
-                        *)      cat "$X_CMD_SRC_PATH/.init.rc"
-                    esac
-                    ;;
+                            return 1
+                        fi
+                        eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
+            update)     shift;  ( xrc x-bash/xrc/update/v0;  xrc_update "$@" ) ;;
+            upgrade)    shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
+            cache)      shift;  echo "$X_BASH_SRC_PATH" ;;
+            initrc)     shift;  _xrc_initrc "$@" ;;
             export-all)
-                    export -f xrc
-                    export -f x
-                    export -f _xrc_curl_gitx
-                    export -f _xrc_http_get
-                    export -f _xrc_logger
-                    export -f _xrc_source_file_list_code
-                    export -f xrc_curl
+                        export -f xrc
+                        export -f x
+                        export -f _xrc_curl_gitx
+                        export -f _xrc_http_get
+                        export -f _xrc_logger
+                        export -f _xrc_source_file_list_code
+                        export -f xrc_curl
 
-                    export X_CMD_SRC_SHELL
-                    export X_BASH_SRC_PATH
-                    export XRC_LOG_COLOR
-                    export XRC_LOG_TIMESTAMP
-                    export TMPDIR
-                    ;;
-            clear)  shift;
-                    if ! grep "_xrc_http_get()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
-                        xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
-                        return 1
-                    fi
-                    rm -rf "$X_BASH_SRC_PATH" ;;
+                        export X_CMD_SRC_SHELL
+                        export X_BASH_SRC_PATH
+                        export XRC_LOG_COLOR
+                        export XRC_LOG_TIMESTAMP
+                        export TMPDIR
+                        ;;
+            clear)      shift;
+                        if ! grep "_xrc_http_get()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
+                            xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
+                            return 1
+                        fi
+                        rm -rf "$X_BASH_SRC_PATH" ;;
             reinstall)
-                    xrc clear
-                    RELOAD=1 xrc upgrade
-                    ;;
-            log)    shift;
-                    if [ $# -eq 0 ]; then
-                        cat >&2 <<A
-xrc log     log control facility
-        Usage:
-            xrc log init [ module ]
-            xrc log [... +module | -module | module/log-level ]
-Subcommand:
-        init <module>:                  Generate function '<module>_log'
-        timestamp < on | off | <format> >:
-                                        off, default setting. shutdown the timestamp output in log
-                                        on, default format is +%H:%M:%S
-                                        <format>, customized timestamp format like "+%H:%M:%S", "+%m/%d-%H:%M:%S"
-Example:
-        Enable debug log for module json:
-                xrc log +json          or   xrc log json
-                xrc log json/verbose   or   xrc log json/v
-                xrc log json/debug     or   xrc log json/d
-        Dsiable debug log for module json:
-                xrc log -json
-                xrc log json/info
-A
-                        return 1
-                    fi
-                    local var
-                    local level_code=0
-
-                    case "$1" in
-                        init)
-                            shift;
-                            for i in "$@"; do
-                                var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
-                                eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
-                            done
-                            return 0 ;;
-                        timestamp)
-                            case "$2" in
-                                on)     XRC_LOG_TIMESTAMP="+%H:%M:%S";      return 0   ;;
-                                off)    XRC_LOG_TIMESTAMP= ;                return 0   ;;
-                                *)      printf "Try customized timestamp format wit date command:\n"
-                                        if date "$2"; then
-                                            XRC_LOG_TIMESTAMP="$2"
-                                            return 0
-                                        fi
-                                        return 1    ;;
-                            esac
-                    esac
-
-                    local level
-                    while [ $# -ne 0 ]; do
-                        case "$1" in
-                            -*) var="$(echo "XRC_LOG_LEVEL_${1#-}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=1"
-                                xrc_log info "Level of logger [${1#-} is set to [info]" ;;
-                            +*) var="$(echo "XRC_LOG_LEVEL_${1#+}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=0"
-                                xrc_log info "Level of logger [${1#+}] is set to [debug]" ;;
-                            *)
-                                level="${1#*/}"
-                                var="${1%/*}"
-                                case "$level" in
-                                    debug|dbg|verbose|v)        level=debug;    level_code=0 ;;
-                                    info|INFO|i)                level=info;     level_code=1 ;;
-                                    warn|WARN|w)                level=warn;     level_code=2 ;;
-                                    error|ERROR|e)              level=error;    level_code=3 ;;
-                                    none|n|no)                  level=none;     level_code=4 ;;
-                                    *)                          level=debug;    level_code=0 ;;
-                                esac
-                                xrc_log info "Level of logger [$var] is set to [$level]"
-                                var="$(echo "XRC_LOG_LEVEL_${var}" | tr "[:lower:]" "[:upper:]")"
-                                eval "$var=$level_code" ;;
-                        esac
-                        shift
-                    done ;;
-            mirror) shift;
-                    local fp="$X_BASH_SRC_PATH/.source.mirror.list"
-                    if [ $# -ne 0 ]; then
-                        mkdir -p "$(dirname "$fp")"
-                        local IFS="
-";
-                        echo "$*" >"$fp"
-                        return
-                    fi
-                    if [ ! -f "$fp" ]; then
-                        xrc mirror \
-                            "https://raw.githubusercontent.com/%s/%s/master/%s" \
-                            "https://gitee.com/%s/%s/raw/master/%s"
-                            # "https://x-bash.github.io/%s/%s"
-                            # "https://x-bash.gitee.io/%s/%s"
-                            # "https://sh.x-cmd.com"
-                    fi
-                    cat "$fp"
-                    return ;;
-            reload) shift
-                    if [ $# != 0 ]; then
-                        local ___XRC_RELOAD=1
-                        eval "$(t="." _xrc_source_file_list_code "$@")"
-                    else
-                        RELOAD=1 . "$X_BASH_SRC_PATH/../boot"
-                    fi
-                    ;;
-            *)      eval "$(t="." _xrc_source_file_list_code "$@")"
+                        xrc clear
+                        RELOAD=1 xrc upgrade
+                        ;;
+            log)        shift;  _xrc_log "$@" ;;
+            mirror)     shift;  _xrc_mirror "$@" ; return ;;
+            reload)     shift
+                        if [ $# != 0 ]; then
+                            local ___XRC_RELOAD=1
+                            eval "$(t="." _xrc_source_file_list_code "$@")"
+                        else
+                            RELOAD=1 . "$X_BASH_SRC_PATH/../boot"
+                        fi
+                        ;;
+            *)          eval "$(t="." _xrc_source_file_list_code "$@")"
         esac
     }
 
@@ -456,6 +337,138 @@ A
         echo "$TGT"
     }
 
+    # Section: initrc
+    _xrc_initrc(){
+        case "$1" in
+            add)    shift;
+                    (
+                        for i in "$@"; do
+                            s="$(printf "xrc %s # auto generated" "$i")"
+                            if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
+                                printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
+                            fi
+                        done
+                    )
+                    ;;
+            del)    shift
+                    (
+                        s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
+                        for i in "$@"; do
+                            s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
+                        done
+                        printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
+                    )
+                    ;;
+            which|w)
+                    printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
+            mod)    shift
+                    awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
+                    ;;
+            *)      cat "$X_CMD_SRC_PATH/.init.rc"
+        esac
+    }
+    # EndSection
+
+
+    _xrc_mirror(){
+        local fp="$X_BASH_SRC_PATH/.source.mirror.list"
+        if [ $# -ne 0 ]; then
+            mkdir -p "$(dirname "$fp")"
+            local IFS="
+";
+            printf "%s" "$*" >"$fp"
+            return
+        fi
+        if [ ! -f "$fp" ]; then
+            _xrc_mirror \
+                "https://raw.githubusercontent.com/%s/%s/master/%s" \
+                "https://gitee.com/%s/%s/raw/master/%s"
+                # "https://x-bash.github.io/%s/%s"
+                # "https://x-bash.gitee.io/%s/%s"
+                # "https://sh.x-cmd.com"
+        fi
+        cat "$fp"
+    }
+
+    # Section: logctl, consider extracting it into individual repository.
+    _xrc_log() {
+        if [ $# -eq 0 ]; then
+            cat >&2 <<A
+xrc log     log control facility
+        Usage:
+            xrc log init [ module ]
+            xrc log [... +module | -module | module/log-level ]
+Subcommand:
+        init <module>:                  Generate function '<module>_log'
+        timestamp < on | off | <format> >:
+                                        off, default setting. shutdown the timestamp output in log
+                                        on, default format is +%H:%M:%S
+                                        <format>, customized timestamp format like "+%H:%M:%S", "+%m/%d-%H:%M:%S"
+Example:
+        Enable debug log for module json:
+                xrc log +json          or   xrc log json
+                xrc log json/verbose   or   xrc log json/v
+                xrc log json/debug     or   xrc log json/d
+        Dsiable debug log for module json:
+                xrc log -json
+                xrc log json/info
+A
+                        return 1
+        fi
+        local var
+        local level_code=0
+
+        case "$1" in
+            init)
+                shift;
+                for i in "$@"; do
+                    var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
+                    eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
+                done
+                return 0 ;;
+            timestamp)
+                case "$2" in
+                    on)     XRC_LOG_TIMESTAMP="+%H:%M:%S";      return 0   ;;
+                    off)    XRC_LOG_TIMESTAMP= ;                return 0   ;;
+                    *)      printf "Try customized timestamp format wit date command:\n"
+                            if date "$2"; then
+                                XRC_LOG_TIMESTAMP="$2"
+                                return 0
+                            fi
+                            return 1    ;;
+                esac
+        esac
+
+        local level
+        while [ $# -ne 0 ]; do
+            case "$1" in
+                -*) var="$(echo "XRC_LOG_LEVEL_${1#-}" | tr "[:lower:]" "[:upper:]")"
+                    eval "$var=1"
+                    xrc_log info "Level of logger [${1#-} is set to [info]" ;;
+                +*) var="$(echo "XRC_LOG_LEVEL_${1#+}" | tr "[:lower:]" "[:upper:]")"
+                    eval "$var=0"
+                    xrc_log info "Level of logger [${1#+}] is set to [debug]" ;;
+                *)
+                    level="${1#*/}"
+                    var="${1%/*}"
+                    case "$level" in
+                        debug|dbg|verbose|v)        level=debug;    level_code=0 ;;
+                        info|INFO|i)                level=info;     level_code=1 ;;
+                        warn|WARN|w)                level=warn;     level_code=2 ;;
+                        error|ERROR|e)              level=error;    level_code=3 ;;
+                        none|n|no)                  level=none;     level_code=4 ;;
+                        *)                          level=debug;    level_code=0 ;;
+                    esac
+                    xrc_log info "Level of logger [$var] is set to [$level]"
+                    var="$(echo "XRC_LOG_LEVEL_${var}" | tr "[:lower:]" "[:upper:]")"
+                    eval "$var=$level_code" ;;
+            esac
+            shift
+        done
+    }
+
+
+    # Section: advise and help
     if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
         xrc_log debug "Using module advise for completion."
         xrc advise/v0
@@ -500,7 +513,7 @@ A
 
         }
 
-    # Section: advise and help
+
         advise init xrc - <<A
 {
     "cat|c": {
