@@ -141,7 +141,7 @@ A
             log)        shift;  _xrc_log "$@" ;;
             mirror)     shift;  _xrc_mirror "$@" ; return ;;
             reload)     shift
-                        if [ $# != 0 ]; then
+                        if [ "$#" != 0 ]; then
                             local ___XRC_RELOAD=1
                             eval "$(t="." _xrc_source_file_list_code "$@")"
                         else
