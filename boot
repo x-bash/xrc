@@ -127,21 +127,7 @@ A
             upgrade)    shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
             cache)      shift;  echo "$X_BASH_SRC_PATH" ;;
             initrc)     shift;  _xrc_initrc "$@" ;;
-            export-all)
-                        export -f xrc
-                        export -f x
-                        export -f _xrc_curl_gitx
-                        export -f _xrc_http_get
-                        export -f _xrc_logger
-                        export -f _xrc_source_file_list_code
-                        export -f xrc_curl
-
-                        export X_CMD_SRC_SHELL
-                        export X_BASH_SRC_PATH
-                        export XRC_LOG_COLOR
-                        export XRC_LOG_TIMESTAMP
-                        export TMPDIR
-                        ;;
+            export-all) _xrc_export_all ;;
             clear)      shift;
                         if ! grep "_xrc_http_get()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
                             xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
@@ -166,6 +152,8 @@ A
         esac
     }
 
+
+    # Section: initialize
     xrc log init xrc
 
     X_CMD_SRC_SHELL="sh"
@@ -181,6 +169,8 @@ A
     X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$X_BASH_SRC_PATH"
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
+
+    # EndSection
 
     _xrc_source_file_list_code(){
         local code=""
@@ -337,39 +327,24 @@ A
         echo "$TGT"
     }
 
-    # Section: initrc
-    _xrc_initrc(){
-        case "$1" in
-            add)    shift;
-                    (
-                        for i in "$@"; do
-                            s="$(printf "xrc %s # auto generated" "$i")"
-                            if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
-                                printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
-                            fi
-                        done
-                    )
-                    ;;
-            del)    shift
-                    (
-                        s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
-                        for i in "$@"; do
-                            s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
-                        done
-                        printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
-                    )
-                    ;;
-            which|w)
-                    printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
-            mod)    shift
-                    awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
-                    ;;
-            *)      cat "$X_CMD_SRC_PATH/.init.rc"
-        esac
+    # Section: export-all
+    _xrc_export_all(){
+        export -f xrc
+        export -f x
+        export -f _xrc_curl_gitx
+        export -f _xrc_http_get
+        export -f _xrc_logger
+        export -f _xrc_source_file_list_code
+        export -f xrc_curl
+
+        export X_CMD_SRC_SHELL
+        export X_BASH_SRC_PATH
+        export XRC_LOG_COLOR
+        export XRC_LOG_TIMESTAMP
+        export TMPDIR
     }
-    # EndSection
 
-
+    # Section: mirror
     _xrc_mirror(){
         local fp="$X_BASH_SRC_PATH/.source.mirror.list"
         if [ $# -ne 0 ]; then
@@ -389,8 +364,9 @@ A
         fi
         cat "$fp"
     }
+    # EndSection
 
-    # Section: logctl, consider extracting it into individual repository.
+    # Section: logctl consider extracting it into individual repository
     _xrc_log() {
         if [ $# -eq 0 ]; then
             cat >&2 <<A
@@ -466,7 +442,7 @@ A
             shift
         done
     }
-
+    # EndSection
 
     # Section: advise and help
     if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
@@ -576,7 +552,39 @@ Subcommand:
     }
     # EndSection
 
+    # Section: initrc
+    _xrc_initrc(){
+        case "$1" in
+            add)    shift;
+                    (
+                        for i in "$@"; do
+                            s="$(printf "xrc %s # auto generated" "$i")"
+                            if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
+                                printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
+                            fi
+                        done
+                    )
+                    ;;
+            del)    shift
+                    (
+                        s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
+                        for i in "$@"; do
+                            s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
+                        done
+                        printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
+                    )
+                    ;;
+            which|w)
+                    printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
+            mod)    shift
+                    awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
+                    ;;
+            *)      cat "$X_CMD_SRC_PATH/.init.rc"
+        esac
+    }
+
     [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
+    # EndSection
 
     x(){
         xrc reload xcmd/v0 && x ${1:+"$@"}
