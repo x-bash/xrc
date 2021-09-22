@@ -1,6 +1,9 @@
 # shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
 if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
+
+# Section: network
+
     if curl --version 1>/dev/null 2>&1; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
         _xrc_http_get(){
@@ -45,6 +48,23 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
         fi
     }
 
+# EndSection
+
+    _xrc_search_path(){
+        local cur="${1:?Provide starting path}"
+        local relative_filepath="${2:?Provide relative filepath}"
+        while [ ! "$cur" = "" ]; do
+            if [ -f "$cur/$relative_filepath" ]; then
+                printf "%s" "$cur"
+                return 0
+            fi
+            cur=${cur%/*}
+        done
+        return 1
+    }
+
+# Section: log
+
     XRC_LOG_COLOR=1
     XRC_LOG_TIMESTAMP=      # "+%H:%M:%S"      # Enable Timestamp.
     _xrc_logger(){
@@ -85,30 +105,12 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             fi
         fi >&2
     }
+# EndSection
 
     xrc(){
         [ $# -eq 0 ] && set -- "help"
         case "$1" in
-            help)   cat >&2 <<A
-xrc     x-bash core function.
-        Uasge:  xrc <lib> [<lib>...]
-        Notice, builtin command 'source' format is 'source <lib> [argument...]'"
-        Please visit following hosting repository for more information:
-            https://gitee.com/x-bash/x-bash
-            https://github.com/x-bash/x-bash.github.io
-            https://gitlab.com/x-bash/x-bash
-            https://bitbucket.com/x-bash/x-bash
-
-Subcommand:
-        cat|c           Provide cat facility
-        which|w         Provide local cache file location
-        update|u        Update file
-        upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
-        cache           Provide cache filepath
-        clear           Clear the cache
-        debug|d         Control debug flags.
-A
-                    return ;;
+            help)   _xrc_help;  return ;;
             c|cat)  shift;
                     eval "$(t="cat" _xrc_source_file_list_code "$@")" ;;
             w|which)  shift;
@@ -538,6 +540,27 @@ A
 A
         :
     fi
+
+    _xrc_help(){
+        printf "xrc     x-bash core function.
+        Uasge:  xrc <lib> [<lib>...]
+        Notice, builtin command 'source' format is 'source <lib> [argument...]'
+        Please visit following hosting repository for more information:
+            https://gitee.com/x-bash/x-bash
+            https://github.com/x-bash/x-bash.github.io
+            https://gitlab.com/x-bash/x-bash
+            https://bitbucket.com/x-bash/x-bash
+
+Subcommand:
+        cat|c           Provide cat facility
+        which|w         Provide local cache file location
+        update|u        Update file
+        upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
+        cache           Provide cache filepath
+        clear           Clear the cache
+        debug|d         Control debug flags.
+" >&2
+    }
     
     [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
 
