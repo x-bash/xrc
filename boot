@@ -258,73 +258,86 @@ A
     _xrc_which_one(){
         local RESOURCE_NAME=${1:?Provide resource name};
 
-        if [ "${RESOURCE_NAME#/}" != "$RESOURCE_NAME" ]; then
-            xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
-            echo "$RESOURCE_NAME"; return 0
-        fi
-
-        if [ "${RESOURCE_NAME#\./}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#\.\./}" != "$RESOURCE_NAME" ]; then
-            xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
-            local tmp
-            if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
-                echo "$tmp/$(basename "$RESOURCE_NAME")"
-                return 0
-            else
-                xrc_log warn "Local file not exists: $RESOURCE_NAME"
-                return 1
-            fi
-        fi
-
         local TGT
-        if [ "${RESOURCE_NAME#http://}" != "$RESOURCE_NAME" ] || [ "${RESOURCE_NAME#https://}" != "$RESOURCE_NAME" ]; then
-            xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
-            if [ -z "$NOWARN" ]; then
-                echo "Sourcing script from unknown location: " "$RESOURCE_NAME"
-                cat >&2 <<A
+
+        case "$RESOURCE_NAME" in
+            /*)
+                xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
+                echo "$RESOURCE_NAME"; return 0
+                ;;
+            ./*|../*)
+                xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
+                local tmp
+                if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
+                    echo "$tmp/$(basename "$RESOURCE_NAME")"
+                    return 0
+                else
+                    xrc_log warn "Local file not exists: $RESOURCE_NAME"
+                    return 1
+                fi
+                ;;
+            @github/*|@gh/*)             # using github service
+                ;;
+            @gt/*|@gitee/*)             # using github service
+                ;;
+            http://*|https://*)
+                xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
+                if [ -z "$NOWARN" ]; then
+                    echo "Sourcing script from unknown location: " "$RESOURCE_NAME"
+                    cat >&2 <<A
 SECURITY WARNING! Sourcing script from unknown location: $RESOURCE_NAME
 If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
     > NOWARN=1 xrc "$RESOURCE_NAME"
 
 A
-                printf "Input yes to continue. Otherwise exit > " >&2
-                local input
-                read -r input
+                    printf "Input yes to continue. Otherwise exit > " >&2
+                    local input
+                    read -r input
 
-                if [ "$input" != "yes" ]; then
-                    echo "Exit becaause detect a non yes output: $input" >&2
+                    if [ "$input" != "yes" ]; then
+                        echo "Exit becaause detect a non yes output: $input" >&2
+                        return 1
+                    fi
+                fi
+
+                TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
+                if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
+                    xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
                     return 1
                 fi
-            fi
 
-            TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
-            if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
-                xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
-                return 1
-            fi
+                echo "$TGT"
+                return 0
+                ;;
+            @/*)    ;;
+            @*/*)   ;;
+            *)
+                local fp
+                if _xrc_search_path . "$RESOURCE_NAME"; then
+                    return
+                fi
 
-            echo "$TGT"
-            return 0
-        fi
+                xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
+                local module="$RESOURCE_NAME"
+                if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
+                    module="$module/latest"         # If it is short alias like str (short for str/latest)
+                    xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
+                fi
+                TGT="$X_BASH_SRC_PATH/$module"
 
-        xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
-        local module="$RESOURCE_NAME"
-        if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
-            module="$module/latest"         # If it is short alias like str (short for str/latest)
-            xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
-        fi
-        TGT="$X_BASH_SRC_PATH/$module"
+                if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
+                    echo "$TGT"
+                    return
+                fi
 
-        if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
-            echo "$TGT"
-            return
-        fi
+                xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
+                if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
+                    xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+                    return 1
+                fi
+                echo "$TGT"
+        esac
 
-        xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-        if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
-            xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
-            return 1
-        fi
-        echo "$TGT"
     }
 
     # Section: export-all
