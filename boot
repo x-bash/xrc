@@ -1,5 +1,7 @@
 # shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
+RELOAD=1
+
 if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
     # Section: network
@@ -31,13 +33,14 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
                 xrc_log debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
-            REDIRECT=$TMPDIR/x-bash-temp-download.$RANDOM
+            # First make sure it works before webservice. Fail fast.
+            mkdir -p "$(dirname "$CACHE")"
+            REDIRECT="$TMPDIR/x-bash-temp-download.$RANDOM"
         fi
 
         if _xrc_http_get "$1" 1>"$REDIRECT"; then
             if [ -n "$CACHE" ]; then
                 xrc_log debug "Copy the temp file to CACHE file: $CACHE"
-                mkdir -p "$(dirname "$CACHE")"
                 mv "$REDIRECT" "$CACHE"
             fi
         else
@@ -259,13 +262,38 @@ A
         local RESOURCE_NAME=${1:?Provide resource name};
 
         local TGT
-
         case "$RESOURCE_NAME" in
             /*)
                 xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
                 echo "$RESOURCE_NAME"; return 0
                 ;;
-            @x/*)
+            http://*|https://*)
+                _xrc_which_one_http "$RESOURCE_NAME"
+                ;;
+            @*/*)
+                local tenant="${RESOURCE_NAME%%/*}"
+                local RESOURCE_NAME="${RESOURCE_NAME#*/}"
+
+                local CACHE="$X_BASH_SRC_PATH/scriptspace/$tenant/$RESOURCE_NAME"
+                xrc_curl "https://scriptspace.x-cmd.io/$tenant/$RESOURCE_NAME?token=$(xrc token)"
+                printf "%s\n" "$CACHE"
+                ;;
+            ./*|../*)
+                xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
+                local tmp
+                if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
+                    echo "$tmp/$(basename "$RESOURCE_NAME")"
+                    return 0
+                else
+                    xrc_log warn "Local file not exists: $RESOURCE_NAME"
+                    return 1
+                fi
+                ;;
+            *)
+                [ -f "$RESOURCE_NAME" ] && echo "$RESOURCE_NAME" && return      # local file
+                _xrc_search_path . "$RESOURCE_NAME" && return                   # .x-cmd
+
+                # x-bash library
                 xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
                 local module="$RESOURCE_NAME"
                 if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
@@ -279,65 +307,45 @@ A
                     return
                 fi
 
-                xrc_log debug "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
+                xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
                 if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
                     xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
                     return 1
                 fi
                 echo "$TGT"
-                ;;
-            ./*|../*)
-                xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
-                local tmp
-                if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
-                    echo "$tmp/$(basename "$RESOURCE_NAME")"
-                    return 0
-                else
-                    xrc_log warn "Local file not exists: $RESOURCE_NAME"
-                    return 1
-                fi
-                ;;
-            @github/*|@gh/*)             # using github service
-                ;;
-            @gt/*|@gitee/*)             # using github service
-                ;;
-            http://*|https://*)
-                xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
-                if [ -z "$NOWARN" ]; then
-                    echo "Sourcing script from unknown location: " "$RESOURCE_NAME"
-                    cat >&2 <<A
+        esac
+    }
+
+
+    _xrc_which_one_http(){
+        local RESOURCE_NAME="${1:?Provide resource name}"
+        xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
+        if [ -z "$NOWARN" ]; then
+            echo "Sourcing script from unknown location: " "$RESOURCE_NAME"
+            cat >&2 <<A
 SECURITY WARNING! Sourcing script from unknown location: $RESOURCE_NAME
 If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
     > NOWARN=1 xrc "$RESOURCE_NAME"
 
 A
-                    printf "Input yes to continue. Otherwise exit > " >&2
-                    local input
-                    read -r input
+            printf "Input yes to continue. Otherwise exit > " >&2
+            local input
+            read -r input
 
-                    if [ "$input" != "yes" ]; then
-                        echo "Exit becaause detect a non yes output: $input" >&2
-                        return 1
-                    fi
-                fi
+            if [ "$input" != "yes" ]; then
+                echo "Exit becaause detect a non yes output: $input" >&2
+                return 1
+            fi
+        fi
 
-                TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
-                if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
-                    xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
-                    return 1
-                fi
+        TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
+        if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
+            xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+            return 1
+        fi
 
-                echo "$TGT"
-                return 0
-                ;;
-            @/*)    ;;
-            @*/*)   ;;
-            *)  local fp
-                if _xrc_search_path . "$RESOURCE_NAME"; then
-                    return
-                fi
-                _xrc_which_one "@x/$RESOURCE_NAME"
-        esac
+        echo "$TGT"
+        return 0
     }
 
     # Section: export-all
@@ -565,9 +573,16 @@ Subcommand:
     }
     # EndSection
 
-    # Section: initrc
+    # Section: initrc, consider external module.
     _xrc_initrc(){
         case "$1" in
+            trust)
+                    # trust gitee, github, gitlab, or any other url
+                    ;;
+            mod)    shift
+                    awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
+                    # + - module
+                    ;;
             add)    shift;
                     (
                         for i in "$@"; do
@@ -589,9 +604,6 @@ Subcommand:
                     ;;
             which|w)
                     printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
-            mod)    shift
-                    awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
-                    ;;
             *)      cat "$X_CMD_SRC_PATH/.init.rc"
         esac
     }
