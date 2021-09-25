@@ -295,14 +295,14 @@ A
 $exec \"$file\""
             else
                 if [ -z "$___XRC_RELOAD" ]; then
-                    if [ "${X_CMD_SH_IN_USED#*$file}" != "${X_CMD_SH_IN_USED}" ]; then
+                    if [ "${___X_CMD_XRC_MODULE_IMPORTED#*$file}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
                         shift
                         continue    # exixted already. skip
                     fi
                 fi
                 code="$code
 $exec \"$file\" && \
-X_CMD_SH_IN_USED=\"\$X_CMD_SH_IN_USED
+___X_CMD_XRC_MODULE_IMPORTED=\"\$___X_CMD_XRC_MODULE_IMPORTED
 $file\""
             fi
             shift
@@ -394,7 +394,10 @@ A
             *)
                 [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
 
-                ___xrc_search_path . ".x-cmd/$RESOURCE_NAME" && return                   # .x-cmd
+                if TGT="$(___xrc_search_path . ".x-cmd/$RESOURCE_NAME")"; then
+                    printf "%s" "$TGT/.x-cmd/$RESOURCE_NAME"
+                    return                   # .x-cmd
+                fi
 
                 # x-bash library
                 xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
@@ -479,7 +482,7 @@ A
                 echo "+"
                 echo "-"
                 ls $___X_CMD_XRC_PATH | grep -v BASE64  | awk '{ print $0 "/"; }'
-                # echo "$X_CMD_SH_IN_USED"  | awk '{ print $0 "/"; }'
+                # echo "$___X_CMD_XRC_MODULE_IMPORTED"  | awk '{ print $0 "/"; }'
             elif [[ "$cur" = */* ]]; then
                 echo "${cur%/*}/debug"
                 echo "${cur%/*}/verbose"
