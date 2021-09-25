@@ -398,8 +398,8 @@ A
                     return                   # .x-cmd
                 fi
 
-                # x-bash library
-                xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
+                # x-bash module
+                xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
                 local module="$RESOURCE_NAME"
                 if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
                     module="$module/latest"         # If it is short alias like str (short for str/latest)
