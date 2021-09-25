@@ -2,13 +2,13 @@
 
 RELOAD=1
 
-if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
+if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
 
     # Section: network
 
     if curl --version 1>/dev/null 2>&1; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
-        _xrc_http_get(){
+        ___xcmd_http_get(){
             # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
             xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
             eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
@@ -20,17 +20,17 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
     elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
         # TODO: Under the situation of container
-        alias _xrc_http_get="x cat"
+        alias ___xcmd_http_get="x cat"
     else
         printf "boot[ERR]: Cannot found curl or x-cmd binary for web resource downloader." >&2
         return 1 || exit 1
     fi
 
-    xrc_curl() {
+    ___xcmd_curl() {
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
             if [ -z "$___XRC_UPDATE" ] && [ -f "$CACHE" ]; then
-                xrc_log debug "Function xrc_curl() terminated. Because local cache existed with update flag unset: $CACHE"
+                xrc_log debug "Function ___xcmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
                 return 0
             fi
             # First make sure it works before webservice. Fail fast.
@@ -38,14 +38,14 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
             REDIRECT="$TMPDIR/x-bash-temp-download.$RANDOM"
         fi
 
-        if _xrc_http_get "$1" 1>"$REDIRECT"; then
+        if ___xcmd_http_get "$1" 1>"$REDIRECT"; then
             if [ -n "$CACHE" ]; then
                 xrc_log debug "Copy the temp file to CACHE file: $CACHE"
                 mv "$REDIRECT" "$CACHE"
             fi
         else
             local code=$?
-            xrc_log debug "_xrc_http_get $1 return code: $code. Fail to retrieve file from: $1"
+            xrc_log debug "___xcmd_http_get $1 return code: $code. Fail to retrieve file from: $1"
             [ -n "$CACHE" ] && rm -f "$REDIRECT"    # In centos, file in "$REDIRECT" is write protected.
             return $code
         fi
@@ -53,7 +53,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
     # EndSection
 
-    _xrc_search_path(){
+    ___xrc_search_path(){
         local cur="${1:?Provide starting path}"
 
         cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
@@ -73,7 +73,7 @@ if [ -n "$RELOAD" ] || [ -z "$X_BASH_SRC_PATH" ]; then
 
     XRC_LOG_COLOR=1
     XRC_LOG_TIMESTAMP=      # "+%H:%M:%S"      # Enable Timestamp.
-    _xrc_logger(){
+    ___xcmd_logger(){
         local logger="${O:-DEFAULT}"
         local IFS=
         local level="${1:?Please provide logger level}"
@@ -146,7 +146,7 @@ A
                 shift;
                 for i in "$@"; do
                     var="$(echo "XRC_LOG_LEVEL_${i}" | tr "[:lower:]" "[:upper:]")"
-                    eval "${i}_log(){     O=$i FLAG_NAME=$var    _xrc_logger \"\$@\";   }"
+                    eval "${i}_log(){     O=$i FLAG_NAME=$var    ___xcmd_logger \"\$@\";   }"
                 done
                 return 0 ;;
             timestamp)
@@ -193,7 +193,7 @@ A
 
     # Section: mirror
     _xrc_mirror(){
-        local fp="$X_BASH_SRC_PATH/.source.mirror.list"
+        local fp="$___X_CMD_XRC_PATH/.source.mirror.list"
         if [ $# -ne 0 ]; then
             mkdir -p "$(dirname "$fp")"
             local IFS="
@@ -218,7 +218,7 @@ A
         case "$1" in
             help)       _xrc_help;  return ;;
             c|cat)      shift;
-                        eval "$(t="cat" _xrc_source_file_list_code "$@")" ;;
+                        eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")" ;;
             w|which)    shift;
                         if [ $# -eq 0 ]; then
                             cat >&2 <<A
@@ -228,18 +228,18 @@ xrc which  Download lib files and print the local path.
 A
                             return 1
                         fi
-                        eval "$(t="echo" _xrc_source_file_list_code "$@")"  ;;
+                        eval "$(t="echo" ___xcmd_xrc_source_file_list_code "$@")"  ;;
             update)     shift;  ( xrc x-bash/xrc/update/v0;  xrc_update "$@" ) ;;
             upgrade)    shift;  eval "$(curl https://get.x-cmd.com/script)" ;;
-            cache)      shift;  echo "$X_BASH_SRC_PATH" ;;
+            cache)      shift;  echo "$___X_CMD_XRC_PATH" ;;
             initrc)     shift;  _xrc_initrc "$@" ;;
-            export-all) _xrc_export_all ;;
+            export-all) ___xcmd_xrc_export_all ;;
             clear)      shift;
-                        if ! grep "_xrc_http_get()" "$X_BASH_SRC_PATH/../boot" >/dev/null 2>&1; then
-                            xrc_log debug "'$X_BASH_SRC_PATH/../boot' NOT found. Please manually clear cache folder: $X_BASH_SRC_PATH"
+                        if ! grep "___xcmd_http_get()" "$___X_CMD_XRC_PATH/../boot" >/dev/null 2>&1; then
+                            xrc_log debug "'$___X_CMD_XRC_PATH/../boot' NOT found. Please manually clear cache folder: $___X_CMD_XRC_PATH"
                             return 1
                         fi
-                        rm -rf "$X_BASH_SRC_PATH" ;;
+                        rm -rf "$___X_CMD_XRC_PATH" ;;
             reinstall)
                         xrc clear
                         RELOAD=1 xrc upgrade
@@ -249,12 +249,12 @@ A
             reload)     shift
                         if [ "$#" != 0 ]; then
                             local ___XRC_RELOAD=1
-                            eval "$(t="." _xrc_source_file_list_code "$@")"
+                            eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
                         else
-                            RELOAD=1 . "$X_BASH_SRC_PATH/../boot"
+                            RELOAD=1 . "$___X_CMD_XRC_PATH/../boot"
                         fi
                         ;;
-            *)          eval "$(t="." _xrc_source_file_list_code "$@")"
+            *)          eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
         esac
     }
 
@@ -270,22 +270,22 @@ A
 
     TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
 
-    xrc_log debug "Setting env X_BASH_SRC_PATH: $X_BASH_SRC_PATH"
+    xrc_log debug "Setting env ___X_CMD_XRC_PATH: $___X_CMD_XRC_PATH"
     X_CMD_SRC_PATH="$HOME/.x-cmd"                  # TODO: Using X_CMD_SRC_PATH
-    X_BASH_SRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
-    mkdir -p "$X_BASH_SRC_PATH"
-    PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
+    ___X_CMD_XRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
+    mkdir -p "$___X_CMD_XRC_PATH"
+    PATH="$(dirname "$___X_CMD_XRC_PATH")/bin:$PATH"
 
     # EndSection
-    _xrc_source_file_list_code(){
+    ___xcmd_xrc_source_file_list_code(){
         local code=""
         local file
         local exec=${t:-.}
         while [ $# -ne 0 ]; do
-            # What if the _xrc_which_one contains '"'
+            # What if the ___xcmd_which_one contains '"'
 
             local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-            if ! file="$(_xrc_which_one "$1")"; then
+            if ! file="$(___xcmd_which_one "$1")"; then
                 echo "return 1"
                 return 0
             fi
@@ -315,9 +315,9 @@ $file\""
         *)          XRC_CHINA_NET=
     esac
 
-    xrc_log debug "Creating $X_BASH_SRC_PATH/.source.mirror.list"
+    xrc_log debug "Creating $___X_CMD_XRC_PATH/.source.mirror.list"
 
-    _xrc_curl_gitx(){   # Simple strategy
+    ____xcmd_curl_gitx(){   # Simple strategy
         local repo="${1:?Provide reponame}"
         local mod="${2:?Provide location like str}"
         local mod_repo=${mod%%/*}
@@ -335,7 +335,7 @@ $file\""
             # shellcheck disable=SC2059
             urlpath="$(printf "$mirror" "$repo" "$mod_repo" "$mod_subpath")"
             xrc_log debug "Trying: $urlpath"
-            xrc_curl "$urlpath"
+            ___xcmd_curl "$urlpath"
 
             case $? in
                 0)  if [ "$lineno" -ne 1 ]; then
@@ -360,7 +360,7 @@ A
         return 1
     }
 
-    _xrc_which_one(){
+    ___xcmd_which_one(){
         local RESOURCE_NAME=${1:?Provide resource name}
 
         local TGT
@@ -370,14 +370,14 @@ A
                 echo "$RESOURCE_NAME"; return 0
                 ;;
             http://*|https://*)
-                _xrc_which_one_http "$RESOURCE_NAME"
+                ___xcmd_which_one_http "$RESOURCE_NAME"
                 ;;
             @*/*)
                 local tenant="${RESOURCE_NAME%%/*}"
                 local RESOURCE_NAME="${RESOURCE_NAME#*/}"
 
-                local CACHE="$X_BASH_SRC_PATH/scriptspace/$tenant/$RESOURCE_NAME"
-                xrc_curl "https://scriptspace.x-cmd.io/$tenant/$RESOURCE_NAME?token=$(xrc token)"
+                local CACHE="$___X_CMD_XRC_PATH/scriptspace/$tenant/$RESOURCE_NAME"
+                ___xcmd_curl "https://scriptspace.x-cmd.io/$tenant/$RESOURCE_NAME?token=$(xrc token)"
                 printf "%s" "$CACHE"
                 ;;
             ./*|../*)
@@ -394,7 +394,7 @@ A
             *)
                 [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
 
-                _xrc_search_path . ".x-cmd/$RESOURCE_NAME" && return                   # .x-cmd
+                ___xrc_search_path . ".x-cmd/$RESOURCE_NAME" && return                   # .x-cmd
 
                 # x-bash library
                 xrc_log debug "Resource recognized as x-bash library: $RESOURCE_NAME"
@@ -403,7 +403,7 @@ A
                     module="$module/latest"         # If it is short alias like str (short for str/latest)
                     xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
                 fi
-                TGT="$X_BASH_SRC_PATH/$module"
+                TGT="$___X_CMD_XRC_PATH/$module"
 
                 if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
                     printf "%s" "$TGT"
@@ -411,7 +411,7 @@ A
                 fi
 
                 xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-                if ! CACHE="$TGT" _xrc_curl_gitx "x-bash" "$module"; then
+                if ! CACHE="$TGT" ____xcmd_curl_gitx "x-bash" "$module"; then
                     xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
                     return 1
                 fi
@@ -419,7 +419,7 @@ A
         esac
     }
 
-    _xrc_which_one_http(){
+    ___xcmd_which_one_http(){
         local RESOURCE_NAME="${1:?Provide resource name}"
         xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
         if [ -z "$NOWARN" ]; then
@@ -440,8 +440,8 @@ A
             fi
         fi
 
-        TGT="$X_BASH_SRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
-        if ! CACHE="$TGT" xrc_curl "$RESOURCE_NAME"; then
+        TGT="$___X_CMD_XRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
+        if ! CACHE="$TGT" ___xcmd_curl "$RESOURCE_NAME"; then
             xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
             return 1
         fi
@@ -451,17 +451,18 @@ A
     }
 
     # Section: export-all
-    _xrc_export_all(){
+    ___xcmd_xrc_export_all(){
         export -f xrc
         export -f x
-        export -f _xrc_curl_gitx
-        export -f _xrc_http_get
-        export -f _xrc_logger
-        export -f _xrc_source_file_list_code
-        export -f xrc_curl
+        export -f ____xcmd_curl_gitx
+        export -f ___xcmd_http_get
+        export -f ___xcmd_logger
+        export -f ___xcmd_xrc_source_file_list_code
+        export -f ___xcmd_curl
 
+        # Using command line.
         export X_CMD_SRC_SHELL
-        export X_BASH_SRC_PATH
+        export ___X_CMD_XRC_PATH
         export XRC_LOG_COLOR
         export XRC_LOG_TIMESTAMP
         export TMPDIR
@@ -477,7 +478,7 @@ A
             if [ "$cur" = "" ]; then
                 echo "+"
                 echo "-"
-                ls $X_BASH_SRC_PATH | grep -v BASE64  | awk '{ print $0 "/"; }'
+                ls $___X_CMD_XRC_PATH | grep -v BASE64  | awk '{ print $0 "/"; }'
                 # echo "$X_CMD_SH_IN_USED"  | awk '{ print $0 "/"; }'
             elif [[ "$cur" = */* ]]; then
                 echo "${cur%/*}/debug"
@@ -485,11 +486,11 @@ A
                 echo "${cur%/*}/warn"
                 echo "${cur%/*}/error"
             elif [[ "$cur" =~ ^\+ ]]; then
-                ls $X_BASH_SRC_PATH | grep -v BASE64 | awk '{ print "+" $0; }'
+                ls $___X_CMD_XRC_PATH | grep -v BASE64 | awk '{ print "+" $0; }'
             elif [[ "$cur" =~ ^\- ]]; then
-                ls $X_BASH_SRC_PATH | grep -v BASE64 | awk '{ print "-" $0; }'
+                ls $___X_CMD_XRC_PATH | grep -v BASE64 | awk '{ print "-" $0; }'
             else
-                ls $X_BASH_SRC_PATH | grep -v BASE64 | awk -v cur="$cur" '
+                ls $___X_CMD_XRC_PATH | grep -v BASE64 | awk -v cur="$cur" '
                     BEGIN { arr_len=0; }
                     $0~"^"cur{
                         arr_len += 1
@@ -515,10 +516,10 @@ A
         advise init xrc - <<A
 {
     "cat|c": {
-        "#n": "ls $X_BASH_SRC_PATH | grep -v BASE64"
+        "#n": "ls $___X_CMD_XRC_PATH | grep -v BASE64"
     },
     "which|w": {
-        "#n": "ls $X_BASH_SRC_PATH | grep -v BASE64"
+        "#n": "ls $___X_CMD_XRC_PATH | grep -v BASE64"
     },
     "update|u": {},
     "upgrade": {},
