@@ -174,7 +174,6 @@ A
     PATH="$(dirname "$X_BASH_SRC_PATH")/bin:$PATH"
 
     # EndSection
-
     _xrc_source_file_list_code(){
         local code=""
         local file
@@ -276,13 +275,13 @@ A
 
                 local CACHE="$X_BASH_SRC_PATH/scriptspace/$tenant/$RESOURCE_NAME"
                 xrc_curl "https://scriptspace.x-cmd.io/$tenant/$RESOURCE_NAME?token=$(xrc token)"
-                printf "%s\n" "$CACHE"
+                printf "%s" "$CACHE"
                 ;;
             ./*|../*)
                 xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
                 local tmp
                 if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
-                    echo "$tmp/$(basename "$RESOURCE_NAME")"
+                    printf "%s" "$tmp/$(basename "$RESOURCE_NAME")"
                     return 0
                 else
                     xrc_log warn "Local file not exists: $RESOURCE_NAME"
@@ -290,7 +289,7 @@ A
                 fi
                 ;;
             *)
-                [ -f "$RESOURCE_NAME" ] && echo "$RESOURCE_NAME" && return      # local file
+                [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
                 _xrc_search_path . "$RESOURCE_NAME" && return                   # .x-cmd
 
                 # x-bash library
@@ -303,7 +302,7 @@ A
                 TGT="$X_BASH_SRC_PATH/$module"
 
                 if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
-                    echo "$TGT"
+                    printf "%s" "$TGT"
                     return
                 fi
 
@@ -312,7 +311,7 @@ A
                     xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
                     return 1
                 fi
-                echo "$TGT"
+                printf "%s" "$TGT"
         esac
     }
 
@@ -533,10 +532,13 @@ A
         "#n": "_xrc_log_completer"
     },
     "initrc": {
-        "add": null,
-        "del": null,
+        "cat": null
         "which|w": null,
-        "mod": null
+        "mod": {
+            "add|+": null,
+            "del|-": "x initrc mod ls",
+            "ls": null
+        }
     },
     "mirror": {
         "#n": [
@@ -580,31 +582,30 @@ Subcommand:
                     # trust gitee, github, gitlab, or any other url
                     ;;
             mod)    shift
-                    awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc"
-                    # + - module
+                    case "$1" in
+                        add|+)      shift
+                                    (
+                                        for i in "$@"; do
+                                            s="$(printf "xrc %s # auto generated" "$i")"
+                                            if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
+                                                printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
+                                            fi
+                                        done
+                                    ) ;;
+                        del|-)      shift
+                                    (
+                                        s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
+                                        for i in "$@"; do
+                                            s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
+                                        done
+                                        printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
+                                    )
+                                    ;;
+                        ls|*)         awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc" ;;
+                    esac
                     ;;
-            add)    shift;
-                    (
-                        for i in "$@"; do
-                            s="$(printf "xrc %s # auto generated" "$i")"
-                            if ! grep "$s" "$X_CMD_SRC_PATH/.init.rc" 1>/dev/null 2>&1; then
-                                printf "%s\n" "$s" >> "$X_CMD_SRC_PATH/.init.rc"
-                            fi
-                        done
-                    )
-                    ;;
-            del)    shift
-                    (
-                        s="$(cat "$X_CMD_SRC_PATH/.init.rc")"
-                        for i in "$@"; do
-                            s="$(printf "%s" "$s" | grep -v "xrc $i # auto generated")"
-                        done
-                        printf "%s" "$s" > "$X_CMD_SRC_PATH/.init.rc"
-                    )
-                    ;;
-            which|w)
-                    printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
-            *)      cat "$X_CMD_SRC_PATH/.init.rc"
+            which)  printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
+            cat|*)  cat "$X_CMD_SRC_PATH/.init.rc" ;;
         esac
     }
 
