@@ -317,7 +317,7 @@ $file\""
 
     xrc_log debug "Creating $___X_CMD_XRC_PATH/.source.mirror.list"
 
-    ____xcmd_curl_gitx(){   # Simple strategy
+    ___xcmd_curl_gitx(){   # Simple strategy
         local repo="${1:?Provide reponame}"
         local mod="${2:?Provide location like str}"
         local mod_repo=${mod%%/*}
@@ -411,7 +411,7 @@ A
                 fi
 
                 xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-                if ! CACHE="$TGT" ____xcmd_curl_gitx "x-bash" "$module"; then
+                if ! CACHE="$TGT" ___xcmd_curl_gitx "x-bash" "$module"; then
                     xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
                     return 1
                 fi
@@ -454,7 +454,7 @@ A
     ___xcmd_xrc_export_all(){
         export -f xrc
         export -f x
-        export -f ____xcmd_curl_gitx
+        export -f ___xcmd_curl_gitx
         export -f ___xcmd_http_get
         export -f ___xcmd_logger
         export -f ___xcmd_xrc_source_file_list_code
