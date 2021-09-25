@@ -51,7 +51,7 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
 
     # EndSection
 
-    ___xrc_search_path(){
+    ___xcmd_search_path(){
         local cur="${1:?Provide starting path}"
 
         cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
@@ -393,7 +393,7 @@ A
             *)
                 [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
 
-                if TGT="$(___xrc_search_path . ".x-cmd/$RESOURCE_NAME")"; then
+                if TGT="$(___xcmd_search_path . ".x-cmd/$RESOURCE_NAME")"; then
                     printf "%s" "$TGT/.x-cmd/$RESOURCE_NAME"
                     return                   # .x-cmd
                 fi
