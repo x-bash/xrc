@@ -392,7 +392,6 @@ A
                 fi
                 ;;
             *)
-
                 [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
 
                 _xrc_search_path . ".x-cmd/$RESOURCE_NAME" && return                   # .x-cmd
@@ -607,8 +606,8 @@ Subcommand:
                         ls|*)         awk '$0~"auto generated"{ print $2; }' "$X_CMD_SRC_PATH/.init.rc" ;;
                     esac
                     ;;
-            which)  printf "%s\n" "$X_CMD_SRC_PATH/.init.rc" ;;
-            cat|*)  cat "$X_CMD_SRC_PATH/.init.rc" ;;
+            which)  printf "%s\n" "$X_CMD_SRC_PATH/.init.rc"    ;;
+            cat|*)  cat "$X_CMD_SRC_PATH/.init.rc" 2>/dev/null  ;;
         esac
     }
 
