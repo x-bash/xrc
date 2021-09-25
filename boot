@@ -367,7 +367,8 @@ A
         case "$RESOURCE_NAME" in
             /*)
                 xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
-                echo "$RESOURCE_NAME"; return 0
+                printf "%s" "$RESOURCE_NAME"
+                return 0
                 ;;
             http://*|https://*)
                 ___xcmd_which_one_http "$RESOURCE_NAME"
