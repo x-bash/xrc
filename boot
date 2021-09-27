@@ -211,6 +211,135 @@ A
     }
     # EndSection
 
+    # Section: login
+
+    ___xcmd_sha512(){
+        command sha512sum 2>/dev/null || command shasum -a 512 2>/dev/null
+    }
+
+    ___xcmd_password_hash(){
+        local username="${1:?Please provide username}"
+        local password="${2:?Please provide password}"
+        printf "%s/%s" "$username" "$password" | ___xcmd_sha512
+    }
+
+    ___xcmd_login(){
+        local user
+        printf "%s" "Username: "
+        read -r user
+
+        local pass
+        printf "%s" "\nPassword: "
+        read -r -s pass
+
+        local passhash
+        passhash=$(___xcmd_password_hash "$pass")
+
+        local result
+        result="$(curl "https://account.x-cmd.com/api/v0/user/login?user=$user&passhash=$passhash" 2>/dev/null)"
+        local token=${result#TOKEN=}
+        if [ "$token" = "$result" ]; then
+            printf "%s/%s" "$user" "$token" > "$___X_CMD_XRC_PATH/env/.login.token"
+            printf "%s\n" "Login Success."
+        else
+            printf "%s\n" "$result"
+        fi
+    }
+
+    ___xcmd_login_token(){
+        local s=$(cat "$___X_CMD_XRC_PATH/env/.login.token")
+        printf "${s#*/}"
+    }
+
+    ___xcmd_login_user(){
+        local s=$(cat "$___X_CMD_XRC_PATH/env/.login.token")
+        printf "${s%/*}"
+    }
+
+    ___xcmd_register(){
+        local user=${1:-""}
+        if [ -z "$user" ]; then
+            printf "%s" "Username: "
+            read -r user
+        fi
+
+        local result
+        result="$(curl "https://account.x-cmd.com/api/v0/user/register?user=$user" 2>/dev/null)"
+        local passtoken=${result#PASS/TOKEN=}
+
+        if [ "$passtoken" = "$result" ]; then
+            local pass=${passtoken%/*}
+            local token=${passtoken#*/}
+            printf "%s/%s" "$user" "$token" > "$___X_CMD_XRC_PATH/env/.login.token"
+
+            if ___xcmd_change_password "$user" "$pass" 1>/dev/null; then
+                printf "Successfully change your password.\n"
+            else
+                printf "Your password is: %s\n" "$pass"
+                printf "Change your password using:\n  x change_password <username> <newpassword>"
+            fi
+        else
+            printf "%s\n" "$result"
+        fi
+    }
+
+    ___xcmd_change_password(){
+        local pass="${3:-""}"
+        if [ -z "$pass" ]; then
+            printf "%s" "Password: "
+            read -r -s pass
+        fi
+
+        local passhash
+        passhash=$(___xcmd_password_hash "$pass")
+
+        local result
+        result="$(curl "https://account.x-cmd.com/api/v0/user/change_password?user=$(___xcmd_login_user)&token=$(___xcmd_login_token)&passhash=$passhash" 2>/dev/null)"
+
+        if [ "OK" = "$result" ]; then
+            printf "Password reset OK.\n"
+        else
+            printf "%s\n" "$result"
+        fi
+    }
+
+    ___xcmd_change_password111(){
+        local user="${1:-""}"
+        if [ -z "$user" ]; then
+            printf "%s" "Username: "
+            read -r user
+        fi
+
+        local pass0="${2:-""}"
+        if [ -z "$pass0" ]; then
+            printf "%s" "Previous Password: "
+            read -r -s pass0
+        fi
+
+        local passhash0
+        passhash0=$(___xcmd_password_hash "$pass0")
+
+        local pass="${3:-""}"
+        if [ -z "$pass" ]; then
+            printf "%s" "Password: "
+            read -r -s pass
+        fi
+
+        local passhash
+        passhash=$(___xcmd_password_hash "$pass")
+
+        local result
+        result="$(curl "https://account.x-cmd.com/api/v0/user/change_password?user=$user&passhash_prev=$passhash0&passhash=$passhash" 2>/dev/null)"
+
+        if [ "OK" = "$result" ]; then
+            printf "Password reset OK."
+        else
+            printf "%s\n" "$result"
+        fi
+    }
+
+    # EndSection
+
     xrc(){
         [ $# -eq 0 ] && set -- "help"
         case "$1" in
@@ -376,7 +505,7 @@ A
                 local RESOURCE_NAME="${RESOURCE_NAME#*/}"
 
                 local CACHE="$___X_CMD_XRC_PATH/scriptspace/$tenant/$RESOURCE_NAME"
-                ___xcmd_curl "https://scriptspace.x-cmd.io/$tenant/$RESOURCE_NAME?token=$(xrc token)"
+                ___xcmd_curl "https://scriptspace.x-cmd.io/$tenant/$RESOURCE_NAME?token=$(___xcmd_login_token)"
                 printf "%s" "$CACHE"
                 ;;
             ./*|../*)
