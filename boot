@@ -219,23 +219,36 @@ A
     ___XCMD_SERVICE_URL="http://127.0.0.1:3000"
 
     ___xcmd_login(){
-        local email
-        printf "%s" "Email: "
-        read -r email
+        local email="${1}"
+        if [ -z "$email" ]; then
+            printf "%s" "Email: "
+            read -r email
+        fi
 
         local result
         result="$(curl "$___XCMD_SERVICE_URL/api/v0/account/login/$email" 2>/dev/null)"
 
-        ___xcmd_verify "$email"
+        if [ "${result#ERR=}" = "$result" ]; then
+            ___xcmd_verify "$email"
+        else
+            printf "%s\n" "$result"
+        fi
     }
 
     ___xcmd_verify(){
-        result="$(curl "$___XCMD_SERVICE_URL/api/v0/account/verify/${1:?email}" 2>/dev/null)"
+        local email="${1:?email}"
+
+        local code
+        printf "%s" "Code: "
+        read -r code
+
+        result="$(curl "$___XCMD_SERVICE_URL/api/v0/account/verify/$email/$code" 2>/dev/null)"
 
         local token=${result#TOKEN=}
-        if [ "$token" = "$result" ]; then
-            printf "%s/%s" "$user" "$token" > "$___X_CMD_XRC_PATH/env/.me"
-            printf "%s/%s" "$user" "$token" > "$___X_CMD_XRC_PATH/env/.token"
+        if [ "$token" != "$result" ]; then
+            mkdir -p "$___X_CMD_XRC_PATH/env"
+            printf "%s/%s" "$email" "$token" > "$___X_CMD_XRC_PATH/env/.me"
+            printf "%s/%s" "$token" "$token" > "$___X_CMD_XRC_PATH/env/.token"
             printf "%s\n" "Login Success."
         else
             printf "%s\n" "$result"
