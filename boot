@@ -257,7 +257,7 @@ A
 
     ___xcmd_login_token(){
         local s=$(cat "$___X_CMD_XRC_PATH/env/.token")
-        printf "${s#*/}"
+        printf "%s" "${s#*/}"
     }
 
     ___xcmd_login_user(){
@@ -273,7 +273,7 @@ A
         fi
 
         local result
-        result="$(curl -X post "$___XCMD_SERVICE_URL/api/v0/account/register/$email" 2>/dev/null)"
+        result="$(curl "$___XCMD_SERVICE_URL/api/v0/account/register/$email" 2>/dev/null)"
         local msg=${result#ERR=}
 
         if [ "$msg" = "$result" ]; then
