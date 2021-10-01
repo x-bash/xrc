@@ -255,6 +255,8 @@ A
         fi
     }
 
+    mkdkr -p "$___X_CMD_XRC_PATH/env"
+
     # shellcheck disable=SC2120
     ___xcmd_token(){
         if [ -z "$1" ]; then
