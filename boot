@@ -255,7 +255,7 @@ A
         fi
     }
 
-    mkdkr -p "$___X_CMD_XRC_PATH/env"
+    mkdir -p "$___X_CMD_XRC_PATH/env"
 
     # shellcheck disable=SC2120
     ___xcmd_token(){
@@ -304,6 +304,8 @@ A
 
     ___xcmd_file_ls(){
         local respath="${1:-@me/}"
+        respath="$(___xcmd_file_normalize_respath "$respath")"
+
         curl \
             "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}"
     }
