@@ -312,6 +312,17 @@ A
 
     ___xcmd_file_which(){
         local respath="${1:?Provide respath}"
+        case "$respath" in
+            @me/*|@i/*|@/*)
+                local user
+                user=$(___xcmd_login_user)
+                if [ -z "$user" ]; then
+                    printf "Cannot not find out login user for resource: %s" "$respath" >&2
+                    return 1
+                fi
+                respath="$user/${respath#@*/}"
+        esac
+
         local CACHE="${___X_CMD_XRC_PATH%/}/${respath#/}"
         if ___xcmd_curl "$___XCMD_SERVICE_URL/api/v0/file/cat?token=$(___xcmd_token)&res=${respath}"; then
             printf "%s" "$CACHE"
