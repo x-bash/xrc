@@ -215,7 +215,8 @@ A
 
     # Section: account
 
-    ___XCMD_SERVICE_URL="https://hub.x-cmd.com"
+    ___XCMD_SERVICE_URL="http://47.115.207.205"
+    # ___XCMD_SERVICE_URL="https://hub.x-cmd.com"
     # ___XCMD_SERVICE_URL="http://127.0.0.1:3000"
 
     ___xcmd_login(){
