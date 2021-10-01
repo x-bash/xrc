@@ -303,7 +303,7 @@ A
     # Section: file service
 
     ___xcmd_file_ls(){
-        local respath="${1:-/}"
+        local respath="${1:-@me/}"
         curl \
             "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}"
     }
