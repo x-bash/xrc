@@ -285,6 +285,41 @@ A
 
     # EndSection
 
+    # Section: file service
+
+    ___xcmd_file_ls(){
+        local respath="${1:-/}"
+        curl \
+            "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_login_token)&res=${respath}"
+    }
+
+    ___xcmd_file_which(){
+        local respath="${1:-/}"
+        local CACHE="${___X_CMD_XRC_PATH%/}/${respath#/}"
+        if ___xcmd_curl "$___XCMD_SERVICE_URL/api/v0/file/cat?token=$(___xcmd_login_token)&res=${respath}"; then
+            printf "%s" "$CACHE"
+        else
+            printf "Failed: %s" "$CACHE" 2>/dev/null
+            return 1
+        fi
+    }
+
+    ___xcmd_file_upload(){
+        local localfp="${1:?Provide local file}"
+
+        [ ! -f "$localfp" ] && {
+            printf "File Not Existed: %s" "$localfp" >&2
+            return
+        }
+
+        local respath="${2:-/}"
+        curl \
+            -F "file=@$localfp" \
+            "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_login_token)&res=${respath}"
+    }
+
+    # EndSection
+
     xrc(){
         [ $# -eq 0 ] && set -- "help"
         case "$1" in
@@ -445,13 +480,8 @@ A
             http://*|https://*)
                 ___xcmd_which_one_http "$RESOURCE_NAME"
                 ;;
-            @*/*)
-                local tenant="${RESOURCE_NAME%%/*}"
-                local RESOURCE_NAME="${RESOURCE_NAME#*/}"
-
-                local CACHE="$___X_CMD_XRC_PATH/scriptspace/$tenant/$RESOURCE_NAME"
-                ___xcmd_curl "https://scriptspace.x-cmd.io/$tenant/$RESOURCE_NAME?token=$(___xcmd_login_token)"
-                printf "%s" "$CACHE"
+            *@*/*)
+                ___xcmd_file_which "$RESOURCE_NAME"
                 ;;
             ./*|../*)
                 xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
