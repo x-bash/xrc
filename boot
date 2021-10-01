@@ -1,7 +1,5 @@
 # shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
-
-RELOAD=1
 if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
 
     # Section: network
