@@ -247,22 +247,35 @@ A
         local token=${result#TOKEN=}
         if [ "$token" != "$result" ]; then
             mkdir -p "$___X_CMD_XRC_PATH/env"
-            printf "%s/%s" "$email" "$token" > "$___X_CMD_XRC_PATH/env/.me"
-            printf "%s/%s" "$token" "$token" > "$___X_CMD_XRC_PATH/env/.token"
+            printf "%s" "$email" > "$___X_CMD_XRC_PATH/env/.me"
+            printf "%s" "$token" > "$___X_CMD_XRC_PATH/env/.token"
             printf "%s\n" "Login Success."
         else
             printf "%s\n" "$result"
         fi
     }
 
-    ___xcmd_login_token(){
-        local s=$(cat "$___X_CMD_XRC_PATH/env/.token")
-        printf "%s" "${s#*/}"
+    # shellcheck disable=SC2120
+    ___xcmd_token(){
+        if [ -z "$1" ]; then
+            cat "$___X_CMD_XRC_PATH/env/.token" 2>/dev/null
+        else
+            if [ "$1" = "${1#*/}" ]; then
+                printf "%s" "${1%/*}" > "$___X_CMD_XRC_PATH/env/.me"
+                printf "%s" "${1#*/}" > "$___X_CMD_XRC_PATH/env/.token"
+                return
+            fi
+
+            local res
+            if res=$(___xcmd_curl "$___XCMD_SERVICE_URL/api/v0/token/info/email?token=$(___xcmd_token)"); then
+                printf "%s" "$res" > "$___X_CMD_XRC_PATH/env/.me"
+                printf "%s" "$1" > "$___X_CMD_XRC_PATH/env/.token"
+            fi
+        fi
     }
 
     ___xcmd_login_user(){
-        local s=$(cat "$___X_CMD_XRC_PATH/env/.me")
-        printf "${s%/*}"
+        cat "$___X_CMD_XRC_PATH/env/.me" 2>/dev/null
     }
 
     ___xcmd_register(){
@@ -290,13 +303,13 @@ A
     ___xcmd_file_ls(){
         local respath="${1:-/}"
         curl \
-            "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_login_token)&res=${respath}"
+            "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}"
     }
 
     ___xcmd_file_which(){
         local respath="${1:-/}"
         local CACHE="${___X_CMD_XRC_PATH%/}/${respath#/}"
-        if ___xcmd_curl "$___XCMD_SERVICE_URL/api/v0/file/cat?token=$(___xcmd_login_token)&res=${respath}"; then
+        if ___xcmd_curl "$___XCMD_SERVICE_URL/api/v0/file/cat?token=$(___xcmd_token)&res=${respath}"; then
             printf "%s" "$CACHE"
         else
             printf "Failed: %s" "$CACHE" 2>/dev/null
@@ -315,21 +328,21 @@ A
         local respath="${2:-/}"
         curl \
             -F "file=@$localfp" \
-            "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_login_token)&res=${respath}"
+            "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_token)&res=${respath}"
     }
 
     ___xcmd_file_share(){
         local respath="${1:?Provide path}"
         curl \
             -F "file=@$localfp" \
-            "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_login_token)&res=${respath}"
+            "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_token)&res=${respath}"
     }
 
     ___xcmd_file_private(){
         local respath="${1:?Provide path}"
         curl \
             -F "file=@$localfp" \
-            "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_login_token)&res=${respath}"
+            "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_token)&res=${respath}"
     }
 
     # EndSection
