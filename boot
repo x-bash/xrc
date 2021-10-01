@@ -312,16 +312,18 @@ A
 
     ___xcmd_file_which(){
         local respath="${1:?Provide respath}"
-        case "$respath" in
-            @me/*|@i/*|@/*)
-                local user
-                user=$(___xcmd_login_user)
-                if [ -z "$user" ]; then
-                    printf "Cannot not find out login user for resource: %s" "$respath" >&2
-                    return 1
-                fi
-                respath="$user/${respath#@*/}"
-        esac
+        # case "$respath" in
+        #     @me/*|@i/*|@/*)
+        #         local user
+        #         user=$(___xcmd_login_user)
+        #         if [ -z "$user" ]; then
+        #             printf "Cannot not find out login user for resource: %s" "$respath" >&2
+        #             return 1
+        #         fi
+        #         respath="$user/${respath#@*/}"
+        # esac
+
+        respath="$(___xcmd_file_normalize_respath "$respath")"
 
         local CACHE="${___X_CMD_XRC_PATH%/}/${respath#/}"
         if ___xcmd_curl "$___XCMD_SERVICE_URL/api/v0/file/cat?token=$(___xcmd_token)&res=${respath}"; then
@@ -335,6 +337,15 @@ A
     ___xcmd_file_normalize_respath(){
         local respath="${1}"
         case "$respath" in
+            @me/*|@i/*|@/*)
+                local user
+                user=$(___xcmd_login_user)
+                if [ -z "$user" ]; then
+                    printf "Cannot not find out login user for resource: %s" "$respath" >&2
+                    return 1
+                fi
+                printf "%s" "$user/${respath#@*/}"
+                ;;
             *@*)    printf "%s" "$respath" ;;
             *)      printf "%s" "$(___xcmd_login_user)/${respath#/}" ;;
         esac
@@ -360,18 +371,15 @@ A
         local respath="${1:?Please provide path}"
         respath="$(___xcmd_file_normalize_respath "$respath")"
 
-        curl \
-            -F "file=@$localfp" \
-            "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_token)&res=${respath}"
+        echo curl "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_token)&res=${respath}"
+        curl "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_token)&res=${respath}"
     }
 
     ___xcmd_file_private(){
         local respath="${1:?Please provide path}"
         respath="$(___xcmd_file_normalize_respath "$respath")"
 
-        curl \
-            -F "file=@$localfp" \
-            "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_token)&res=${respath}"
+        curl "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_token)&res=${respath}"
     }
 
     # EndSection
