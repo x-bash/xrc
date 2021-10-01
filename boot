@@ -309,7 +309,7 @@ A
     }
 
     ___xcmd_file_which(){
-        local respath="${1:-/}"
+        local respath="${1:?Provide respath}"
         local CACHE="${___X_CMD_XRC_PATH%/}/${respath#/}"
         if ___xcmd_curl "$___XCMD_SERVICE_URL/api/v0/file/cat?token=$(___xcmd_token)&res=${respath}"; then
             printf "%s" "$CACHE"
@@ -317,6 +317,14 @@ A
             printf "Failed: %s" "$CACHE" 2>/dev/null
             return 1
         fi
+    }
+
+    ___xcmd_file_normalize_respath(){
+        local respath="${1}"
+        case "$respath" in
+            *@*)    printf "%s" "$respath" ;;
+            *)      printf "%s" "$(___xcmd_login_user)/${respath#/}" ;;
+        esac
     }
 
     ___xcmd_file_upload(){
@@ -327,21 +335,27 @@ A
             return
         }
 
-        local respath="${2:-/}"
+        local respath="${2:?Please provide path}"
+        respath="$(___xcmd_file_normalize_respath "$respath")"
+
         curl \
             -F "file=@$localfp" \
             "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_token)&res=${respath}"
     }
 
     ___xcmd_file_share(){
-        local respath="${1:?Provide path}"
+        local respath="${1:?Please provide path}"
+        respath="$(___xcmd_file_normalize_respath "$respath")"
+
         curl \
             -F "file=@$localfp" \
             "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_token)&res=${respath}"
     }
 
     ___xcmd_file_private(){
-        local respath="${1:?Provide path}"
+        local respath="${1:?Please provide path}"
+        respath="$(___xcmd_file_normalize_respath "$respath")"
+
         curl \
             -F "file=@$localfp" \
             "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_token)&res=${respath}"
