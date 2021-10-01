@@ -355,7 +355,7 @@ A
         local localfp="${1:?Provide local file}"
 
         [ ! -f "$localfp" ] && {
-            printf "File Not Existed: %s" "$localfp" >&2
+            printf "File Not Existed: %s\n" "$localfp" >&2
             return
         }
 
@@ -365,6 +365,7 @@ A
         curl \
             -F "file=@$localfp" \
             "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_token)&res=${respath}"
+        printf "\n"
     }
 
     ___xcmd_file_share(){
