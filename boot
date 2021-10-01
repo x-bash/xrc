@@ -318,6 +318,20 @@ A
             "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_login_token)&res=${respath}"
     }
 
+    ___xcmd_file_share(){
+        local respath="${1:?Provide path}"
+        curl \
+            -F "file=@$localfp" \
+            "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_login_token)&res=${respath}"
+    }
+
+    ___xcmd_file_private(){
+        local respath="${1:?Provide path}"
+        curl \
+            -F "file=@$localfp" \
+            "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_login_token)&res=${respath}"
+    }
+
     # EndSection
 
     xrc(){
