@@ -227,6 +227,7 @@ A
 
         local result
         result="$(curl "$___XCMD_SERVICE_URL/api/v0/account/login/$email" 2>/dev/null)"
+        printf "Result: %s" "$result" >&2
 
         if [ "${result#ERR=}" = "$result" ]; then
             ___xcmd_verify "$email"
