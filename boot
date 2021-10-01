@@ -306,8 +306,12 @@ A
         local respath="${1:-@me/}"
         respath="$(___xcmd_file_normalize_respath "$respath")"
 
-        curl \
-            "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}" 2>/dev/null
+        local res
+        res="$(curl \
+            "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}" 2>/dev/null)"
+
+        printf "%s" "$res" | jq .[]
+
     }
 
     ___xcmd_file_which(){
