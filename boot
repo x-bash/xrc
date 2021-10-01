@@ -310,7 +310,7 @@ A
         res="$(curl \
             "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}" 2>/dev/null)"
 
-        printf "%s" "$res" | jq .[]
+        printf "%s" "$res" | x jq -r .[]
 
     }
 
