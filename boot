@@ -307,7 +307,7 @@ A
         respath="$(___xcmd_file_normalize_respath "$respath")"
 
         curl \
-            "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}"
+            "$___XCMD_SERVICE_URL/api/v0/file/ls?token=$(___xcmd_token)&res=${respath}" 2>/dev/null
     }
 
     ___xcmd_file_which(){
@@ -364,7 +364,7 @@ A
 
         curl \
             -F "file=@$localfp" \
-            "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_token)&res=${respath}"
+            "$___XCMD_SERVICE_URL/api/v0/file/upload?token=$(___xcmd_token)&res=${respath}" 2>/dev/null
         printf "\n"
     }
 
@@ -372,7 +372,7 @@ A
         local respath="${1:?Please provide path}"
         respath="$(___xcmd_file_normalize_respath "$respath")"
 
-        curl "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_token)&res=${respath}"
+        curl "$___XCMD_SERVICE_URL/api/v0/file/share/true?token=$(___xcmd_token)&res=${respath}" 2>/dev/null
         printf "\n"
     }
 
@@ -380,7 +380,7 @@ A
         local respath="${1:?Please provide path}"
         respath="$(___xcmd_file_normalize_respath "$respath")"
 
-        curl "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_token)&res=${respath}"
+        curl "$___XCMD_SERVICE_URL/api/v0/file/share/false?token=$(___xcmd_token)&res=${respath}" 2>/dev/null
         printf "\n"
     }
 
