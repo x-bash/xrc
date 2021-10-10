@@ -3,6 +3,7 @@
     "files.associations": {
         "*.json": "json",
         "index.html": "shellscript",
+        "**/*.md": "markdown",
         "**/std/**": "shellscript",
         "**/tools/*": "shellscript",
         "**/cloud/*": "shellscript",
