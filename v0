@@ -1,375 +1,374 @@
 # shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
-if [ -n "$RELOAD" ] || [ -z "$___X_CMD_PATH" ]; then
-
-    # Section: Requirement & Initialize
-    if curl --version 1>/dev/null 2>&1; then
-        [ -n "$KSH_VERSION" ] && alias local=typeset
-        ___xcmd_http_get(){
-            # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
-            xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
-            eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
-            local code=$?
-            # TODO: figure out a way to distinguish timeout or network failure
-            # [ $code -eq 28 ] && return 4
-            return $code
-        }
-    else
-        printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
-        return 1 || exit 1
-    fi
-
-    X_CMD_SRC_SHELL="sh"
-    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh";  setopt aliases
-    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"; shopt -s expand_aliases
-    elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
-    fi
-
-    TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
-
-    xrc_log debug "Setting env ___X_CMD_PATH: $___X_CMD_PATH"
-    ___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
-    mkdir -p "$___X_CMD_PATH"
-    PATH="$___X_CMD_PATH/.bin:$PATH"
-
-    xrc_log(){
-        local level="$1"; shift
-        [ "$level" = debug ] && return
-        printf "[%s]: %s\n" "$level" "$@"
+# Section: Requirement & Initialize
+if curl --version 1>/dev/null 2>&1; then
+    [ -n "$KSH_VERSION" ] && alias local=typeset
+    ___xcmd_http_get(){
+        # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
+        xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
+        eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
+        local code=$?
+        # TODO: figure out a way to distinguish timeout or network failure
+        # [ $code -eq 28 ] && return 4
+        return $code
     }
-    # EndSection
+else
+    printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
+    return 1 || exit 1
+fi
 
-    # Section: network & mirror
-    ___xcmd_curl() {
-        local REDIRECT=/dev/stdout
+xrc_log(){
+    local level="$1"; shift
+    [ "$level" = debug ] && return
+    printf "[%s]: %s\n" "$level" "$@"
+}
+
+X_CMD_SRC_SHELL="sh"
+if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh";  setopt aliases
+elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"; shopt -s expand_aliases
+elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
+fi
+
+TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
+
+xrc_log debug "Setting env ___X_CMD_PATH: $___X_CMD_PATH"
+___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
+mkdir -p "$___X_CMD_PATH"
+PATH="$___X_CMD_PATH/.bin:$PATH"
+
+# EndSection
+
+# Section: network & mirror
+___xcmd_curl() {
+    local REDIRECT=/dev/stdout
+    if [ -n "$CACHE" ]; then
+        if [ -z "$___XRC_UPDATE" ] && [ -f "$CACHE" ]; then
+            xrc_log debug "Function ___xcmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
+            return 0
+        fi
+        # First make sure it works before webservice. Fail fast.
+        mkdir -p "$(dirname "$CACHE")"
+        REDIRECT="$TMPDIR/x-bash-temp-download.$RANDOM"
+    fi
+
+    if ___xcmd_http_get "$1" 1>"$REDIRECT"; then
         if [ -n "$CACHE" ]; then
-            if [ -z "$___XRC_UPDATE" ] && [ -f "$CACHE" ]; then
-                xrc_log debug "Function ___xcmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
-                return 0
-            fi
-            # First make sure it works before webservice. Fail fast.
-            mkdir -p "$(dirname "$CACHE")"
-            REDIRECT="$TMPDIR/x-bash-temp-download.$RANDOM"
+            xrc_log debug "Copy the temp file to CACHE file: $CACHE"
+            mv "$REDIRECT" "$CACHE"
         fi
+    else
+        local code=$?
+        xrc_log debug "___xcmd_http_get $1 return code: $code. Fail to retrieve file from: $1"
+        [ -n "$CACHE" ] && rm -f "$REDIRECT"    # In centos, file in "$REDIRECT" is write protected.
+        return $code
+    fi
+}
 
-        if ___xcmd_http_get "$1" 1>"$REDIRECT"; then
-            if [ -n "$CACHE" ]; then
-                xrc_log debug "Copy the temp file to CACHE file: $CACHE"
-                mv "$REDIRECT" "$CACHE"
-            fi
-        else
-            local code=$?
-            xrc_log debug "___xcmd_http_get $1 return code: $code. Fail to retrieve file from: $1"
-            [ -n "$CACHE" ] && rm -f "$REDIRECT"    # In centos, file in "$REDIRECT" is write protected.
-            return $code
-        fi
-    }
-
-    ___x_cmd_mirror(){
-        local fp="$___X_CMD_PATH/.source.mirror.list"
-        if [ $# -ne 0 ]; then
-            mkdir -p "$(dirname "$fp")"
-            local IFS="
+___x_cmd_mirror(){
+    local fp="$___X_CMD_PATH/.source.mirror.list"
+    if [ $# -ne 0 ]; then
+        mkdir -p "$(dirname "$fp")"
+        local IFS="
 ";
-            printf "%s" "$*" >"$fp"
-            return
-        fi
-        if [ ! -f "$fp" ]; then
-            # "https://raw.githubusercontent.com/x-bash/%s/stable/%s"
-            # "https://gitee.com/%s/%s/raw/stable/%s"
-            # "https://raw.githubusercontent.com/x-cmd/std/stable/%s/%s"
-            # "https://gitee.com/x-cmd/std/raw/stable/%s/%s"
-            ___x_cmd_mirror \
-                "https://raw.githubusercontent.com/%s/%s/master/%s" \
-                "https://gitee.com/%s/%s/raw/master/%s"
-                # "https://sh.x-cmd.com"
-        fi
-        cat "$fp"
-    }
-    # EndSection
+        printf "%s" "$*" >"$fp"
+        return
+    fi
+    if [ ! -f "$fp" ]; then
+        # "https://raw.githubusercontent.com/x-bash/%s/stable/%s"
+        # "https://gitee.com/%s/%s/raw/stable/%s"
+        # "https://raw.githubusercontent.com/x-cmd/std/stable/%s/%s"
+        # "https://gitee.com/x-cmd/std/raw/stable/%s/%s"
+        ___x_cmd_mirror \
+            "https://raw.githubusercontent.com/%s/%s/master/%s" \
+            "https://gitee.com/%s/%s/raw/master/%s"
+            # "https://sh.x-cmd.com"
+    fi
+    cat "$fp"
+}
+# EndSection
 
-    xrc(){
-        [ $# -eq 0 ] && set -- "help"
-        local subcmd="$1";  shift
-        case "$subcmd" in
-            help)
-                _xrc_help ;;
-            c|cat)
-                if [ $# -gt 0 ]; then
-                    eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")"
-                    return
-                fi
-                cat >&2 <<A
-xrc cat         show the script in text form
-        Uasge:  xrc  cat <lib> [<lib>...]
-        Example: source "$(xrc cat str)"
-A
-                return 1;;
-            w|which)
-                if [ $# -gt 0 ]; then
-                    eval "$(t="printf" ___xcmd_xrc_source_file_list_code "$@")"
-                    return
-                fi
-                cat >&2 <<A
-xrc which       Download lib files and print the local path.
-        Uasge:  xrc which <lib> [<lib>...]
-        Example: source "$(xrc which str)"
-A
-                return 1 ;;
-            cache)
-                printf "%s" "$___X_CMD_PATH" ;;
-            mirror)
-                ___x_cmd_mirror "$@" ;;
-            export-all)
-                ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
-            update)
-                ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
-            ls)
-                ls "$___X_CMD_PATH" ;;  # If tar.gz, using tar ls. If folder, ls $folder
-            reload)
-                if [ "$#" -eq 0 ]; then
-                    RELOAD=1 xrc xrc; return
-                fi
-                local ___XRC_RELOAD=1
-                eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")" ;;
-            *)
-                eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
-        esac
-    }
-
-    # Section: xrc helper function
-    ___xcmd_xrc_source_file_list_code(){
-        local code=""
-        local file
-        local exec=${t:-.}
-        while [ $# -ne 0 ]; do
-            # What if the ___xcmd_which_one contains '"'
-            local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-            if ! file="$(___xcmd_which_one "$1")"; then
-                echo "return 1"
-                return 0
+xrc(){
+    [ $# -eq 0 ] && set -- "help"
+    local subcmd="$1";  shift
+    case "$subcmd" in
+        help)
+            ___xrc_help ;;
+        c|cat)
+            if [ $# -gt 0 ]; then
+                eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")"
+                return
             fi
+            cat >&2 <<A
+xrc cat         show the script in text form
+    Uasge:  xrc  cat <lib> [<lib>...]
+    Example: source "$(xrc cat str)"
+A
+            return 1;;
+        w|which)
+            if [ $# -gt 0 ]; then
+                eval "$(t="printf" ___xcmd_xrc_source_file_list_code "$@")"
+                return
+            fi
+            cat >&2 <<A
+xrc which       Download lib files and print the local path.
+    Uasge:  xrc which <lib> [<lib>...]
+    Example: source "$(xrc which str)"
+A
+            return 1 ;;
+        cache)
+            printf "%s" "$___X_CMD_PATH" ;;
+        mirror)
+            ___x_cmd_mirror "$@" ;;
+        export-all)
+            ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
+        update)
+            ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
+        ls)
+            ls "$___X_CMD_PATH" ;;  # If tar.gz, using tar ls. If folder, ls $folder
+        reload)
+            if [ "$#" -eq 0 ]; then
+                RELOAD=1 xrc xrc; return
+            fi
+            local ___XRC_RELOAD=1
+            eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")" ;;
+        *)
+            eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
+    esac
+}
 
-            if [ "$exec" != "." ]; then
-                code="$code
+# Section: xrc helper function
+___xcmd_xrc_source_file_list_code(){
+    local code=""
+    local file
+    local exec=${t:-.}
+    while [ $# -ne 0 ]; do
+        # What if the ___xcmd_which_one contains '"'
+        local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
+        if ! file="$(___xcmd_which_one "$1")"; then
+            echo "return 1"
+            return 0
+        fi
+
+        if [ "$exec" != "." ]; then
+            code="$code
 $exec \"$file\""
-            else
-                # Ask whether using http or outside resource.
-                if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
-                    printf "Sourcing script from unknown location: %s\n" "$1"
-                    cat >&2 <<A
+        else
+            # Ask whether using http or outside resource.
+            if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
+                printf "Sourcing script from unknown location: %s\n" "$1"
+                cat >&2 <<A
 SECURITY WARNING! Sourcing script from unknown location: $1
 If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
 > NOWARN=1 xrc "$1"
 A
-                    printf "Input yes to continue. Otherwise exit > " >&2
-                    local input
-                    read -r input
+                printf "Input yes to continue. Otherwise exit > " >&2
+                local input
+                read -r input
 
-                    if [ "$input" != "yes" ]; then
-                        echo "Exit becaause detect a non yes output: $input" >&2
-                        return 1
-                    fi
+                if [ "$input" != "yes" ]; then
+                    echo "Exit becaause detect a non yes output: $input" >&2
+                    return 1
                 fi
+            fi
 
-                if [ -z "$___XRC_RELOAD" ]; then
-                    if [ "${___X_CMD_XRC_MODULE_IMPORTED#*$file}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-                        shift
-                        continue    # exixted already. skip
-                    fi
+            if [ -z "$___XRC_RELOAD" ]; then
+                if [ "${___X_CMD_XRC_MODULE_IMPORTED#*$file}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
+                    shift
+                    continue    # exixted already. skip
                 fi
-                code="$code
+            fi
+            code="$code
 $exec \"$file\" && \
 ___X_CMD_XRC_MODULE_IMPORTED=\"\$___X_CMD_XRC_MODULE_IMPORTED
 $file\""
-            fi
-            shift
-        done
-        printf "%s\n" "$code"
-    }
+        fi
+        shift
+    done
+    printf "%s\n" "$code"
+}
 
-    ___xcmd_curl_gitx(){   # Simple strategy
-        local repo="${1:?Provide reponame}"
-        local mod="${2:?Provide location like str}"
-        local mod_repo=${mod%%/*}
-        local mod_subpath=${mod#*/}
+___xcmd_curl_gitx(){   # Simple strategy
+    local repo="${1:?Provide reponame}"
+    local mod="${2:?Provide location like str}"
+    local mod_repo=${mod%%/*}
+    local mod_subpath=${mod#*/}
 
-        local IFS
+    local IFS
 
-        local mirror_list
-        mirror_list="$(xrc mirror)"
+    local mirror_list
+    mirror_list="$(xrc mirror)"
 
-        local mirror
-        local lineno=1
-        local urlpath
-        while read -r mirror; do
-            # shellcheck disable=SC2059
-            urlpath="$(printf "$mirror" "$repo" "$mod_repo" "$mod_subpath")"
-            xrc_log debug "Trying: $urlpath"
-            ___xcmd_curl "$urlpath"
+    local mirror
+    local lineno=1
+    local urlpath
+    while read -r mirror; do
+        # shellcheck disable=SC2059
+        urlpath="$(printf "$mirror" "$repo" "$mod_repo" "$mod_subpath")"
+        xrc_log debug "Trying: $urlpath"
+        ___xcmd_curl "$urlpath"
 
-            case $? in
-                0)  if [ "$lineno" -ne 1 ]; then
-                        xrc_log debug "Current default mirror is $mirror"
-                        xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
+        case $? in
+            0)  if [ "$lineno" -ne 1 ]; then
+                    xrc_log debug "Current default mirror is $mirror"
+                    xrc mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
 
-                        # Set CHINA_NET FLAG
-                        case "$mirror" in
-                            *gitee*)                    XRC_CHINA_NET=1 ;;
-                            *github*|*gitlab*)          XRC_CHINA_NET=  ;;
-                        esac
-                    fi
-                    return 0;;
-                4)  xrc_log debug "Network unavailable."
-                    return 4;;
-                *)  xrc_log debug "Mirror is down: $urlpath"
-            esac
-            lineno=$((lineno+1))  # Support both ash, dash, bash
-        done <<A
+                    # Set CHINA_NET FLAG
+                    case "$mirror" in
+                        *gitee*)                    XRC_CHINA_NET=1 ;;
+                        *github*|*gitlab*)          XRC_CHINA_NET=  ;;
+                    esac
+                fi
+                return 0;;
+            4)  xrc_log debug "Network unavailable."
+                return 4;;
+            *)  xrc_log debug "Mirror is down: $urlpath"
+        esac
+        lineno=$((lineno+1))  # Support both ash, dash, bash
+    done <<A
 ${mirror_list}
 A
-        return 1
-    }
+    return 1
+}
 
-    ___xcmd_search_path(){
-        local cur="${1:?Provide starting path}"
+___xcmd_search_path(){
+    local cur="${1:?Provide starting path}"
 
-        cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
+    cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
 
-        local relative_filepath="${2:?Provide relative filepath}"
-        while [ ! "$cur" = "" ]; do
-            if [ -f "$cur/$relative_filepath" ]; then
-                printf "%s" "$cur"
-                return 0
-            fi
-            cur=${cur%/*}
-        done
-        return 1
-    }
+    local relative_filepath="${2:?Provide relative filepath}"
+    while [ ! "$cur" = "" ]; do
+        if [ -f "$cur/$relative_filepath" ]; then
+            printf "%s" "$cur"
+            return 0
+        fi
+        cur=${cur%/*}
+    done
+    return 1
+}
 
-    ___xcmd_which_one(){
-        local RESOURCE_NAME=${1:?Provide resource name}
+___xcmd_which_one(){
+    local RESOURCE_NAME=${1:?Provide resource name}
 
-        local TGT
-        ___X_CMD_UNTRUSTED_RESOURCE=0
-        case "$RESOURCE_NAME" in
-            /*)
-                xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
-                printf "%s" "$RESOURCE_NAME"
-                return 0
-                ;;
-            http://*|https://*)
-                ___X_CMD_UNTRUSTED_RESOURCE=1
-                xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
+    local TGT
+    ___X_CMD_UNTRUSTED_RESOURCE=0
+    case "$RESOURCE_NAME" in
+        /*)
+            xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
+            printf "%s" "$RESOURCE_NAME"
+            return 0
+            ;;
+        http://*|https://*)
+            ___X_CMD_UNTRUSTED_RESOURCE=1
+            xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
 
-                TGT="$___X_CMD_PATH/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
-                if ! CACHE="$TGT" ___xcmd_curl "$RESOURCE_NAME"; then
-                    xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
-                    return 1
-                else
-                    printf "%s" "$TGT"
-                fi
-                ;;
-            *@*/*)
-                xrc hub/v0
-                ___xcmd_hub_file_which "$RESOURCE_NAME"     # Will set ___X_CMD_UNTRUSTED_RESOURCE=1 if from unknow source
-                ;;
-            ./*|../*)
-                xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
-                local tmp
-                if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
-                    printf "%s" "$tmp/$(basename "$RESOURCE_NAME")"
-                    return 0
-                else
-                    xrc_log warn "Local file not exists: $RESOURCE_NAME"
-                    return 1
-                fi
-                ;;
-            *)
-                [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
-
-                if TGT="$(___xcmd_search_path . ".x-cmd/$RESOURCE_NAME")"; then
-                    printf "%s" "$TGT/.x-cmd/$RESOURCE_NAME"
-                    return                   # .x-cmd
-                fi
-
-                # x-bash module
-                xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
-                local module="$RESOURCE_NAME"
-                if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
-                    module="$module/latest"         # If it is short alias like str (short for str/latest)
-                    xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
-                fi
-                TGT="$___X_CMD_PATH/$module"
-
-                if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
-                    printf "%s" "$TGT"
-                    return
-                fi
-
-                xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-                if ! CACHE="$TGT" ___xcmd_curl_gitx "x-bash" "$module"; then
-                    xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
-                    return 1
-                fi
+            TGT="$___X_CMD_PATH/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
+            if ! CACHE="$TGT" ___xcmd_curl "$RESOURCE_NAME"; then
+                xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+                return 1
+            else
                 printf "%s" "$TGT"
-        esac
-    }
-    # EndSection
+            fi
+            ;;
+        *@*/*)
+            xrc hub/v0
+            ___xcmd_hub_file_which "$RESOURCE_NAME"     # Will set ___X_CMD_UNTRUSTED_RESOURCE=1 if from unknow source
+            ;;
+        ./*|../*)
+            xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
+            local tmp
+            if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
+                printf "%s" "$tmp/$(basename "$RESOURCE_NAME")"
+                return 0
+            else
+                xrc_log warn "Local file not exists: $RESOURCE_NAME"
+                return 1
+            fi
+            ;;
+        *)
+            [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
 
-    # Section: advise and help
-    if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
-        xrc_log debug "Using module advise for completion."
-        xrc advise/v0
+            if TGT="$(___xcmd_search_path . ".x-cmd/$RESOURCE_NAME")"; then
+                printf "%s" "$TGT/.x-cmd/$RESOURCE_NAME"
+                return                   # .x-cmd
+            fi
 
-        advise init xrc - <<A
+            # x-bash module
+            xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
+            local module="$RESOURCE_NAME"
+            if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
+                module="$module/latest"         # If it is short alias like str (short for str/latest)
+                xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
+            fi
+            TGT="$___X_CMD_PATH/$module"
+
+            if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
+                printf "%s" "$TGT"
+                return
+            fi
+
+            xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
+            if ! CACHE="$TGT" ___xcmd_curl_gitx "x-bash" "$module"; then
+                xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+                return 1
+            fi
+            printf "%s" "$TGT"
+    esac
+}
+# EndSection
+
+# Section: advise and help
+if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
+    xrc_log debug "Using module advise for completion."
+    xrc advise/v0
+
+    advise init xrc - <<A
 {
-    "cat|c": {
-        "#n": "ls $___X_CMD_PATH | grep -v BASE64"
-    },
-    "which|w": {
-        "#n": "ls $___X_CMD_PATH | grep -v BASE64"
-    },
-    "cache": {},
-    "clear": {},
+"cat|c": {
+    "#n": "ls $___X_CMD_PATH | grep -v BASE64"
+},
+"which|w": {
+    "#n": "ls $___X_CMD_PATH | grep -v BASE64"
+},
+"cache": {},
+"clear": {},
 
-    "mirror": {
-        "#n": [
-            "https://x-bash.gitee.io",
-            "https://x-bash.github.io",
-            "https://x-bash.gitlab.io",
-            "https://bitbucket.com/x-bash/x-bash"
-        ]
-    }
+"mirror": {
+    "#n": [
+        "https://x-bash.gitee.io",
+        "https://x-bash.github.io",
+        "https://x-bash.gitlab.io",
+        "https://bitbucket.com/x-bash/x-bash"
+    ]
+}
 }
 A
-        :
-    fi
-
-    _xrc_help(){
-        printf "xrc     x-bash core function.
-        Uasge:  xrc <lib> [<lib>...]
-        Please visit our homepage for more information: https://x-cmd.com
-SUBCOMMAND:
-        cat|c           Provide cat facility
-        which|w         Provide local cache file location
-        update|u        Update file
-        upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
-        cache           Provide cache filepath
-        clear           Clear the cache
-" >&2
-    }
-    # EndSection
-
-    # Section: other initialization
-    case "$(xrc mirror|head -n1)" in
-        *gitee*)    XRC_CHINA_NET=1 ;;
-        *)          XRC_CHINA_NET=
-    esac
-
-    [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
-
-    # Lazy loading...
-    x(){    unset -f x; xrc reload xcmd/v0 && x ${1:+"$@"};    }
-    # EndSection
+    :
 fi
+
+___xrc_help(){
+    printf "xrc     x-bash core function.
+    Uasge:  xrc <lib> [<lib>...]
+    Please visit our homepage for more information: https://x-cmd.com
+SUBCOMMAND:
+    cat|c           Provide cat facility
+    which|w         Provide local cache file location
+    update|u        Update file
+    upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
+    cache           Provide cache filepath
+    clear           Clear the cache
+" >&2
+}
+# EndSection
+
+# Section: other initialization
+case "$(xrc mirror|head -n1)" in
+    *gitee*)    XRC_CHINA_NET=1 ;;
+    *)          XRC_CHINA_NET=
+esac
+
+[ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
+
+# Lazy loading...
+x(){    unset -f x; xrc reload xcmd/v0 && x ${1:+"$@"};    }
+# EndSection
+
