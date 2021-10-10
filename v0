@@ -124,9 +124,11 @@ A
                 ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
             update)
                 ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
+            ls)
+                ls "$___X_CMD_PATH" ;;  # If tar.gz, using tar ls. If folder, ls $folder
             reload)
                 if [ "$#" -eq 0 ]; then
-                    RELOAD=1 . "$___X_CMD_PATH/../boot"; return
+                    RELOAD=1 xrc xrc; return
                 fi
                 local ___XRC_RELOAD=1
                 eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")" ;;
