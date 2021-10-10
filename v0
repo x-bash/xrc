@@ -63,7 +63,7 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
     }
 
     # Section: mirror
-    _xrc_mirror(){
+    ___x_cmd_mirror(){
         local fp="$___X_CMD_XRC_PATH/.source.mirror.list"
         if [ $# -ne 0 ]; then
             mkdir -p "$(dirname "$fp")"
@@ -73,7 +73,7 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
             return
         fi
         if [ ! -f "$fp" ]; then
-            _xrc_mirror \
+            ___x_cmd_mirror \
                 "https://raw.githubusercontent.com/%s/%s/master/%s" \
                 "https://gitee.com/%s/%s/raw/master/%s"
                 # "https://x-bash.github.io/%s/%s"
@@ -304,7 +304,7 @@ A
                         RELOAD=1 xrc upgrade
                         ;;
             log)        shift;  _xrc_log "$@" ;;
-            mirror)     shift;  _xrc_mirror "$@" ; return ;;
+            mirror)     shift;  ___x_cmd_mirror "$@" ; return ;;
             reload)     shift
                         if [ "$#" != 0 ]; then
                             local ___XRC_RELOAD=1
