@@ -31,7 +31,6 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
     ___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$___X_CMD_PATH"
     PATH="$___X_CMD_PATH/.bin:$PATH"
-
     # EndSection
 
     # Section: network
@@ -59,7 +58,6 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
             return $code
         fi
     }
-
     # EndSection
 
     ___xcmd_search_path(){
@@ -89,8 +87,10 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
             return
         fi
         if [ ! -f "$fp" ]; then
-            # "https://raw.githubusercontent.com/%s/%s/stable/%s"
+            # "https://raw.githubusercontent.com/x-bash/%s/stable/%s"
             # "https://gitee.com/%s/%s/raw/stable/%s"
+            # "https://raw.githubusercontent.com/x-cmd/std/stable/%s/%s"
+            # "https://gitee.com/x-cmd/std/raw/stable/%s/%s"
             ___x_cmd_mirror \
                 "https://raw.githubusercontent.com/%s/%s/master/%s" \
                 "https://gitee.com/%s/%s/raw/master/%s"
@@ -156,6 +156,24 @@ A
                 code="$code
 $exec \"$file\""
             else
+                # Ask whether using http or outside resource.
+                if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
+                    printf "Sourcing script from unknown location: %s\n" "$1"
+                    cat >&2 <<A
+SECURITY WARNING! Sourcing script from unknown location: $1
+If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
+> NOWARN=1 xrc "$1"
+A
+                    printf "Input yes to continue. Otherwise exit > " >&2
+                    local input
+                    read -r input
+
+                    if [ "$input" != "yes" ]; then
+                        echo "Exit becaause detect a non yes output: $input" >&2
+                        return 1
+                    fi
+                fi
+
                 if [ -z "$___XRC_RELOAD" ]; then
                     if [ "${___X_CMD_XRC_MODULE_IMPORTED#*$file}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
                         shift
@@ -226,6 +244,7 @@ A
         local RESOURCE_NAME=${1:?Provide resource name}
 
         local TGT
+        ___X_CMD_UNTRUSTED_RESOURCE=0
         case "$RESOURCE_NAME" in
             /*)
                 xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
@@ -233,11 +252,20 @@ A
                 return 0
                 ;;
             http://*|https://*)
-                ___xcmd_which_one_http "$RESOURCE_NAME"
+                ___X_CMD_UNTRUSTED_RESOURCE=1
+                xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
+
+                TGT="$___X_CMD_XRC_PATH/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
+                if ! CACHE="$TGT" ___xcmd_curl "$RESOURCE_NAME"; then
+                    xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+                    return 1
+                else
+                    printf "%s" "$TGT"
+                fi
                 ;;
             *@*/*)
                 xrc hub/v0
-                ___xcmd_hub_file_which "$RESOURCE_NAME"
+                ___xcmd_hub_file_which "$RESOURCE_NAME"     # Will set ___X_CMD_UNTRUSTED_RESOURCE=1 if from unknow source
                 ;;
             ./*|../*)
                 xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
@@ -279,37 +307,6 @@ A
                 fi
                 printf "%s" "$TGT"
         esac
-    }
-
-    ___xcmd_which_one_http(){
-        local RESOURCE_NAME="${1:?Provide resource name}"
-        xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
-        if [ -z "$NOWARN" ]; then
-            echo "Sourcing script from unknown location: " "$RESOURCE_NAME"
-            cat >&2 <<A
-SECURITY WARNING! Sourcing script from unknown location: $RESOURCE_NAME
-If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
-    > NOWARN=1 xrc "$RESOURCE_NAME"
-
-A
-            printf "Input yes to continue. Otherwise exit > " >&2
-            local input
-            read -r input
-
-            if [ "$input" != "yes" ]; then
-                echo "Exit becaause detect a non yes output: $input" >&2
-                return 1
-            fi
-        fi
-
-        TGT="$___X_CMD_XRC_PATH/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
-        if ! CACHE="$TGT" ___xcmd_curl "$RESOURCE_NAME"; then
-            xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
-            return 1
-        fi
-
-        echo "$TGT"
-        return 0
     }
 
     # Section: advise and help
