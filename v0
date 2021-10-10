@@ -165,12 +165,11 @@ $exec \"$file\""
                 code="$code
 $exec \"$file\" && \
 ___X_CMD_XRC_MODULE_IMPORTED=\"\$___X_CMD_XRC_MODULE_IMPORTED
-$file\"
-"
+$file\""
             fi
             shift
         done
-        printf "%s" "$code"
+        printf "%s\n" "$code"
     }
 
     case "$(xrc mirror|head -n1)" in
