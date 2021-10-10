@@ -2,7 +2,7 @@
 
 if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
 
-    # Section: network
+    # Section: Requirement & Initialize
     if curl --version 1>/dev/null 2>&1; then
         [ -n "$KSH_VERSION" ] && alias local=typeset
         ___xcmd_http_get(){
@@ -19,6 +19,22 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
         return 1 || exit 1
     fi
 
+    X_CMD_SRC_SHELL="sh"
+    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh";  setopt aliases
+    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"; shopt -s expand_aliases
+    elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
+    fi
+
+    TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
+
+    xrc_log debug "Setting env ___X_CMD_XRC_PATH: $___X_CMD_XRC_PATH"
+    ___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
+    mkdir -p "$___X_CMD_PATH"
+    PATH="$___X_CMD_PATH/.bin:$PATH"
+
+    # EndSection
+
+    # Section: network
     ___xcmd_curl() {
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
@@ -123,23 +139,6 @@ A
         esac
     }
 
-
-    # Section: initialize
-    X_CMD_SRC_SHELL="sh"
-    if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh";  setopt aliases
-    elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"; shopt -s expand_aliases
-    elif    [ -n "$KSH_VERSION" ];  then    X_CMD_SRC_SHELL="ksh"
-    fi
-
-    TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
-
-    xrc_log debug "Setting env ___X_CMD_XRC_PATH: $___X_CMD_XRC_PATH"
-    X_CMD_SRC_PATH="$HOME/.x-cmd"                  # TODO: Using X_CMD_SRC_PATH
-    ___X_CMD_XRC_PATH="$HOME/.x-cmd/x-bash"           # boot will be placed in "$HOME/.x-cmd/boot"
-    mkdir -p "$___X_CMD_XRC_PATH"
-    PATH="$(dirname "$___X_CMD_XRC_PATH")/bin:$PATH"
-
-    # EndSection
     ___xcmd_xrc_source_file_list_code(){
         local code=""
         local file
@@ -207,8 +206,8 @@ $file\""
 
                         # Set CHINA_NET FLAG
                         case "$mirror" in
-                            *gitee*)    XRC_CHINA_NET=1 ;;
-                            *)          XRC_CHINA_NET=
+                            *gitee*)                    XRC_CHINA_NET=1 ;;
+                            *github*|*gitlab*)          XRC_CHINA_NET=  ;;
                         esac
                     fi
                     return 0;;
@@ -360,6 +359,7 @@ SUBCOMMAND:
     [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
     # EndSection
 
+    # Lazy loading...
     x(){
         xrc reload xcmd/v0 && x ${1:+"$@"}
     }
