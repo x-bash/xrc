@@ -1,8 +1,9 @@
+# shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
-XRC_UPDATE_AWK_PATH="$(xrc which x-bash/xrc/update/awk.awk)"
+XRC_UPDATE_AWK_PATH="$(xrc which x-bash/xrc/_v0/update.awk)"
 xrc_update_list_dependency(){
     xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$XRC_UPDATE_AWK_PATH"
-    # xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$(xrc which x-bash/xrc/update/awk.awk)"
+    # xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$(xrc which x-bash/xrc/update/update.awk)"
 }
 
 xrc_update()(
