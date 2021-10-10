@@ -31,10 +31,12 @@ fi
 
 TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
 
-xrc_log debug "Setting env ___X_CMD_PATH: $___X_CMD_PATH"
-___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
-mkdir -p "$___X_CMD_PATH" || return 1 || exit 1
-PATH="$___X_CMD_PATH/.bin:$PATH"
+if [ -z "$___X_CMD_PATH" ]; then
+    xrc_log debug "Setting env ___X_CMD_PATH: $___X_CMD_PATH"
+    ___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
+    mkdir -p "$___X_CMD_PATH" || return 1 || exit 1
+    PATH="$___X_CMD_PATH/.bin:$PATH"
+fi
 
 # EndSection
 
