@@ -360,5 +360,5 @@ SUBCOMMAND:
     # EndSection
 
     # Lazy loading...
-    x(){    xrc reload xcmd/v0 && x ${1:+"$@"};    }
+    x(){    unset -f x; xrc reload xcmd/v0 && x ${1:+"$@"};    }
 fi
