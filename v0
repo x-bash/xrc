@@ -92,38 +92,46 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
         [ $# -eq 0 ] && set -- "help"
         local subcmd="$1";  shift
         case "$subcmd" in
-            help)       _xrc_help ;;
+            help)
+                _xrc_help ;;
             c|cat)
-                if [ $# -eq 0 ]; then
-                    cat >&2 <<A
+                if [ $# -gt 0 ]; then
+                    eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")"
+                    return
+                fi
+                cat >&2 <<A
 xrc cat         show the script in text form
         Uasge:  xrc  cat <lib> [<lib>...]
         Example: source "$(xrc cat str)"
 A
-                fi
-                eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")" ;;
+                return 1;;
             w|which)
-                if [ $# -eq 0 ]; then
-                    cat >&2 <<A
+                if [ $# -gt 0 ]; then
+                    eval "$(t="echo" ___xcmd_xrc_source_file_list_code "$@")"
+                    return
+                fi
+                cat >&2 <<A
 xrc which       Download lib files and print the local path.
         Uasge:  xrc which <lib> [<lib>...]
         Example: source "$(xrc which str)"
 A
-                    return 1
-                fi
-                eval "$(t="echo" ___xcmd_xrc_source_file_list_code "$@")"  ;;
-            cache)      echo "$___X_CMD_XRC_PATH" ;;
-            mirror)     ___x_cmd_mirror "$@" ;;
-            export-all) ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
-
-            update)     ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
+                return 1 ;;
+            cache)
+                echo "$___X_CMD_XRC_PATH" ;;
+            mirror)
+                ___x_cmd_mirror "$@" ;;
+            export-all)
+                ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
+            update)
+                ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
             reload)
                 if [ "$#" -eq 0 ]; then
                     RELOAD=1 . "$___X_CMD_XRC_PATH/../boot"; return
                 fi
                 local ___XRC_RELOAD=1
                 eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")" ;;
-            *)          eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
+            *)
+                eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
         esac
     }
 
