@@ -33,7 +33,7 @@ TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT 
 
 xrc_log debug "Setting env ___X_CMD_PATH: $___X_CMD_PATH"
 ___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
-mkdir -p "$___X_CMD_PATH"
+mkdir -p "$___X_CMD_PATH" || return 1 || exit 1
 PATH="$___X_CMD_PATH/.bin:$PATH"
 
 # EndSection
