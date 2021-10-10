@@ -125,8 +125,6 @@ A
 
 
     # Section: initialize
-    xrc log init xrc
-
     X_CMD_SRC_SHELL="sh"
     if      [ -n "$ZSH_VERSION" ];  then    X_CMD_SRC_SHELL="zsh";  setopt aliases
     elif    [ -n "$BASH_VERSION" ]; then    X_CMD_SRC_SHELL="bash"; shopt -s expand_aliases
@@ -314,7 +312,6 @@ A
         echo "$TGT"
         return 0
     }
-
 
     # Section: advise and help
     if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
