@@ -31,9 +31,15 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
     ___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
     mkdir -p "$___X_CMD_PATH"
     PATH="$___X_CMD_PATH/.bin:$PATH"
+
+    xrc_log(){
+        local level="$1"; shift
+        [ "$level" = debug ] && return
+        printf "[%s]: %s\n" "$level" "$@"
+    }
     # EndSection
 
-    # Section: network
+    # Section: network & mirror
     ___xcmd_curl() {
         local REDIRECT=/dev/stdout
         if [ -n "$CACHE" ]; then
@@ -58,25 +64,7 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
             return $code
         fi
     }
-    # EndSection
 
-    ___xcmd_search_path(){
-        local cur="${1:?Provide starting path}"
-
-        cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
-
-        local relative_filepath="${2:?Provide relative filepath}"
-        while [ ! "$cur" = "" ]; do
-            if [ -f "$cur/$relative_filepath" ]; then
-                printf "%s" "$cur"
-                return 0
-            fi
-            cur=${cur%/*}
-        done
-        return 1
-    }
-
-    # Section: mirror
     ___x_cmd_mirror(){
         local fp="$___X_CMD_XRC_PATH/.source.mirror.list"
         if [ $# -ne 0 ]; then
@@ -100,45 +88,46 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
     }
     # EndSection
 
-    xrc_log(){
-        local level="$1"; shift
-        [ "$level" = debug ] && return
-        printf "[%s]: %s\n" "$level" "$@"
-    }
-
     xrc(){
         [ $# -eq 0 ] && set -- "help"
-        case "$1" in
-            help)       _xrc_help;  return ;;
-            c|cat)      shift;
-                        eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")" ;;
-            w|which)    shift;
-                        if [ $# -eq 0 ]; then
-                            cat >&2 <<A
-xrc which  Download lib files and print the local path.
-        Uasge:  xrc which <lib> [<lib>...]
-        Example: source "$(xrc which std/str)"
+        local subcmd="$1";  shift
+        case "$subcmd" in
+            help)       _xrc_help ;;
+            c|cat)
+                if [ $# -eq 0 ]; then
+                    cat >&2 <<A
+xrc cat         show the script in text form
+        Uasge:  xrc  cat <lib> [<lib>...]
+        Example: source "$(xrc cat str)"
 A
-                            return 1
-                        fi
-                        eval "$(t="echo" ___xcmd_xrc_source_file_list_code "$@")"  ;;
-            cache)      shift;  echo "$___X_CMD_XRC_PATH" ;;
-            mirror)     shift;  ___x_cmd_mirror "$@" ; return ;;
-            export-all) shift;  ( xrc x-bash/xrc/_v0/export;  ___xcmd_xrc_export_all "$@" ) ;;
+                fi
+                eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")" ;;
+            w|which)
+                if [ $# -eq 0 ]; then
+                    cat >&2 <<A
+xrc which       Download lib files and print the local path.
+        Uasge:  xrc which <lib> [<lib>...]
+        Example: source "$(xrc which str)"
+A
+                    return 1
+                fi
+                eval "$(t="echo" ___xcmd_xrc_source_file_list_code "$@")"  ;;
+            cache)      echo "$___X_CMD_XRC_PATH" ;;
+            mirror)     ___x_cmd_mirror "$@" ;;
+            export-all) ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
 
-            update)     shift;  ( xrc x-bash/xrc/_v0/update;  xrc_update "$@" ) ;;
-            reload)     shift
-                        if [ "$#" != 0 ]; then
-                            local ___XRC_RELOAD=1
-                            eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
-                        else
-                            RELOAD=1 . "$___X_CMD_XRC_PATH/../boot"
-                        fi
-                        ;;
+            update)     ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
+            reload)
+                if [ "$#" -eq 0 ]; then
+                    RELOAD=1 . "$___X_CMD_XRC_PATH/../boot"; return
+                fi
+                local ___XRC_RELOAD=1
+                eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")" ;;
             *)          eval "$(t="." ___xcmd_xrc_source_file_list_code "$@")"
         esac
     }
 
+    # Section: xrc helper function
     ___xcmd_xrc_source_file_list_code(){
         local code=""
         local file
@@ -190,13 +179,6 @@ $file\""
         printf "%s\n" "$code"
     }
 
-    case "$(xrc mirror|head -n1)" in
-        *gitee*)    XRC_CHINA_NET=1 ;;
-        *)          XRC_CHINA_NET=
-    esac
-
-    xrc_log debug "Creating $___X_CMD_XRC_PATH/.source.mirror.list"
-
     ___xcmd_curl_gitx(){   # Simple strategy
         local repo="${1:?Provide reponame}"
         local mod="${2:?Provide location like str}"
@@ -237,6 +219,22 @@ $file\""
         done <<A
 ${mirror_list}
 A
+        return 1
+    }
+
+    ___xcmd_search_path(){
+        local cur="${1:?Provide starting path}"
+
+        cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
+
+        local relative_filepath="${2:?Provide relative filepath}"
+        while [ ! "$cur" = "" ]; do
+            if [ -f "$cur/$relative_filepath" ]; then
+                printf "%s" "$cur"
+                return 0
+            fi
+            cur=${cur%/*}
+        done
         return 1
     }
 
@@ -308,6 +306,7 @@ A
                 printf "%s" "$TGT"
         esac
     }
+    # EndSection
 
     # Section: advise and help
     if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
@@ -353,9 +352,15 @@ SUBCOMMAND:
     }
     # EndSection
 
+    # Section: other initialization
+    case "$(xrc mirror|head -n1)" in
+        *gitee*)    XRC_CHINA_NET=1 ;;
+        *)          XRC_CHINA_NET=
+    esac
+
     [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
-    # EndSection
 
     # Lazy loading...
     x(){    unset -f x; xrc reload xcmd/v0 && x ${1:+"$@"};    }
+    # EndSection
 fi
