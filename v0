@@ -94,16 +94,28 @@ xrc(){
     local subcmd="$1";  shift
     case "$subcmd" in
         help)
-            ___xrc_help ;;
+            printf "xrc     x-bash core function.
+    Uasge:  xrc <lib> [<lib>...]
+    Please visit our homepage for more information: https://x-cmd.com
+SUBCOMMAND:
+    cat|c           Show the script in text form.
+    which|w         Download lib files and print the local path.
+    update|u        Update file
+    upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
+    cache           Provide cache filepath
+    clear           Clear the cache
+    ls              Show the cache modules.
+" >&2
+            ;;
         c|cat)
             if [ $# -gt 0 ]; then
                 eval "$(t="cat" ___xcmd_xrc_source_file_list_code "$@")"
                 return
             fi
             cat >&2 <<A
-xrc cat         show the script in text form
+xrc cat         Show the script in text form
     Uasge:  xrc  cat <lib> [<lib>...]
-    Example: source "$(xrc cat str)"
+    Example: eval "$(xrc cat str)"
 A
             return 1;;
         w|which)
@@ -318,11 +330,10 @@ ___xcmd_which_one(){
 }
 # EndSection
 
-# Section: advise and help
+# Section: advise
 if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
     xrc_log debug "Using module advise for completion."
     xrc advise/v0
-
     advise init xrc - <<A
 {
     "cat|c": {
@@ -333,7 +344,6 @@ if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*
     },
     "cache": {},
     "clear": {},
-
     "mirror": {
         "#n": [
             "https://x-bash.gitee.io",
@@ -344,22 +354,8 @@ if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*
     }
 }
 A
-    :
 fi
 
-___xrc_help(){
-    printf "xrc     x-bash core function.
-    Uasge:  xrc <lib> [<lib>...]
-    Please visit our homepage for more information: https://x-cmd.com
-SUBCOMMAND:
-    cat|c           Provide cat facility
-    which|w         Provide local cache file location
-    update|u        Update file
-    upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
-    cache           Provide cache filepath
-    clear           Clear the cache
-" >&2
-}
 # EndSection
 
 # Section: other initialization
@@ -373,4 +369,3 @@ esac
 # Lazy loading...
 x(){    unset -f x; xrc reload xcmd/v0 && x ${1:+"$@"};    }
 # EndSection
-
