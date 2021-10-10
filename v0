@@ -225,7 +225,7 @@ ___xcmd_curl_gitx(){   # Simple strategy
                 return 4;;
             *)  xrc_log debug "Mirror is down: $urlpath"
         esac
-        lineno=$((lineno+1))  # Support both ash, dash, bash
+        lineno=$((lineno+1))
     done <<A
 ${mirror_list}
 A
@@ -325,23 +325,23 @@ if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*
 
     advise init xrc - <<A
 {
-"cat|c": {
-    "#n": "ls $___X_CMD_PATH | grep -v BASE64"
-},
-"which|w": {
-    "#n": "ls $___X_CMD_PATH | grep -v BASE64"
-},
-"cache": {},
-"clear": {},
+    "cat|c": {
+        "#n": "ls $___X_CMD_PATH | grep -v BASE64"
+    },
+    "which|w": {
+        "#n": "ls $___X_CMD_PATH | grep -v BASE64"
+    },
+    "cache": {},
+    "clear": {},
 
-"mirror": {
-    "#n": [
-        "https://x-bash.gitee.io",
-        "https://x-bash.github.io",
-        "https://x-bash.gitlab.io",
-        "https://bitbucket.com/x-bash/x-bash"
-    ]
-}
+    "mirror": {
+        "#n": [
+            "https://x-bash.gitee.io",
+            "https://x-bash.github.io",
+            "https://x-bash.gitlab.io",
+            "https://bitbucket.com/x-bash/x-bash"
+        ]
+    }
 }
 A
     :
