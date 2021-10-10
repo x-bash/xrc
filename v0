@@ -107,7 +107,7 @@ A
                 return 1;;
             w|which)
                 if [ $# -gt 0 ]; then
-                    eval "$(t="echo" ___xcmd_xrc_source_file_list_code "$@")"
+                    eval "$(t="printf" ___xcmd_xrc_source_file_list_code "$@")"
                     return
                 fi
                 cat >&2 <<A
@@ -117,7 +117,7 @@ xrc which       Download lib files and print the local path.
 A
                 return 1 ;;
             cache)
-                echo "$___X_CMD_XRC_PATH" ;;
+                printf "%s" "$___X_CMD_XRC_PATH" ;;
             mirror)
                 ___x_cmd_mirror "$@" ;;
             export-all)
@@ -142,7 +142,6 @@ A
         local exec=${t:-.}
         while [ $# -ne 0 ]; do
             # What if the ___xcmd_which_one contains '"'
-
             local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
             if ! file="$(___xcmd_which_one "$1")"; then
                 echo "return 1"
