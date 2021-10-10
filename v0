@@ -14,12 +14,8 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
             # [ $code -eq 28 ] && return 4
             return $code
         }
-    elif [ "$(x author 2>/dev/null)" = "ljh & LTeam" ]; then
-        [ -n "$KSH_VERSION" ] && alias local=typeset
-        # TODO: Under the situation of container
-        alias ___xcmd_http_get="x cat"
     else
-        printf "boot[ERR]: Cannot found curl or x-cmd binary for web resource downloader." >&2
+        printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
         return 1 || exit 1
     fi
 
