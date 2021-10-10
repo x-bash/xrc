@@ -89,11 +89,11 @@ if [ -n "$RELOAD" ] || [ -z "$___X_CMD_XRC_PATH" ]; then
             return
         fi
         if [ ! -f "$fp" ]; then
+            # "https://raw.githubusercontent.com/%s/%s/stable/%s"
+            # "https://gitee.com/%s/%s/raw/stable/%s"
             ___x_cmd_mirror \
                 "https://raw.githubusercontent.com/%s/%s/master/%s" \
                 "https://gitee.com/%s/%s/raw/master/%s"
-                # "https://x-bash.github.io/%s/%s"
-                # "https://x-bash.gitee.io/%s/%s"
                 # "https://sh.x-cmd.com"
         fi
         cat "$fp"
