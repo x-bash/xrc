@@ -13,7 +13,8 @@
         "**/el/*": "shellscript",
         "**/*.awk": "awk",
         "*": "shellscript",
-        "*install*": "shellscript"
+        "*install*": "shellscript",
+        "LICENSE": "text"
     },
     "files.trimTrailingWhitespace": true,
     "editor.detectIndentation": true,
