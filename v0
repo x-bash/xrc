@@ -79,8 +79,10 @@ ___x_cmd_mirror(){
     fi
     if [ ! -f "$fp" ]; then
         ___x_cmd_mirror \
-            "https://raw.githubusercontent.com/%s/%s/$___X_CMD_BRANCH/%s" \
-            "https://gitee.com/%s/%s/raw/$___X_CMD_BRANCH/%s"
+            "https://raw.githubusercontent.com/x-cmd/x-cmd/mod/$___X_CMD_BRANCH/%s/%s/%s" \
+            "https://gitee.com/x-cmd/x-cmd/raw/mod/$___X_CMD_BRANCH/%s/%s/%s"
+        #     "https://raw.githubusercontent.com/%s/%s/$___X_CMD_BRANCH/%s" \
+        #     "https://gitee.com/%s/%s/raw/$___X_CMD_BRANCH/%s"
     fi
     cat "$fp"
 }
