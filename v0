@@ -81,8 +81,8 @@ ___x_cmd_mirror(){
         # "https://raw.githubusercontent.com/x-cmd/std/stable/%s/%s"
         # "https://gitee.com/x-cmd/std/raw/stable/%s/%s"
         ___x_cmd_mirror \
-            "https://raw.githubusercontent.com/%s/%s/master/%s" \
-            "https://gitee.com/%s/%s/raw/master/%s"
+            "https://raw.githubusercontent.com/%s/%s/main/%s" \
+            "https://gitee.com/%s/%s/raw/main/%s"
             # "https://sh.x-cmd.com"
     fi
     cat "$fp"
