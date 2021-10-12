@@ -31,11 +31,11 @@ fi
 
 TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
 
-if [ -z "$___X_CMD_PATH" ]; then
-    ___xrc_log debug "Setting env ___X_CMD_PATH: $___X_CMD_PATH"
-    ___X_CMD_PATH="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
-    mkdir -p "$___X_CMD_PATH" || return 1 || exit 1
-    PATH="$___X_CMD_PATH/.bin:$PATH"
+if [ -z "$___X_CMD_ROOT" ]; then
+    ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
+    ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
+    mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
+    PATH="$___X_CMD_ROOT/.bin:$PATH"
 fi
 
 # EndSection
@@ -67,7 +67,7 @@ ___x_cmd_curl() {
 }
 
 ___x_cmd_mirror(){
-    local fp="$___X_CMD_PATH/.source.mirror.list"
+    local fp="$___X_CMD_ROOT/.source.mirror.list"
     if [ $# -ne 0 ]; then
         mkdir -p "$(dirname "$fp")"
         local IFS="
@@ -130,7 +130,7 @@ xrc which       Download lib files and print the local path.
 A
             return 1 ;;
         cache)
-            printf "%s" "$___X_CMD_PATH" ;;
+            printf "%s" "$___X_CMD_ROOT" ;;
         mirror)
             ___x_cmd_mirror "$@" ;;
         export-all)
@@ -138,7 +138,7 @@ A
         update)
             ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
         ls)
-            ls "$___X_CMD_PATH" ;;  # If tar.gz, using tar ls. If folder, ls $folder
+            ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
         reload)
             if [ "$#" -eq 0 ]; then
                 RELOAD=1 xrc xrc; return
@@ -275,7 +275,7 @@ ___x_cmd_which_one(){
             ___X_CMD_UNTRUSTED_RESOURCE=1
             ___xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
 
-            TGT="$___X_CMD_PATH/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
+            TGT="$___X_CMD_ROOT/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" ___x_cmd_curl "$RESOURCE_NAME"; then
                 ___xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
                 return 1
@@ -313,7 +313,7 @@ ___x_cmd_which_one(){
                 module="$module/latest"         # If it is short alias like str (short for str/latest)
                 ___xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
             fi
-            TGT="$___X_CMD_PATH/$module"
+            TGT="$___X_CMD_ROOT/$module"
 
             if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
                 printf "%s" "$TGT"
@@ -345,10 +345,10 @@ if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*
     advise init xrc - <<A
 {
     "cat|c": {
-        "#n": "ls $___X_CMD_PATH | grep -v BASE64"
+        "#n": "ls $___X_CMD_ROOT | grep -v BASE64"
     },
     "which|w": {
-        "#n": "ls $___X_CMD_PATH | grep -v BASE64"
+        "#n": "ls $___X_CMD_ROOT | grep -v BASE64"
     },
     "cache": {},
     "clear": {},
