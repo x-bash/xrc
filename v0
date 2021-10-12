@@ -78,14 +78,9 @@ ___x_cmd_mirror(){
         return
     fi
     if [ ! -f "$fp" ]; then
-        # "https://raw.githubusercontent.com/x-bash/%s/stable/%s"
-        # "https://gitee.com/%s/%s/raw/stable/%s"
-        # "https://raw.githubusercontent.com/x-cmd/std/stable/%s/%s"
-        # "https://gitee.com/x-cmd/std/raw/stable/%s/%s"
         ___x_cmd_mirror \
             "https://raw.githubusercontent.com/%s/%s/$___X_CMD_BRANCH/%s" \
             "https://gitee.com/%s/%s/raw/$___X_CMD_BRANCH/%s"
-            # "https://sh.x-cmd.com"
     fi
     cat "$fp"
 }
