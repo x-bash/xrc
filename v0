@@ -66,6 +66,8 @@ ___x_cmd_curl() {
     fi
 }
 
+___X_CMD_BRANCH=main
+
 ___x_cmd_mirror(){
     local fp="$___X_CMD_ROOT/.source.mirror.list"
     if [ $# -ne 0 ]; then
@@ -81,8 +83,8 @@ ___x_cmd_mirror(){
         # "https://raw.githubusercontent.com/x-cmd/std/stable/%s/%s"
         # "https://gitee.com/x-cmd/std/raw/stable/%s/%s"
         ___x_cmd_mirror \
-            "https://raw.githubusercontent.com/%s/%s/main/%s" \
-            "https://gitee.com/%s/%s/raw/main/%s"
+            "https://raw.githubusercontent.com/%s/%s/$___X_CMD_BRANCH/%s" \
+            "https://gitee.com/%s/%s/raw/$___X_CMD_BRANCH/%s"
             # "https://sh.x-cmd.com"
     fi
     cat "$fp"
