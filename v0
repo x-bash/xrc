@@ -339,7 +339,7 @@ ___x_cmd_which_one(){
 # EndSection
 
 # Section: other initialization: advise, initrc lazy loading
-[ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
+# [ -f "$(x initrc which)" ] && . "$(x initrc which)"
 x(){    unset -f x; xrc reload x/v0 && x ${1:+"$@"};    }
 
 if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
