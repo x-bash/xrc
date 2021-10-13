@@ -75,13 +75,24 @@ ___x_cmd_mirror(){
     fi
     if [ ! -f "$fp" ]; then
         ___x_cmd_mirror \
-            "https://raw.githubusercontent.com/x-cmd/x-cmd/mod/$___X_CMD_BRANCH/%s/%s/%s" \
-            "https://gitee.com/x-cmd/x-cmd/raw/mod/$___X_CMD_BRANCH/%s/%s/%s"
+            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s/%s" \
+            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s/%s"
         #     "https://raw.githubusercontent.com/%s/%s/$___X_CMD_BRANCH/%s" \
         #     "https://gitee.com/%s/%s/raw/$___X_CMD_BRANCH/%s"
     fi
     cat "$fp"
 }
+
+if [ "$___X_CMD_IN_CHINA_NET" -eq 1 ]; then
+    ___x_cmd_mirror \
+            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s/%s" \
+            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s/%s"
+fi
+
+case "$(xrc mirror|head -n1)" in
+    *gitee*)    ___X_CMD_IN_CHINA_NET=1 ;;
+    *)          ___X_CMD_IN_CHINA_NET=
+esac
 # EndSection
 
 # Section: main entrance
@@ -225,8 +236,8 @@ ___x_cmd_curl_gitx(){   # Simple strategy
 
                     # Set CHINA_NET FLAG
                     case "$mirror" in
-                        *gitee*)                    XRC_CHINA_NET=1 ;;
-                        *github*|*gitlab*)          XRC_CHINA_NET=  ;;
+                        *gitee*)                    ___X_CMD_IN_CHINA_NET=1 ;;
+                        *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET=  ;;
                     esac
                 fi
                 return 0;;
@@ -328,11 +339,6 @@ ___x_cmd_which_one(){
 # EndSection
 
 # Section: other initialization: advise, initrc lazy loading
-case "$(xrc mirror|head -n1)" in
-    *gitee*)    XRC_CHINA_NET=1 ;;
-    *)          XRC_CHINA_NET=
-esac
-
 [ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
 x(){    unset -f x; xrc reload x/v0 && x ${1:+"$@"};    }
 
