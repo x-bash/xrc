@@ -197,11 +197,12 @@ A
             if [ "$#" -gt 0 ]; then
                 local ___XRC_RELOAD=1
                 eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$@")"
+                return
             fi
-            RELOAD=1 xrc xrc; return ;;
+            RELOAD=1 xrc xrc/latest; return ;;
         *)
             if [ "$#" -gt 0 ]; then
-                eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$@")"
+                eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$subcmd" "$@")"
                 return
             fi
             xrc help; return ;;
