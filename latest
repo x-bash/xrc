@@ -4,8 +4,6 @@ if curl --version 1>/dev/null 2>&1; then
 # Section: Requirement & Initialize
     [ -n "$KSH_VERSION" ] && alias local=typeset
 
-    curl -i www.baidu.com/abc 2>/dev/null | while read -r a; if [ "$a" = "" ]; then cat; else fi;
-
     ___x_cmd_http_get_inner(){
         ___X_CMD_CURL_RETURN="$(printf "\r")"
         ___X_CMD_CURL_HEADER=""
