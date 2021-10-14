@@ -207,6 +207,7 @@ A
 }
 # EndSection
 
+# Section: main entrance helper
 ___X_CMD_XRC_MODULE_IMPORTED=""
 ___x_cmd_xrc_source_file_source(){
     local file
@@ -453,8 +454,6 @@ ___x_cmd_which_one(){
     esac
 }
 # EndSection
-
-
 
 # Section: other initialization: advise, initrc lazy loading
 # [ -f "$(x initrc which)" ] && . "$(x initrc which)"
