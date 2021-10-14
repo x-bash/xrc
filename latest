@@ -244,13 +244,45 @@ ___x_cmd_xrc_source_file_cat(){
     fi
 }
 
-___x_cmd_xrc_source_file_cat(){
+___x_cmd_xrc_source_file_source(){
     local file
     local last="cat"
     while [ $# -ne 0 ]; then
         local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-        file="$(___x_cmd_which_one "$1")";
+
+        file="$(___x_cmd_which_one "$1")"
         code=$?
+
+        if [ -n "$___x_cmd_xrc_source_file_source_is_running" ]; then
+            # This is running
+            # Ask whether using http or outside resource.
+            if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
+                printf "Sourcing script from unknown location: %s\n" "$1"
+                cat >&2 <<A
+SECURITY WARNING! Sourcing script from unknown location: $1
+If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
+> NOWARN=1 xrc "$1"
+A
+                printf "Input yes to continue. Otherwise exit > " >&2
+                local input
+                read -r input
+
+                if [ "$input" != "yes" ]; then
+                    echo "Exit becaause detect a non yes output: $input" >&2
+                    return 1
+                fi
+            fi
+
+            if [ -z "$___XRC_RELOAD" ]; then
+                if [ "${___X_CMD_XRC_MODULE_IMPORTED#*$file}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
+                    shift
+                    continue    # exixted already. skip
+                fi
+            fi
+        fi
+
+
+
         case "$code" in
             1)
                 printf "Interrupted." >&2
@@ -279,6 +311,7 @@ ___x_cmd_xrc_source_file_cat(){
     fi
 }
 
+___X_CMD_XRC_MODULE_IMPORTED=""
 ___x_cmd_xrc_source_file_list_code(){
     local code=""
     local file
@@ -314,7 +347,9 @@ A
             fi
 
             if [ -z "$___XRC_RELOAD" ]; then
-                if [ "${___X_CMD_XRC_MODULE_IMPORTED#*$file}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
+                if [ "${___X_CMD_XRC_MODULE_IMPORTED#
+$file
+}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
                     shift
                     continue    # exixted already. skip
                 fi
