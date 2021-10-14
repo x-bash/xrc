@@ -369,6 +369,7 @@ ___x_cmd_which_one_file(){
 
 ___x_cmd_which_one_tar(){
     # If match in core.tar.gz
+
     local mod_path=${1}
     local mod_root=${mod_path%%/*}
 
@@ -437,6 +438,9 @@ ___x_cmd_which_one(){
                 return                   # .x-cmd
             fi
 
+            TGT="$___X_CMD_ROOT/$module"
+            [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
+
             # x-bash module
             ___xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
             local module="$RESOURCE_NAME"
@@ -449,7 +453,7 @@ ___x_cmd_which_one(){
                 return 101
             fi
 
-            TGT="$___X_CMD_ROOT/$module"
+            # TGT="$___X_CMD_ROOT/$module"
             ___x_cmd_which_one_file "$module" "$___X_CMD_ROOT/$module"
     esac
 }
@@ -484,7 +488,6 @@ if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*
 A
 fi
 # EndSection
-
 
 else
     printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
