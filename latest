@@ -46,7 +46,7 @@ A
 
 ___xrc_log(){
     local level="$1"; shift
-    [ "$level" = debug ] && return
+    # [ "$level" = debug ] && return
     printf "[%s]: %s\n" "$level" "$@"
 }
 
@@ -144,7 +144,7 @@ xrc(){
     [ $# -eq 0 ] && set -- "help"
     local subcmd="$1";  shift
     case "$subcmd" in
-        help)
+        ""|help)
             printf "xrc     x-bash core function.
     Uasge:  xrc <lib> [<lib>...]
     Please visit our homepage for more information: https://x-cmd.com
@@ -201,11 +201,8 @@ A
             fi
             RELOAD=1 xrc xrc/latest; return ;;
         *)
-            if [ "$#" -gt 0 ]; then
-                eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$subcmd" "$@")"
-                return
-            fi
-            xrc help; return ;;
+            eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$subcmd" "$@")"
+            return
     esac
 }
 # EndSection
@@ -361,8 +358,8 @@ ___x_cmd_which_one_file(){
     if ! CACHE="$TGT" ___x_cmd_curl_gitx "x-bash" "$module"; then
         local code=$?
         case $code in
-            4)      ___xrc_log warn "ERROR: Module Inexisted: $RESOURCE_NAME"
-            *)      ___xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+            4)      ___xrc_log warn "ERROR: Module Inexisted: $RESOURCE_NAME" ;;
+            *)      ___xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME" ;;
         esac
         return 1
     fi
@@ -457,6 +454,8 @@ ___x_cmd_which_one(){
 }
 # EndSection
 
+
+
 # Section: other initialization: advise, initrc lazy loading
 # [ -f "$(x initrc which)" ] && . "$(x initrc which)"
 x(){    unset -f x; xrc reload x/v0 && x ${1:+"$@"};    }
@@ -486,6 +485,7 @@ if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*
 A
 fi
 # EndSection
+
 
 else
     printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
