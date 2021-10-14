@@ -7,6 +7,9 @@ if curl --version 1>/dev/null 2>&1; then
     ___x_cmd_http_get_inner(){
         ___X_CMD_CURL_RETURN="$(printf "\r")"
         ___X_CMD_CURL_HEADER=""
+
+        echo curl -i "$@" >&2
+
         {
             while read -r line; do
                 [ "$line" = "$___X_CMD_CURL_RETURN" ] && break
@@ -28,26 +31,35 @@ A
     }
 
     ___x_cmd_http_get(){
-        ___xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
+        ___xrc_log debug "curl -i ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} ${1:?Provide target URL}"
 
         if [ -z "$XRC_MAX_TIME" ]; then
-            ___x_cmd_http_get_inner --fail "$1" 2>/dev/null
+            ___x_cmd_http_get_inner "$1" # 2>/dev/null
         else
             # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
             # eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
-            ___x_cmd_http_get_inner --fail --max-time $XRC_MAX_TIME "$1" 2>/dev/null
+            ___x_cmd_http_get_inner --max-time $XRC_MAX_TIME "$1" # 2>/dev/null
         fi
 
-        # local code=$?
-        # TODO: figure out a way to distinguish timeout or network failure
-        # [ $code -eq 28 ] && return 4
-        # return $code
+        local code=$?
+        local http_code
+        http_code="$(___x_cmd_http_get_response_header_code)"
+
+        case "$http_code" in
+            20*)   return 0 ;;
+            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 4 ;;
+            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                    return 1 ;;
+            *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 2 ;;
+        esac
     }
 
 ___xrc_log(){
     local level="$1"; shift
     # [ "$level" = debug ] && return
-    printf "[%s]: %s\n" "$level" "$@"
+    printf "[%s]: %s\n" "$level" "$@" 1>&2
 }
 
 ___X_CMD_CUR_SHELL="sh"
@@ -65,9 +77,9 @@ if [ -z "$___X_CMD_ROOT" ]; then
     PATH="$___X_CMD_ROOT/.bin:$PATH"
 fi
 
-if [ -f "$___X_CMD_PATH/.tgz/core.tgz" ]; then
+if [ -f "$___X_CMD_ROOT/.tgz/core.tgz" ]; then
     ___X_CMD_COER_TGZ_FILES_CACHE="
-$(tar tf "$___X_CMD_PATH/.tgz/core.tgz")"
+$(tar tf "$___X_CMD_ROOT/.tgz/core.tgz")"
     ___X_CMD_COER_TGZ_MOD_CACHE="
 $(printf "%s" "$___X_CMD_COER_TGZ_FILES_CACHE" | awk -v FS=/ '{ print $1; }' | uniq)"
 fi
@@ -93,14 +105,7 @@ ___x_cmd_curl() {
             mv "$REDIRECT" "$CACHE"
         fi
     else
-        local code=$?
-        local http_code="$(___x_cmd_http_get_response_header_code)"
-        case "$http_code" in
-            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                    code=4 ;;
-            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
-                    code=1 ;;
-        esac
+        code=$?
         [ -n "$CACHE" ] && rm -f "$REDIRECT"    # In centos, file in "$REDIRECT" is write protected.
         return $code
     fi
@@ -210,19 +215,22 @@ A
 # Section: main entrance helper
 ___X_CMD_XRC_MODULE_IMPORTED=""
 ___x_cmd_xrc_source_file_source(){
-    local file
+
     local code
+
     local last="cat"
     while [ $# -ne 0 ]; do
+        local xrcpath=$1;   shift
+
         local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-        file="$(___x_cmd_which_one "$1")"
+        file="$(___x_cmd_which_one "$xrcpath")"
         code=$?
 
         if [ -n "$___X_CMD_XRC_EVAL_SOURCE" ]; then
             # This is running
             # Ask whether using http or outside resource.
             if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
-                printf "Sourcing script from unknown location: %s\n" "$1"
+                printf "Sourcing script from unknown location: %s\n" "$xrcpath"
                 cat >&2 <<A
 SECURITY WARNING! Sourcing script from unknown location: $1
 If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
@@ -246,8 +254,10 @@ A
             0)
                 if [ "${last%%\ *}" = cat ]; then
                     last="$last $file"
+                         echo " 1... $last" 1>&2
                 else
-                    eval "$last"
+                                            echo "... $last" 1>&2
+                    eval tar Oxvf "$last"
                     last="cat $file"
                 fi ;;
             101)
@@ -256,7 +266,9 @@ A
                 if [ "${last%%\ *}" = "$targz" ]; then
                     last="$last $fp"
                 else
-                    eval tar Oxvf "$last"
+                    if [ "$last" != cat ]; then
+                        eval "$last"
+                    fi
                     last="$file"
                 fi ;;
         esac
@@ -286,8 +298,7 @@ $file
 }
 
 ___x_cmd_curl_gitx(){   # Simple strategy
-    local repo="${1:?Provide reponame}"
-    local mod="${2:?Provide location like str}"
+    local mod="${1:?Provide location like str}"
     local mod_repo=${mod%%/*}
     local mod_subpath=${mod#*/}
 
@@ -301,8 +312,7 @@ ___x_cmd_curl_gitx(){   # Simple strategy
     local urlpath
     while read -r mirror; do
         # shellcheck disable=SC2059
-        urlpath="$(printf "$mirror" "$repo" "$mod_repo" "$mod_subpath")"
-        ___xrc_log debug "Trying: $urlpath"
+        urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
         ___x_cmd_curl "$urlpath"
 
         case $? in
@@ -321,7 +331,9 @@ ___x_cmd_curl_gitx(){   # Simple strategy
                 return 1;;
             4)  ___xrc_log debug "Resource Not Found."
                 return 4;;
-            *)  ___xrc_log debug "Mirror is down: $urlpath"
+            *)
+                ___xrc_log debug "Network unavailable Or Mirror is down: $urlpath"
+                return 1;;
         esac
         lineno=$((lineno+1))
     done <<A
@@ -355,12 +367,12 @@ ___x_cmd_which_one_file(){
         return
     fi
 
-    ___xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-    if ! CACHE="$TGT" ___x_cmd_curl_gitx "x-bash" "$module"; then
+    ___xrc_log info "Dowloading resource=$module to local cache: $TGT"
+    if ! CACHE="$TGT" ___x_cmd_curl_gitx "$module"; then
         local code=$?
         case $code in
-            4)      ___xrc_log warn "ERROR: Module Inexisted: $RESOURCE_NAME" ;;
-            *)      ___xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME" ;;
+            4)      ___xrc_log warn "ERROR: Module Inexisted: $module" ;;
+            *)      ___xrc_log warn "ERROR: Fail to load module due to network error or other: $module" ;;
         esac
         return 1
     fi
@@ -378,14 +390,14 @@ ___x_cmd_which_one_tar(){
 $mod_root
 }"
         if [ "$res" != "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
-            printf "%s %s" "$mod_path" "$___X_CMD_PATH/.tgz/core.tgz"
+            printf "%s %s" "$mod_path" "$___X_CMD_ROOT/.tgz/core.tgz"
             return 0
         fi
     fi
 
     # TODO: check and download.
-    if ___x_cmd_which_one_file "$mod_root/$mod_root.tgz" "$___X_CMD_PATH/.tgz/$mod_root.tgz"; then
-        printf "%s %s" "$___X_CMD_PATH/.tgz/$mod_root.tgz" "$mod_path"
+    if ___x_cmd_which_one_file "$mod_root/$mod_root.tgz" "$___X_CMD_ROOT/.tgz/$mod_root.tgz"; then
+        printf "%s %s" "$___X_CMD_ROOT/.tgz/$mod_root.tgz" "$mod_path"
         return 0
     fi
 
