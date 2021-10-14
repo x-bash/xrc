@@ -369,8 +369,8 @@ ___x_cmd_which_one_file(){
     if ! CACHE="$TGT" ___x_cmd_curl_gitx "$module"; then
         local code=$?
         case $code in
-            4)      ___xrc_log warn "ERROR: Module Inexisted: $module" ;;
-            *)      ___xrc_log warn "ERROR: Fail to load module due to network error or other: $module" ;;
+            4)      ___xrc_log error "ERROR: Module Inexisted: $module" ;;
+            *)      ___xrc_log error "ERROR: Fail to load module due to network error or other: $module" ;;
         esac
         return 1
     fi
@@ -394,12 +394,18 @@ $mod_root
     fi
 
     # TODO: check and download.
-    if ___x_cmd_which_one_file "$mod_root/$mod_root.tgz" "$___X_CMD_ROOT/.tgz/$mod_root.tgz"; then
-        printf "%s %s" "$___X_CMD_ROOT/.tgz/$mod_root.tgz" "$mod_path"
-        return 0
+    local CACHE="$___X_CMD_ROOT/.tgz/$mod_root.tgz"
+    local webfile="$mod_root/$mod_root.tgz"
+    if ! ___x_cmd_curl_gitx "$webfile"; then
+        local code=$?
+        case $code in
+            4)      ___xrc_log warn "Module Tar Inexisted: $webfile" ;;
+            *)      ___xrc_log error "ERROR: Fail to load module due to network error or other: $webfile" ;;
+        esac
+        return 1
     fi
 
-    return 1
+    return 0
 }
 
 ___x_cmd_which_one(){
