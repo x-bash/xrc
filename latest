@@ -180,7 +180,7 @@ xrc which       Download lib files and print the local path.
     Example: source "$(xrc which str)"
 A
             return 1 ;;
-        cache)
+        root)
             printf "%s" "$___X_CMD_ROOT" ;;
         mirror)
             ___x_cmd_mirror "$@" ;;
