@@ -144,6 +144,9 @@ A
             ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
         update)
             ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
+        log)
+            printf "WARN: xrc log deprecated, you should using 'x log' instead"
+            x log "$@" ;;
         ls)
             ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
         reload)
