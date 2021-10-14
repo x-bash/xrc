@@ -132,7 +132,7 @@ ___x_cmd_mirror(){
     cat "$fp"
 }
 
-if [ "$___X_CMD_IN_CHINA_NET" -eq 1 ]; then
+if [ "$___X_CMD_IN_CHINA_NET" = 1 ]; then
     ___x_cmd_mirror \
             "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s/%s" \
             "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s/%s"
