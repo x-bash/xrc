@@ -34,11 +34,11 @@ A
         ___xrc_log debug "curl -i ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} ${1:?Provide target URL}"
 
         if [ -z "$XRC_MAX_TIME" ]; then
-            ___x_cmd_http_get_inner "$1" # 2>/dev/null
+            ___x_cmd_http_get_inner "$1" 2>/dev/null
         else
             # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
             # eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
-            ___x_cmd_http_get_inner --max-time $XRC_MAX_TIME "$1" # 2>/dev/null
+            ___x_cmd_http_get_inner --max-time $XRC_MAX_TIME "$1" 2>/dev/null
         fi
 
         local code=$?
@@ -58,7 +58,7 @@ A
 
 ___xrc_log(){
     local level="$1"; shift
-    # [ "$level" = debug ] && return
+    [ "$level" = debug ] && return
     printf "[%s]: %s\n" "$level" "$@" 1>&2
 }
 
@@ -176,7 +176,7 @@ A
             return 1;;
         w|which)
             if [ $# -gt 0 ]; then
-                eval "$(t="printf" ___x_cmd_xrc_source_file_list_code "$@")"
+                ___x_cmd_which_one "$@"
                 return
             fi
             cat >&2 <<A
@@ -194,7 +194,7 @@ A
         update)
             ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
         log)
-            printf "WARN: xrc log deprecated, you should using 'x log' instead"
+            printf "WARN: xrc log deprecated, you should using 'x log' instead\n"
             x log "$@" ;;
         ls)
             ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
@@ -254,9 +254,7 @@ A
             0)
                 if [ "${last%%\ *}" = cat ]; then
                     last="$last $file"
-                         echo " 1... $last" 1>&2
                 else
-                                            echo "... $last" 1>&2
                     eval tar Oxvf "$last"
                     last="cat $file"
                 fi ;;
@@ -473,7 +471,7 @@ ___x_cmd_which_one(){
 
 # Section: other initialization: advise, initrc lazy loading
 # [ -f "$(x initrc which)" ] && . "$(x initrc which)"
-x(){    unset -f x; xrc reload x/v0 && x ${1:+"$@"};    }
+x(){    unset -f x; xrc reload x-cmd/v0 && x ${1:+"$@"};    }
 
 if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
     ___xrc_log debug "Using module advise for completion."
