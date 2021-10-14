@@ -210,21 +210,21 @@ A
 ___x_cmd_xrc_source_file_cat(){
     local file
     local last="cat"
-    while [ $# -ne 0 ]; then
+    while [ $# -ne 0 ]; do
         local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-        file="$(___x_cmd_which_one "$1")";
+        file="$(___x_cmd_which_one "$1")"
         code=$?
         case "$code" in
             1)
-                printf "Interrupted." >&2
-                return 1
+                printf "Interrupted because resource not found." >&2
+                return 1 ;;
             0)
                 if [ "${last%%\ *}" = cat ]; then
                     last="$last $file"
                 else
                     eval "$last"
                     last="cat $file"
-                fi
+                fi ;;
             101)
                 local targz=${file%\ *}
                 local fp=${file#*\ }
@@ -233,9 +233,9 @@ ___x_cmd_xrc_source_file_cat(){
                 else
                     eval tar Oxvf "$last"
                     last="$file"
-                fi
+                fi ;;
         esac
-    fi
+    done
 
     if [ "$last" != cat ]; then
         eval "$last"
