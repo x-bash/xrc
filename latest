@@ -10,8 +10,6 @@ if curl --version 1>/dev/null 2>&1; then
 
         ___X_CMD_HTTP_GET_INNER_HEADER=""
 
-        echo curl -i "$@" >&2
-
         {
             while read -r line; do
                 [ "$line" = "$___X_CMD_CURL_RETURN" ] && break
