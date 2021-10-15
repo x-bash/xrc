@@ -170,7 +170,6 @@ SUBCOMMAND:
     cat|c           Show the script in text form.
     which|w         Download lib files and print the local path.
     update|u        Update file
-    upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
     cache           Provide cache filepath
     clear           Clear the cache
     ls              Show the cache modules.
