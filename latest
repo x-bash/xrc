@@ -227,16 +227,13 @@ A
 # Section: main entrance helper
 ___X_CMD_XRC_MODULE_IMPORTED=""
 ___x_cmd_xrc_source_file_source(){
-
-    local code
-
     local last="cat"
     while [ $# -ne 0 ]; do
         local xrcpath=$1;   shift
 
         local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
         file="$(___x_cmd_which_one "$xrcpath")"
-        code=$?
+        local code=$?
 
         if [ -n "$___X_CMD_XRC_EVAL_SOURCE" ]; then
             # This is running
