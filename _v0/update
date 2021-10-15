@@ -29,6 +29,8 @@ ___x_cmd_xrc_update()(
     local queue="$1
 "
 
+    local already_update_core_tgz=
+
     local aliasname
     while true; do
         elem="${queue%%
@@ -38,8 +40,11 @@ ___x_cmd_xrc_update()(
         [ "$elem" = "" ] && break
 
         if ___x_cmd_is_in_core_tgz "$elem"; then
-            ___x_cmd_xrc_update_core
-            return
+            if [ -z "$already_update_core_tgz" ]; then
+                ___x_cmd_xrc_update_core
+                already_update_core_tgz=1
+            fi
+            continue
         fi
 
         queue="${queue#*
