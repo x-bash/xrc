@@ -5,15 +5,17 @@ if curl --version 1>/dev/null 2>&1; then
     [ -n "$KSH_VERSION" ] && alias local=typeset
 
     ___x_cmd_http_get_inner(){
+        local ___X_CMD_CURL_RETURN
         ___X_CMD_CURL_RETURN="$(printf "\r")"
-        ___X_CMD_CURL_HEADER=""
+
+        ___X_CMD_HTTP_GET_INNER_HEADER=""
 
         echo curl -i "$@" >&2
 
         {
             while read -r line; do
                 [ "$line" = "$___X_CMD_CURL_RETURN" ] && break
-                ___X_CMD_CURL_HEADER="$___X_CMD_CURL_HEADER
+                ___X_CMD_HTTP_GET_INNER_HEADER="$___X_CMD_HTTP_GET_INNER_HEADER
 $line"
             done
             cat
@@ -23,7 +25,7 @@ A
     }
 
     ___x_cmd_http_get_response_header(){
-        printf "%s" "$___X_CMD_CURL_HEADER"
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER"
     }
 
     ___x_cmd_http_get_response_header_code(){
