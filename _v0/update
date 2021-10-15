@@ -1,12 +1,33 @@
 # shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
-XRC_UPDATE_AWK_PATH="$(xrc which x-bash/xrc/_v0/update.awk)"
-xrc_update_list_dependency(){
-    xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$XRC_UPDATE_AWK_PATH"
+___X_CMD_XRC_UPDATE_AWK_PATH="$(xrc which x-bash/xrc/_v0/update.awk)"
+___x_cmd_xrc_update_list_dependency(){
+    xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$___X_CMD_XRC_UPDATE_AWK_PATH"
     # xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$(xrc which x-bash/xrc/update/update.awk)"
 }
 
-xrc_update()(
+___x_cmd____x_cmd_xrc_update_core(){
+    CACHE="$___X_CMD_PATH/.tgz/core.tgz" \
+        ___x_cmd_curl_gitx "dist/core.tgz"
+}
+
+___x_cmd_xrc_update()(
+    if [ "$#" -eq 0 ]; then
+        ___x_cmd____x_cmd_xrc_update_core
+        return
+    fi
+
+    local mod_root="$1"
+    if [ -n "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
+        local res="${___X_CMD_COER_TGZ_MOD_CACHE#
+$mod_root
+}"
+        if [ "$res" != "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
+            ___x_cmd____x_cmd_xrc_update_core
+            return
+        fi
+    fi
+
     local IFS
     local line
 
@@ -24,7 +45,7 @@ xrc_update()(
         queue="${queue#*
 }"
 
-        xrc_log info "xrc_update: $elem"
+        xrc_log info "___x_cmd_xrc_update: $elem"
         while read -r line; do
             [ "$line" = "" ] && break
             aliasname=$(printf "%s" "$line" | tr "/" "?")
@@ -35,7 +56,7 @@ xrc_update()(
             queue="${queue}${line}
 "
         done <<A
-$( ___XRC_UPDATE=1 ___XRC_RELOAD=1 xrc_update_list_dependency "$elem" )
+$( ___XRC_UPDATE=1 ___XRC_RELOAD=1 ___x_cmd_xrc_update_list_dependency "$elem" )
 A
 
     done

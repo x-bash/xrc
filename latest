@@ -124,18 +124,16 @@ ___x_cmd_mirror(){
     fi
     if [ ! -f "$fp" ]; then
         ___x_cmd_mirror \
-            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s/%s" \
-            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s/%s"
-        #     "https://raw.githubusercontent.com/%s/%s/$___X_CMD_BRANCH/%s" \
-        #     "https://gitee.com/%s/%s/raw/$___X_CMD_BRANCH/%s"
+            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/%s" \
+            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/%s"
     fi
     cat "$fp"
 }
 
 if [ "$___X_CMD_IN_CHINA_NET" = 1 ]; then
     ___x_cmd_mirror \
-            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s/%s" \
-            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s/%s"
+            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/%s/%s" \
+            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/%s"
 fi
 
 case "$(xrc mirror|head -n1)" in
@@ -192,7 +190,7 @@ A
         export-all)
             ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
         update)
-            ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
+            ( xrc x-bash/xrc/_v0/update &&  ___x_cmd_xrc_update "$@" ) ;;
         log)
             printf "WARN: xrc log deprecated, you should using 'x log' instead\n"
             x log "$@" ;;
@@ -296,9 +294,7 @@ $file
 }
 
 ___x_cmd_curl_gitx(){   # Simple strategy
-    local mod="${1:?Provide location like str}"
-    local mod_repo=${mod%%/*}
-    local mod_subpath=${mod#*/}
+    local suburl="${1:?Provide location like str}"
 
     local IFS
 
@@ -310,7 +306,7 @@ ___x_cmd_curl_gitx(){   # Simple strategy
     local urlpath
     while read -r mirror; do
         # shellcheck disable=SC2059
-        urlpath="$(printf "$mirror" "$mod_repo" "$mod_subpath")"
+        urlpath="$(printf "$mirror" "$suburl")"
         ___x_cmd_curl "$urlpath"
 
         case $? in
@@ -366,7 +362,7 @@ ___x_cmd_which_one_file(){
     fi
 
     ___xrc_log info "Dowloading resource=$module to local cache: $TGT"
-    if ! CACHE="$TGT" ___x_cmd_curl_gitx "$module"; then
+    if ! CACHE="$TGT" ___x_cmd_curl_gitx "mod/$module"; then
         local code=$?
         case $code in
             4)      ___xrc_log error "ERROR: Module Inexisted: $module" ;;
@@ -396,7 +392,7 @@ $mod_root
     # TODO: check and download.
     local CACHE="$___X_CMD_ROOT/.tgz/$mod_root.tgz"
     local webfile="$mod_root/$mod_root.tgz"
-    if ! ___x_cmd_curl_gitx "$webfile"; then
+    if ! ___x_cmd_curl_gitx "mod/$webfile"; then
         local code=$?
         case $code in
             4)      ___xrc_log warn "Module Tar Inexisted: $webfile" ;;
