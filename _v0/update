@@ -6,14 +6,14 @@ ___x_cmd_xrc_update_list_dependency(){
     # xrc cat "${1:?Provide module}" 2>/dev/null | awk -f "$(xrc which x-bash/xrc/update/update.awk)"
 }
 
-___x_cmd____x_cmd_xrc_update_core(){
+___x_cmd_xrc_update_core(){
     CACHE="$___X_CMD_PATH/.tgz/core.tgz" \
         ___x_cmd_curl_gitx "dist/core.tgz"
 }
 
 ___x_cmd_xrc_update()(
     if [ "$#" -eq 0 ]; then
-        ___x_cmd____x_cmd_xrc_update_core
+        ___x_cmd_xrc_update_core
         return
     fi
 
@@ -23,7 +23,7 @@ ___x_cmd_xrc_update()(
 $mod_root
 }"
         if [ "$res" != "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
-            ___x_cmd____x_cmd_xrc_update_core
+            ___x_cmd_xrc_update_core
             return
         fi
     fi
