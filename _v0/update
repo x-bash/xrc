@@ -17,7 +17,7 @@ ___x_cmd_xrc_update()(
         return
     fi
 
-    if ___x_cmd_file_in_core_tgz "$1"; then
+    if ___x_cmd_is_in_core_tgz "$1"; then
         ___x_cmd_xrc_update_core
         return
     fi
@@ -37,7 +37,7 @@ ___x_cmd_xrc_update()(
         [ "$elem" = "$queue" ] && break
         [ "$elem" = "" ] && break
 
-        if ___x_cmd_file_in_core_tgz "$elem"; then
+        if ___x_cmd_is_in_core_tgz "$elem"; then
             ___x_cmd_xrc_update_core
             return
         fi
