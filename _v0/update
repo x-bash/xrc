@@ -17,15 +17,9 @@ ___x_cmd_xrc_update()(
         return
     fi
 
-    local mod_root="$1"
-    if [ -n "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
-        local res="${___X_CMD_COER_TGZ_MOD_CACHE#
-$mod_root
-}"
-        if [ "$res" != "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
-            ___x_cmd_xrc_update_core
-            return
-        fi
+    if ___x_cmd_file_in_core_tgz "$1"; then
+        ___x_cmd_xrc_update_core
+        return
     fi
 
     local IFS
@@ -42,6 +36,12 @@ $mod_root
 
         [ "$elem" = "$queue" ] && break
         [ "$elem" = "" ] && break
+
+        if ___x_cmd_file_in_core_tgz "$elem"; then
+            ___x_cmd_xrc_update_core
+            return
+        fi
+
         queue="${queue#*
 }"
 

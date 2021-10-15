@@ -84,6 +84,19 @@ $(tar tf "$___X_CMD_ROOT/.tgz/core.tgz")"
 $(printf "%s" "$___X_CMD_COER_TGZ_FILES_CACHE" | awk -v FS=/ '{ print $1; }' | uniq)"
 fi
 
+___x_cmd_file_in_core_tgz(){
+    local mod_root="$1"
+    if [ -n "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
+        local res="${___X_CMD_COER_TGZ_MOD_CACHE#
+$mod_root
+}"
+        if [ "$res" != "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
+            ___x_cmd_xrc_update_core
+            return
+        fi
+    fi
+}
+
 # EndSection
 
 # Section: network & mirror
