@@ -239,6 +239,8 @@ ___x_cmd_xrc_source_file_source(){
             # This is running
             # Ask whether using http or outside resource.
             if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
+
+                # We should do it before ___x_cmd_which_one
                 printf "Sourcing script from unknown location: %s\n" "$xrcpath"
                 cat >&2 <<A
 SECURITY WARNING! Sourcing script from unknown location: $1
@@ -250,6 +252,7 @@ A
                 read -r input
 
                 if [ "$input" != "yes" ]; then
+                    rm "$file"
                     echo "Exit becaause detect a non yes output: $input" >&2
                     return 1
                 fi
