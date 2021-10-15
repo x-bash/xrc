@@ -158,6 +158,11 @@ esac
 # EndSection
 
 # Section: main entrance
+
+___x_cmd_xrc_eval(){
+    eval "$1"
+}
+
 xrc(){
     [ $# -eq 0 ] && set -- "help"
     local subcmd="$1";  shift
@@ -213,12 +218,12 @@ A
         reload)
             if [ "$#" -gt 0 ]; then
                 local ___XRC_RELOAD=1
-                eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$@")"
+                ___x_cmd_xrc_eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$@")"
                 return
             fi
             RELOAD=1 xrc xrc/latest; return ;;
         *)
-            eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$subcmd" "$@")"
+            ___x_cmd_xrc_eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$subcmd" "$@")"
             return
     esac
 }
