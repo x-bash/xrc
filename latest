@@ -365,7 +365,9 @@ ___x_cmd_search_path(){
     done
     return 1
 }
+# EndSection
 
+# Section: which
 ___x_cmd_which_one_file(){
     local module=${1:?Provide module}
     local TGT="${2:?Provide tgt}"
