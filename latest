@@ -1,26 +1,65 @@
 # shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
-# Section: Requirement & Initialize
 if curl --version 1>/dev/null 2>&1; then
+# Section: Requirement & Initialize
     [ -n "$KSH_VERSION" ] && alias local=typeset
-    ___x_cmd_http_get(){
-        # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
-        ___xrc_log debug "curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail ${1:?Provide target URL}"
-        eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
-        local code=$?
-        # TODO: figure out a way to distinguish timeout or network failure
-        # [ $code -eq 28 ] && return 4
-        return $code
+
+    ___x_cmd_http_get_inner(){
+        local ___X_CMD_CURL_RETURN
+        ___X_CMD_CURL_RETURN="$(printf "\r")"
+
+        ___X_CMD_HTTP_GET_INNER_HEADER=""
+
+        {
+            while read -r line; do
+                [ "$line" = "$___X_CMD_CURL_RETURN" ] && break
+                ___X_CMD_HTTP_GET_INNER_HEADER="$___X_CMD_HTTP_GET_INNER_HEADER
+$line"
+            done
+            cat
+        } <<A
+$(curl -i "$@")
+A
     }
-else
-    printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
-    return 1 || exit 1
-fi
+
+    ___x_cmd_http_get_response_header(){
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER"
+    }
+
+    ___x_cmd_http_get_response_header_code(){
+        ___x_cmd_http_get_response_header | awk 'NR==2{ printf($2); }'
+    }
+
+    ___x_cmd_http_get(){
+        ___xrc_log debug "curl -i ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} ${1:?Provide target URL}"
+
+        if [ -z "$XRC_MAX_TIME" ]; then
+            ___x_cmd_http_get_inner "$1" 2>/dev/null
+        else
+            # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
+            # eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
+            ___x_cmd_http_get_inner --max-time $XRC_MAX_TIME "$1" 2>/dev/null
+        fi
+
+        local code=$?
+        local http_code
+        http_code="$(___x_cmd_http_get_response_header_code)"
+
+        case "$http_code" in
+            20*)   return 0 ;;
+            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 4 ;;
+            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                    return 1 ;;
+            *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 2 ;;
+        esac
+    }
 
 ___xrc_log(){
     local level="$1"; shift
     [ "$level" = debug ] && return
-    printf "[%s]: %s\n" "$level" "$@"
+    printf "[%s]: %s\n" "$level" "$@" 1>&2
 }
 
 ___X_CMD_CUR_SHELL="sh"
@@ -37,6 +76,28 @@ if [ -z "$___X_CMD_ROOT" ]; then
     mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$PATH"
 fi
+
+if [ -f "$___X_CMD_ROOT/.tgz/core.tgz" ]; then
+    ___X_CMD_COER_TGZ_FILES_CACHE="
+$(tar tf "$___X_CMD_ROOT/.tgz/core.tgz")"
+    ___X_CMD_COER_TGZ_MOD_CACHE="
+$(printf "%s" "$___X_CMD_COER_TGZ_FILES_CACHE" | awk -v FS=/ '{ print $1; }' | uniq)"
+fi
+
+___x_cmd_is_in_core_tgz(){
+    local mod_root="$1"
+    if [ -n "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
+        local res="${___X_CMD_COER_TGZ_MOD_CACHE#
+$mod_root
+}"
+        if [ "$res" != "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+    return 2
+}
 
 # EndSection
 
@@ -59,12 +120,13 @@ ___x_cmd_curl() {
             mv "$REDIRECT" "$CACHE"
         fi
     else
-        local code=$?
-        ___xrc_log debug "___x_cmd_http_get $1 return code: $code. Fail to retrieve file from: $1"
+        code=$?
         [ -n "$CACHE" ] && rm -f "$REDIRECT"    # In centos, file in "$REDIRECT" is write protected.
         return $code
     fi
 }
+
+___X_CMD_BRANCH=main
 
 ___x_cmd_mirror(){
     local fp="$___X_CMD_ROOT/.source.mirror.list"
@@ -76,24 +138,36 @@ ___x_cmd_mirror(){
         return
     fi
     if [ ! -f "$fp" ]; then
-        # "https://raw.githubusercontent.com/x-bash/%s/stable/%s"
-        # "https://gitee.com/%s/%s/raw/stable/%s"
-        # "https://raw.githubusercontent.com/x-cmd/std/stable/%s/%s"
-        # "https://gitee.com/x-cmd/std/raw/stable/%s/%s"
         ___x_cmd_mirror \
-            "https://raw.githubusercontent.com/%s/%s/main/%s" \
-            "https://gitee.com/%s/%s/raw/main/%s"
-            # "https://sh.x-cmd.com"
+            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/%s" \
+            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/%s"
     fi
     cat "$fp"
 }
+
+if [ "$___X_CMD_IN_CHINA_NET" = 1 ]; then
+    ___x_cmd_mirror \
+            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/%s" \
+            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/%s"
+fi
+
+case "$(xrc mirror|head -n1)" in
+    *gitee*)    ___X_CMD_IN_CHINA_NET=1 ;;
+    *)          ___X_CMD_IN_CHINA_NET=
+esac
 # EndSection
+
+# Section: main entrance
+
+___x_cmd_xrc_eval(){
+    eval "$1"
+}
 
 xrc(){
     [ $# -eq 0 ] && set -- "help"
     local subcmd="$1";  shift
     case "$subcmd" in
-        help)
+        ""|help)
             printf "xrc     x-bash core function.
     Uasge:  xrc <lib> [<lib>...]
     Please visit our homepage for more information: https://x-cmd.com
@@ -101,7 +175,6 @@ SUBCOMMAND:
     cat|c           Show the script in text form.
     which|w         Download lib files and print the local path.
     update|u        Update file
-    upgrade         Upgrade xrc from 'https://get.x-cmd.com/script'
     cache           Provide cache filepath
     clear           Clear the cache
     ls              Show the cache modules.
@@ -109,7 +182,7 @@ SUBCOMMAND:
             ;;
         c|cat)
             if [ $# -gt 0 ]; then
-                eval "$(t="cat" ___x_cmd_xrc_source_file_list_code "$@")"
+                eval "$(___X_CMD_XRC_EVAL_SOURCE="" ___x_cmd_xrc_source_file_source "$@")"
                 return
             fi
             cat >&2 <<A
@@ -120,7 +193,7 @@ A
             return 1;;
         w|which)
             if [ $# -gt 0 ]; then
-                eval "$(t="printf" ___x_cmd_xrc_source_file_list_code "$@")"
+                ___x_cmd_which_one "$@"
                 return
             fi
             cat >&2 <<A
@@ -129,47 +202,51 @@ xrc which       Download lib files and print the local path.
     Example: source "$(xrc which str)"
 A
             return 1 ;;
-        cache)
+        root)
             printf "%s" "$___X_CMD_ROOT" ;;
         mirror)
             ___x_cmd_mirror "$@" ;;
         export-all)
-            ( xrc x-bash/xrc/_v0/export &&  ___xcmd_xrc_export_all "$@" ) ;;
+            ( xrc x-bash/xrc/_v0/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
         update)
-            ( xrc x-bash/xrc/_v0/update &&  xrc_update "$@" ) ;;
+            ( xrc x-bash/xrc/_v0/update &&  ___x_cmd_xrc_update "$@" ) ;;
+        log)
+            printf "WARN: xrc log deprecated, you should using 'x log' instead\n"
+            x log "$@" ;;
         ls)
             ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
         reload)
-            if [ "$#" -eq 0 ]; then
-                RELOAD=1 xrc xrc; return
+            if [ "$#" -gt 0 ]; then
+                local ___XRC_RELOAD=1
+                ___x_cmd_xrc_eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$@")"
+                return
             fi
-            local ___XRC_RELOAD=1
-            eval "$(t="." ___x_cmd_xrc_source_file_list_code "$@")" ;;
+            RELOAD=1 xrc xrc/latest; return ;;
         *)
-            eval "$(t="." ___x_cmd_xrc_source_file_list_code "$@")"
+            ___x_cmd_xrc_eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$subcmd" "$@")"
+            return
     esac
 }
+# EndSection
 
-# Section: xrc helper function
-___x_cmd_xrc_source_file_list_code(){
-    local code=""
-    local file
-    local exec=${t:-.}
+# Section: main entrance helper
+___X_CMD_XRC_MODULE_IMPORTED=""
+___x_cmd_xrc_source_file_source(){
+    local last="cat"
     while [ $# -ne 0 ]; do
-        # What if the ___x_cmd_which_one contains '"'
-        local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-        if ! file="$(___x_cmd_which_one "$1")"; then
-            echo "return 1"
-            return 0
-        fi
+        local xrcpath=$1;   shift
 
-        if [ "$exec" != "." ]; then
-            code="$code
-$exec \"$file\""
-        else
+        local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
+        file="$(___x_cmd_which_one "$xrcpath")"
+        local code=$?
+
+        if [ -n "$___X_CMD_XRC_EVAL_SOURCE" ]; then
+            # This is running
             # Ask whether using http or outside resource.
             if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
-                printf "Sourcing script from unknown location: %s\n" "$1"
+
+                # We should do it before ___x_cmd_which_one
+                printf "Sourcing script from unknown location: %s\n" "$xrcpath"
                 cat >&2 <<A
 SECURITY WARNING! Sourcing script from unknown location: $1
 If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
@@ -180,32 +257,63 @@ A
                 read -r input
 
                 if [ "$input" != "yes" ]; then
+                    rm "$file"
                     echo "Exit becaause detect a non yes output: $input" >&2
                     return 1
                 fi
             fi
+        fi
 
+        case "$code" in
+            1)
+                printf "Interrupted because resource not found." >&2
+                return 1 ;;
+            0)
+                if [ "${last%%\ *}" = cat ]; then
+                    last="$last $file"
+                else
+                    eval tar Oxvf "$last"
+                    last="cat $file"
+                fi ;;
+            101)
+                local targz=${file%\ *}
+                local fp=${file#*\ }
+                if [ "${last%%\ *}" = "$targz" ]; then
+                    last="$last $fp"
+                else
+                    if [ "$last" != cat ]; then
+                        eval "$last"
+                    fi
+                    last="$file"
+                fi ;;
+        esac
+
+        if [ -z "$___X_CMD_XRC_EVAL_SOURCE" ]; then
             if [ -z "$___XRC_RELOAD" ]; then
-                if [ "${___X_CMD_XRC_MODULE_IMPORTED#*$file}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
+                if [ "${___X_CMD_XRC_MODULE_IMPORTED#
+$file
+}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
                     shift
                     continue    # exixted already. skip
                 fi
             fi
-            code="$code
-$exec \"$file\" && \
+            ___X_CMD_XRC_MODULE_IMPORTED="${___X_CMD_XRC_MODULE_IMPORTED}
+$file
+"
+            printf "%s" "
 ___X_CMD_XRC_MODULE_IMPORTED=\"\$___X_CMD_XRC_MODULE_IMPORTED
-$file\""
+$file
+\""
         fi
-        shift
     done
-    printf "%s\n" "$code"
+
+    if [ "$last" != cat ]; then
+        eval "$last"
+    fi
 }
 
 ___x_cmd_curl_gitx(){   # Simple strategy
-    local repo="${1:?Provide reponame}"
-    local mod="${2:?Provide location like str}"
-    local mod_repo=${mod%%/*}
-    local mod_subpath=${mod#*/}
+    local suburl="${1:?Provide location like str}"
 
     local IFS
 
@@ -217,8 +325,7 @@ ___x_cmd_curl_gitx(){   # Simple strategy
     local urlpath
     while read -r mirror; do
         # shellcheck disable=SC2059
-        urlpath="$(printf "$mirror" "$repo" "$mod_repo" "$mod_subpath")"
-        ___xrc_log debug "Trying: $urlpath"
+        urlpath="$(printf "$mirror" "$suburl")"
         ___x_cmd_curl "$urlpath"
 
         case $? in
@@ -228,14 +335,18 @@ ___x_cmd_curl_gitx(){   # Simple strategy
 
                     # Set CHINA_NET FLAG
                     case "$mirror" in
-                        *gitee*)                    XRC_CHINA_NET=1 ;;
-                        *github*|*gitlab*)          XRC_CHINA_NET=  ;;
+                        *gitee*)                    ___X_CMD_IN_CHINA_NET=1 ;;
+                        *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET=  ;;
                     esac
                 fi
                 return 0;;
-            4)  ___xrc_log debug "Network unavailable."
+            1)  ___xrc_log debug "Network unavailable."
+                return 1;;
+            4)  ___xrc_log debug "Resource Not Found."
                 return 4;;
-            *)  ___xrc_log debug "Mirror is down: $urlpath"
+            *)
+                ___xrc_log debug "Network unavailable Or Mirror is down: $urlpath"
+                return 1;;
         esac
         lineno=$((lineno+1))
     done <<A
@@ -258,6 +369,55 @@ ___x_cmd_search_path(){
         cur=${cur%/*}
     done
     return 1
+}
+# EndSection
+
+# Section: which
+___x_cmd_which_one_file(){
+    local module=${1:?Provide module}
+    local TGT="${2:?Provide tgt}"
+
+    if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
+        printf "%s" "$TGT"
+        return
+    fi
+
+    ___xrc_log info "Dowloading resource=$module to local cache: $TGT"
+    if ! CACHE="$TGT" ___x_cmd_curl_gitx "mod/$module"; then
+        local code=$?
+        case $code in
+            4)      ___xrc_log error "ERROR: Module Inexisted: $module" ;;
+            *)      ___xrc_log error "ERROR: Fail to load module due to network error or other: $module" ;;
+        esac
+        return 1
+    fi
+    printf "%s" "$TGT"
+}
+
+___x_cmd_which_one_tar(){
+    # If match in core.tar.gz
+
+    local mod_path=${1}
+    local mod_root=${mod_path%%/*}
+
+    if ___x_cmd_is_in_core_tgz "$mod_root"; then
+        printf "%s %s" "$mod_path" "$___X_CMD_ROOT/.tgz/core.tgz"
+        return 0
+    fi
+
+    # TODO: check and download.
+    local CACHE="$___X_CMD_ROOT/.tgz/$mod_root.tgz"
+    local webfile="$mod_root/$mod_root.tgz"
+    if ! ___x_cmd_curl_gitx "mod/$webfile"; then
+        local code=$?
+        case $code in
+            4)      ___xrc_log warn "Module Tar Inexisted: $webfile" ;;
+            *)      ___xrc_log error "ERROR: Fail to load module due to network error or other: $webfile" ;;
+        esac
+        return 1
+    fi
+
+    return 0
 }
 
 ___x_cmd_which_one(){
@@ -306,6 +466,9 @@ ___x_cmd_which_one(){
                 return                   # .x-cmd
             fi
 
+            TGT="$___X_CMD_ROOT/$module"
+            [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
+
             # x-bash module
             ___xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
             local module="$RESOURCE_NAME"
@@ -313,31 +476,20 @@ ___x_cmd_which_one(){
                 module="$module/latest"         # If it is short alias like str (short for str/latest)
                 ___xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
             fi
-            TGT="$___X_CMD_ROOT/$module"
 
-            if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
-                printf "%s" "$TGT"
-                return
+            if ___x_cmd_which_one_tar "$module"; then
+                return 101
             fi
 
-            ___xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
-            if ! CACHE="$TGT" ___x_cmd_curl_gitx "x-bash" "$module"; then
-                ___xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
-                return 1
-            fi
-            printf "%s" "$TGT"
+            # TGT="$___X_CMD_ROOT/$module"
+            ___x_cmd_which_one_file "$module" "$___X_CMD_ROOT/$module"
     esac
 }
 # EndSection
 
 # Section: other initialization: advise, initrc lazy loading
-case "$(xrc mirror|head -n1)" in
-    *gitee*)    XRC_CHINA_NET=1 ;;
-    *)          XRC_CHINA_NET=
-esac
-
-[ -f "$(xrc initrc which)" ] && . "$(xrc initrc which)"
-x(){    unset -f x; xrc reload x/v0 && x ${1:+"$@"};    }
+# [ -f "$(x initrc which)" ] && . "$(x initrc which)"
+x(){    unset -f x; xrc reload x-cmd/v0 && x ${1:+"$@"};    }
 
 if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
     ___xrc_log debug "Using module advise for completion."
@@ -364,3 +516,10 @@ if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*
 A
 fi
 # EndSection
+
+else
+    printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
+    return 1 2>/dev/null
+    ( return 1 )                # Provide error code 1
+    # return 1 || exit 1
+fi
