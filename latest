@@ -394,10 +394,11 @@ ___x_cmd_which_one(){
 
             if [ -f "$___X_CMD_ROOT/mod/$module" ]; then
                 printf "%s" "$___X_CMD_ROOT/mod/$module"
-            else
-                ___xrc_log debug "Module not found: $module"
-                return 1
+                return 0
             fi
+
+            ___xrc_log debug "Module not found: $module"
+            return 1
     esac
 }
 # EndSection
