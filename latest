@@ -390,9 +390,14 @@ ___x_cmd_which_one(){
             fi
 
             TGT="$___X_CMD_ROOT/$module"
-            [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
+            # [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
+            # ___xrc_log debug "Module not found: $module"
+            # return 1
 
-            ___xrc_log debug "Module not found: $module"
+            xrc_log info "Dowloading resource=$RESOURCE_NAME to local cache: $TGT"
+            CACHE="$TGT" ___x_cmd_curl_gitx "x-bash" "$module" && printf "%s" "$TGT" && return 0
+
+            xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
     esac
 }
