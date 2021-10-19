@@ -381,9 +381,6 @@ ___x_cmd_which_one(){
                 return                   # .x-cmd
             fi
 
-            TGT="$___X_CMD_ROOT/$module"
-            [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
-
             # x-bash module
             ___xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
             local module="$RESOURCE_NAME"
@@ -392,10 +389,8 @@ ___x_cmd_which_one(){
                 ___xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
             fi
 
-            if [ -f "$___X_CMD_ROOT/mod/$module" ]; then
-                printf "%s" "$___X_CMD_ROOT/mod/$module"
-                return 0
-            fi
+            TGT="$___X_CMD_ROOT/$module"
+            [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
 
             ___xrc_log debug "Module not found: $module"
             return 1
