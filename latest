@@ -33,6 +33,7 @@ A
     ___x_cmd_http_get(){
         ___xrc_log debug "curl -i ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} ${1:?Provide target URL}"
 
+        # local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
         if [ -z "$XRC_MAX_TIME" ]; then
             ___x_cmd_http_get_inner "$1" 2>/dev/null
         else
@@ -76,28 +77,6 @@ if [ -z "$___X_CMD_ROOT" ]; then
     mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$PATH"
 fi
-
-if [ -f "$___X_CMD_ROOT/.tgz/core.tgz" ]; then
-    ___X_CMD_COER_TGZ_FILES_CACHE="
-$(tar tf "$___X_CMD_ROOT/.tgz/core.tgz")"
-    ___X_CMD_COER_TGZ_MOD_CACHE="
-$(printf "%s" "$___X_CMD_COER_TGZ_FILES_CACHE" | awk -v FS=/ '{ print $1; }' | uniq)"
-fi
-
-___x_cmd_is_in_core_tgz(){
-    local mod_root="$1"
-    if [ -n "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
-        local res="${___X_CMD_COER_TGZ_MOD_CACHE#
-$mod_root
-}"
-        if [ "$res" != "$___X_CMD_COER_TGZ_MOD_CACHE" ]; then
-            return 0
-        else
-            return 1
-        fi
-    fi
-    return 2
-}
 
 # EndSection
 
@@ -159,9 +138,7 @@ esac
 
 # Section: main entrance
 
-___x_cmd_xrc_eval(){
-    eval "$1"
-}
+# shellcheck disable=SC1091
 
 xrc(){
     [ $# -eq 0 ] && set -- "help"
@@ -182,7 +159,7 @@ SUBCOMMAND:
             ;;
         c|cat)
             if [ $# -gt 0 ]; then
-                eval "$(___X_CMD_XRC_EVAL_SOURCE="" ___x_cmd_xrc_source_file_source "$@")"
+                ___x_cmd_xrc_source_file "$@"
                 return
             fi
             cat >&2 <<A
@@ -209,7 +186,10 @@ A
         export-all)
             ( xrc x-bash/xrc/_v0/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
         update)
-            ( xrc x-bash/xrc/_v0/update &&  ___x_cmd_xrc_update "$@" ) ;;
+            local CACHE="$___X_CMD_PATH/mod/all.tgz"
+            rm -rf "$___X_CMD_PATH/mod"
+            ___x_cmd_curl_gitx "dist/all.tgz"
+            tar xvf "$CACHE" ;;
         log)
             printf "WARN: xrc log deprecated, you should using 'x log' instead\n"
             x log "$@" ;;
@@ -218,98 +198,82 @@ A
         reload)
             if [ "$#" -gt 0 ]; then
                 local ___XRC_RELOAD=1
-                ___x_cmd_xrc_eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$@")"
+                eval "$( ___x_cmd_xrc_source_file "$@")"
                 return
             fi
             RELOAD=1 xrc xrc/latest; return ;;
         *)
-            ___x_cmd_xrc_eval "$(___X_CMD_XRC_EVAL_SOURCE=1 ___x_cmd_xrc_source_file_source "$subcmd" "$@")"
+            eval "$(___x_cmd_xrc_source_file "$subcmd" "$@")"
             return
     esac
 }
 # EndSection
 
-# Section: main entrance helper
-___X_CMD_XRC_MODULE_IMPORTED=""
-___x_cmd_xrc_source_file_source(){
-    local last="cat"
+___x_cmd_xrc_cat(){
+    local file
     while [ $# -ne 0 ]; do
         local xrcpath=$1;   shift
 
-        local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-        file="$(___x_cmd_which_one "$xrcpath")"
+        if file="$(___x_cmd_which_one "$xrcpath")"; then
+            printf "Interrupted because resource not found." >&2
+            return 1
+        fi
+
+        cat "$file"
+    done
+}
+
+
+# Section: main entrance helper
+___X_CMD_XRC_MODULE_IMPORTED=""
+___x_cmd_xrc_source_file(){
+    local file
+    while [ $# -ne 0 ]; do
+        local xrcpath=$1;   shift
+
+        if file="$(___x_cmd_which_one "$xrcpath")"; then
+            printf "Interrupted because resource not found.\n" >&2
+            return 1
+        fi
         local code=$?
 
-        if [ -n "$___X_CMD_XRC_EVAL_SOURCE" ]; then
-            # This is running
-            # Ask whether using http or outside resource.
-            if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
+        # Ask whether using http or outside resource.
+        if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
 
-                # We should do it before ___x_cmd_which_one
-                printf "Sourcing script from unknown location: %s\n" "$xrcpath"
-                cat >&2 <<A
+            # We should do it before ___x_cmd_which_one
+            printf "Sourcing script from unknown location: %s\n" "$xrcpath"
+            cat >&2 <<A
 SECURITY WARNING! Sourcing script from unknown location: $1
 If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
 > NOWARN=1 xrc "$1"
 A
-                printf "Input yes to continue. Otherwise exit > " >&2
-                local input
-                read -r input
+            printf "Input yes to continue. Otherwise exit > " >&2
+            local input
+            read -r input
 
-                if [ "$input" != "yes" ]; then
-                    rm "$file"
-                    echo "Exit becaause detect a non yes output: $input" >&2
-                    return 1
-                fi
+            if [ "$input" != "yes" ]; then
+                rm "$file"
+                printf "%s\n" "Exit because of a non yes output received: $input" >&2
+                return 1
             fi
         fi
 
-        case "$code" in
-            1)
-                printf "Interrupted because resource not found." >&2
-                return 1 ;;
-            0)
-                if [ "${last%%\ *}" = cat ]; then
-                    last="$last $file"
-                else
-                    eval tar Oxvf "$last"
-                    last="cat $file"
-                fi ;;
-            101)
-                local targz=${file%\ *}
-                local fp=${file#*\ }
-                if [ "${last%%\ *}" = "$targz" ]; then
-                    last="$last $fp"
-                else
-                    if [ "$last" != cat ]; then
-                        eval "$last"
-                    fi
-                    last="$file"
-                fi ;;
-        esac
-
-        if [ -z "$___X_CMD_XRC_EVAL_SOURCE" ]; then
-            if [ -z "$___XRC_RELOAD" ]; then
-                if [ "${___X_CMD_XRC_MODULE_IMPORTED#
+        if [ -z "$___XRC_RELOAD" ]; then
+            if [ "${___X_CMD_XRC_MODULE_IMPORTED#
 $file
 }" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-                    shift
-                    continue    # exixted already. skip
-                fi
+                shift
+                continue    # exixted already. skip
             fi
-            ___X_CMD_XRC_MODULE_IMPORTED="${___X_CMD_XRC_MODULE_IMPORTED}
-$file
-"
-            printf "%s" "
+        fi
+
+        printf "eval '%s'\n" "$file"
+        printf "%s" "
 ___X_CMD_XRC_MODULE_IMPORTED=\"\$___X_CMD_XRC_MODULE_IMPORTED
 $file
 \""
-        fi
-    done
 
-    if [ "$last" != cat ]; then
-        eval "$last"
-    fi
+    done
 }
 
 ___x_cmd_curl_gitx(){   # Simple strategy
@@ -373,53 +337,6 @@ ___x_cmd_search_path(){
 # EndSection
 
 # Section: which
-___x_cmd_which_one_file(){
-    local module=${1:?Provide module}
-    local TGT="${2:?Provide tgt}"
-
-    if [ -z "$___XRC_UPDATE" ] && [ -f "$TGT" ]; then
-        printf "%s" "$TGT"
-        return
-    fi
-
-    ___xrc_log info "Dowloading resource=$module to local cache: $TGT"
-    if ! CACHE="$TGT" ___x_cmd_curl_gitx "mod/$module"; then
-        local code=$?
-        case $code in
-            4)      ___xrc_log error "ERROR: Module Inexisted: $module" ;;
-            *)      ___xrc_log error "ERROR: Fail to load module due to network error or other: $module" ;;
-        esac
-        return 1
-    fi
-    printf "%s" "$TGT"
-}
-
-___x_cmd_which_one_tar(){
-    # If match in core.tar.gz
-
-    local mod_path=${1}
-    local mod_root=${mod_path%%/*}
-
-    if ___x_cmd_is_in_core_tgz "$mod_root"; then
-        printf "%s %s" "$mod_path" "$___X_CMD_ROOT/.tgz/core.tgz"
-        return 0
-    fi
-
-    # TODO: check and download.
-    local CACHE="$___X_CMD_ROOT/.tgz/$mod_root.tgz"
-    local webfile="$mod_root/$mod_root.tgz"
-    if ! ___x_cmd_curl_gitx "mod/$webfile"; then
-        local code=$?
-        case $code in
-            4)      ___xrc_log warn "Module Tar Inexisted: $webfile" ;;
-            *)      ___xrc_log error "ERROR: Fail to load module due to network error or other: $webfile" ;;
-        esac
-        return 1
-    fi
-
-    return 0
-}
-
 ___x_cmd_which_one(){
     local RESOURCE_NAME=${1:?Provide resource name}
 
@@ -477,12 +394,12 @@ ___x_cmd_which_one(){
                 ___xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
             fi
 
-            if ___x_cmd_which_one_tar "$module"; then
-                return 101
+            if [ -f "$___X_CMD_ROOT/mod/$module" ]; then
+                printf "%s" "$___X_CMD_ROOT/mod/$module"
+            else
+                ___xrc_log debug "Module not found: $module"
+                return 1
             fi
-
-            # TGT="$___X_CMD_ROOT/$module"
-            ___x_cmd_which_one_file "$module" "$___X_CMD_ROOT/$module"
     esac
 }
 # EndSection
