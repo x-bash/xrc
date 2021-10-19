@@ -4,58 +4,58 @@ if curl --version 1>/dev/null 2>&1; then
 # Section: Requirement & Initialize
     [ -n "$KSH_VERSION" ] && alias local=typeset
 
-    ___x_cmd_http_get_inner(){
-        local ___X_CMD_CURL_RETURN
-        ___X_CMD_CURL_RETURN="$(printf "\r")"
+___x_cmd_http_get_inner(){
+    local ___X_CMD_CURL_RETURN
+    ___X_CMD_CURL_RETURN="$(printf "\r")"
 
-        ___X_CMD_HTTP_GET_INNER_HEADER=""
+    ___X_CMD_HTTP_GET_INNER_HEADER=""
 
-        {
-            while read -r line; do
-                [ "$line" = "$___X_CMD_CURL_RETURN" ] && break
-                ___X_CMD_HTTP_GET_INNER_HEADER="$___X_CMD_HTTP_GET_INNER_HEADER
+    {
+        while read -r line; do
+            [ "$line" = "$___X_CMD_CURL_RETURN" ] && break
+            ___X_CMD_HTTP_GET_INNER_HEADER="$___X_CMD_HTTP_GET_INNER_HEADER
 $line"
-            done
-            cat
-        } <<A
+        done
+        cat
+    } <<A
 $(curl -i "$@")
 A
-    }
+}
 
-    ___x_cmd_http_get_response_header(){
-        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER"
-    }
+___x_cmd_http_get_response_header(){
+    printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER"
+}
 
-    ___x_cmd_http_get_response_header_code(){
-        ___x_cmd_http_get_response_header | awk 'NR==2{ printf($2); }'
-    }
+___x_cmd_http_get_response_header_code(){
+    ___x_cmd_http_get_response_header | awk 'NR==2{ printf($2); }'
+}
 
-    ___x_cmd_http_get(){
-        ___xrc_log debug "curl -i ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} ${1:?Provide target URL}"
+___x_cmd_http_get(){
+    ___xrc_log debug "curl -i ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} ${1:?Provide target URL}"
 
-        # local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
-        if [ -z "$XRC_MAX_TIME" ]; then
-            ___x_cmd_http_get_inner "$1" 2>/dev/null
-        else
-            # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
-            # eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
-            ___x_cmd_http_get_inner --max-time $XRC_MAX_TIME "$1" 2>/dev/null
-        fi
+    # local XRC_MAX_TIME=3        # Consider one file is less than 100KB, bandwidth at least 35KB/s.
+    if [ -z "$XRC_MAX_TIME" ]; then
+        ___x_cmd_http_get_inner "$1" 2>/dev/null
+    else
+        # Other solution: --speed-time 5 --speed-limit 10, disconnect if less than 10kb, and last for 5 seconds.
+        # eval curl ${XRC_MAX_TIME+--max-time $XRC_MAX_TIME} --fail "\"\${1}\"" 2>/dev/null
+        ___x_cmd_http_get_inner --max-time $XRC_MAX_TIME "$1" 2>/dev/null
+    fi
 
-        local code=$?
-        local http_code
-        http_code="$(___x_cmd_http_get_response_header_code)"
+    local code=$?
+    local http_code
+    http_code="$(___x_cmd_http_get_response_header_code)"
 
-        case "$http_code" in
-            20*)   return 0 ;;
-            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                    return 4 ;;
-            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
-                    return 1 ;;
-            *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                    return 2 ;;
-        esac
-    }
+    case "$http_code" in
+        20*)   return 0 ;;
+        40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 4 ;;
+        "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                return 1 ;;
+        *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 2 ;;
+    esac
+}
 
 ___xrc_log(){
     local level="$1"; shift
@@ -159,7 +159,7 @@ SUBCOMMAND:
             ;;
         c|cat)
             if [ $# -gt 0 ]; then
-                ___x_cmd_xrc_source_file "$@"
+                ___x_cmd_xrc_cat "$@"
                 return
             fi
             cat >&2 <<A
@@ -222,7 +222,6 @@ ___x_cmd_xrc_cat(){
         cat "$file"
     done
 }
-
 
 # Section: main entrance helper
 ___X_CMD_XRC_MODULE_IMPORTED=""
