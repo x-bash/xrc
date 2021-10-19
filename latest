@@ -59,7 +59,7 @@ ___x_cmd_http_get(){
 
 ___xrc_log(){
     local level="$1"; shift
-    [ "$level" = debug ] && return
+    # [ "$level" = debug ] && return
     printf "[%s]: %s\n" "$level" "$@" 1>&2
 }
 
@@ -266,7 +266,7 @@ $file
             fi
         fi
 
-        printf "eval '%s'\n" "$file"
+        printf ". '%s'\n" "$file"
         printf "%s" "
 ___X_CMD_XRC_MODULE_IMPORTED=\"\$___X_CMD_XRC_MODULE_IMPORTED
 $file
