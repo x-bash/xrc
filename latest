@@ -162,6 +162,9 @@ A
             tar xvf "$CACHE"
             rm "$CACHE"
             ;;
+        upgrade)
+            eval "$(curl https://get.x-cmd.com)"
+            ;;
         log)
             printf "WARN: xrc log deprecated, you should using 'x log' instead\n" >&2
             x log "$@" ;;
