@@ -156,11 +156,17 @@ A
         export-all)
             ( xrc x-bash/xrc/_v0/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
         update)
-            local CACHE="$___X_CMD_PATH/all.tgz"
-            # rm -rf "$___X_CMD_PATH" # Dangerous.
-            ___x_cmd_curl_gitx "dist/all.tgz"
-            tar xvf "$CACHE"
-            rm "$CACHE"
+            (
+                local CACHE="$___X_CMD_ROOT/all.tgz"
+                # rm -rf "$___X_CMD_ROOT" # Dangerous.
+                if ___x_cmd_curl_gitx "dist/all.tgz"; then
+                    cd $___X_CMD_ROOT && tar xvf "$CACHE"
+                    rm "$CACHE"
+                fi
+            )
+            ;;
+        upgrade)
+            eval "$(curl https://get.x-cmd.com)"
             ;;
         log)
             printf "WARN: xrc log deprecated, you should using 'x log' instead\n" >&2
@@ -208,12 +214,12 @@ ___x_cmd_xrc_source_file(){
         fi
 
         # Ask whether using http or outside resource.
-        if [ "$___X_CMD_UNTRUSTED_RESOURCE" = 1 ] && [ -z "$NOWARN" ]; then
+        if [ -n "$___X_CMD_UNTRUSTED_RESOURCE" ] && [ -z "$NOWARN" ]; then
 
             # We should do it before ___x_cmd_which_one
-            printf "Sourcing script from unknown location: %s\n" "$xrcpath"
+            printf "Sourcing script from untrusted location: %s\n" "$xrcpath"
             cat >&2 <<A
-SECURITY WARNING! Sourcing script from unknown location: $1
+SECURITY WARNING! Sourcing script from untrusted location: $1
 If you confirm this script is secure and want to skip this warning for some purpose, use the following code.
 > NOWARN=1 xrc "$1"
 A
@@ -232,7 +238,7 @@ A
             if [ "${___X_CMD_XRC_MODULE_IMPORTED#
 $file
 }" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-                shift
+                shift 2>/dev/null
                 continue    # exixted already. skip
             fi
         fi
@@ -311,7 +317,7 @@ ___x_cmd_which_one(){
     local RESOURCE_NAME=${1:?Provide resource name}
 
     local TGT
-    ___X_CMD_UNTRUSTED_RESOURCE=0
+    ___X_CMD_UNTRUSTED_RESOURCE=
     case "$RESOURCE_NAME" in
         /*)
             ___xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
@@ -319,7 +325,7 @@ ___x_cmd_which_one(){
             return 0
             ;;
         http://*|https://*)
-            ___X_CMD_UNTRUSTED_RESOURCE=1
+            ___X_CMD_UNTRUSTED_RESOURCE=http
             ___xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
 
             TGT="$___X_CMD_ROOT/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
@@ -349,6 +355,7 @@ ___x_cmd_which_one(){
             [ -f "$RESOURCE_NAME" ] && printf "%s" "$RESOURCE_NAME" && return      # local file
 
             if TGT="$(___x_cmd_search_path . ".x-cmd/$RESOURCE_NAME")"; then
+                ___X_CMD_UNTRUSTED_RESOURCE=workspace
                 printf "%s" "$TGT/.x-cmd/$RESOURCE_NAME"
                 return                   # .x-cmd
             fi
@@ -362,7 +369,7 @@ ___x_cmd_which_one(){
             fi
 
             TGT="$___X_CMD_ROOT/$module"
-            # [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
+            [ -f "$TGT" ] && printf "%s" "$TGT" && return 0
             # ___xrc_log debug "Module not found: $module"
             # return 1
 
