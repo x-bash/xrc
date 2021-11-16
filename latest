@@ -52,7 +52,7 @@ fi
 
 # Section: network & mirror
 ___x_cmd_curl() {
-    local REDIRECT=&1
+    local REDIRECT="&1"
     if [ -n "$CACHE" ]; then
         if [ -z "$___X_CMD_CURL_UPDATE" ] && [ -f "$CACHE" ]; then
             ___xrc_log debug "Function ___x_cmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
