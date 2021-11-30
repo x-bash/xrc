@@ -413,11 +413,18 @@ ___x_cmd_which_one(){
 
 # ___x_cmd_instance_add class object
 
+___x_cmd_instance_has(){
+    local class="${1:?Provide class name}"
+    local object="${2:?Provide object name}"
+    local name="___X_CMD_INSTANCE_$class"
+    eval [ \"\$$name\" != \"${$name#*@\${object}-}\" ]
+}
+
 ___x_cmd_instance_add(){
     local class="${1:?Provide class name}"
     local object="${2:?Provide object name}"
     local name="___X_CMD_INSTANCE_$class"
-    eval "$name=\"\${$name}@\${object}-}\""
+    eval "$name=\"\${$name}@\${object}-\""
 }
 
 # ___x_cmd_instance_rm class object
@@ -427,7 +434,7 @@ ___x_cmd_instance_rm(){
     local object="${2:?Provide object name}"
     # local O="${1:?Provide instance name}"
     local name="___X_CMD_INSTANCE_$class"
-    eval "$name=\"\${$name%@\${object}-*}\${name##*@\${object}-}\""
+    eval "$name=\"\${$name%@\${object}-*}\${$name##*@\${object}-}\""
 }
 
 # ___x_cmd_instance_rm class
@@ -435,7 +442,13 @@ ___x_cmd_instance_list(){
     local class="${1:?Provide class name}"
     local name="___X_CMD_INSTANCE_$class"
     eval [ -z \"\${$name}\" ] && return
-    eval printf \"%s\" \"\${$name}\" | tr "-" "\n"
+    eval printf \"%s\" \"\${$name}\" | tr "-" "\n" | tr -d @
+}
+
+___x_cmd_instance_clear(){
+    local class="${1:?Provide class name}"
+    local name="___X_CMD_INSTANCE_$class"
+    eval "$name="
 }
 
 # EndSection
