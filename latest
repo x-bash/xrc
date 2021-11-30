@@ -262,9 +262,9 @@ A
         fi
 
         if [ -z "$___XRC_RELOAD" ]; then
-            if [ "${___X_CMD_XRC_MODULE_IMPORTED#
+            if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 $file
-}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
+*}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
                 shift 2>/dev/null
                 continue    # exixted already. skip
             fi
