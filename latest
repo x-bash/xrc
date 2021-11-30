@@ -409,7 +409,7 @@ ___x_cmd_which_one(){
 }
 # EndSection
 
-# Section: Instance Management
+# Section: Small list for Instance management.
 
 # ___x_cmd_instance_add class object
 
