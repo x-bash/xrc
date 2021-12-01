@@ -412,7 +412,6 @@ ___x_cmd_which_one(){
 # Section: Instance management.
 
 # ___x_cmd_instance_add class object
-# ___x_cmd_instance_new dict_make :ali "$@"
 ___x_cmd_instance_new(){
     local name="${2:?Provide object name}"
     name="${name#?}"
