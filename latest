@@ -456,10 +456,10 @@ ___x_cmd_instance_add(){
 }
 
 # ___x_cmd_instance_rm class object
+# shellcheck disable=SC2034
 ___x_cmd_instance_rm(){
     local class="${1:?Provide class name}"
     local object="${2:?Provide object name}"
-    # local O="${1:?Provide instance name}"
     local name="___X_CMD_INSTANCE_$class"
     eval "$name=\"\${$name%@\${object}-*}\${$name##*@\${object}-}\""
 }
