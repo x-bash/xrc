@@ -218,7 +218,7 @@ A
 ___x_cmd_xrc_cat(){
     local file
     while [ $# -ne 0 ]; do
-        local xrcpath=$1;   shift
+        local xrcpath="$1";   shift
 
         if ! file="$(___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$xrcpath")"; then
             printf "ERROR: Interrupted because resource not found. %s \n" "$xrcpath" >&2
