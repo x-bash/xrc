@@ -232,10 +232,11 @@ ___x_cmd_xrc_cat(){
 
 ___X_CMD_XRC_MODULE_IMPORTED=""
 ___x_cmd_xrc_source_file(){
+    local ___X_CMD_WHICH_ONE_RESULT
+    local xrcpath
 
     while [ $# -ne 0 ]; do
-        local xrcpath="$1";   shift
-        local ___X_CMD_WHICH_ONE_RESULT
+        xrcpath="$1";   shift
 
         if ! ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$xrcpath"; then
             printf "ERROR: Interrupted because resource not found. %s \n" "$xrcpath" >&2
