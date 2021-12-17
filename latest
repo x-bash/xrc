@@ -490,6 +490,15 @@ ___x_cmd_instance_clear(){
 
 # EndSection
 
+# TODO: using an environment to mark
+___x_cmd_is_interative_tty(){
+    [ "${-#*i}" != "$-" ]
+}
+
+___x_cmd_is_suitable_advise_env(){
+    [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
+}
+
 ___x_cmd_awk(){
     xrc awk/latest && ___x_cmd_awk "$@"
 }
@@ -498,7 +507,7 @@ ___x_cmd_awk(){
 # [ -f "$(x initrc which)" ] && . "$(x initrc which)"
 x(){    unset -f x; xrc reload x-cmd/v0 && x ${1:+"$@"};    }
 
-if [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]; then
+if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
     xrc advise/v0 && advise init xrc && advise init x
     # load all advise json from advise dir
