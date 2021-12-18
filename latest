@@ -511,12 +511,17 @@ elif [ -n "$ZSH_VERSION" ]; then
     ___X_CMD_SHELL=zsh
 elif [ -n "$KSH_VERSION" ]; then
     ___X_CMD_SHELL=ksh
-elif "$0" --help 2>&1 | grep BusyBox >/dev/null; then                       # TODO: there must be a better way.
-    ___X_CMD_SHELL=ash
-elif this_command_should_never_exist 2>&1 | grep dash >/dev/null; then      # TODO: there must be a better way.
-    ___X_CMD_SHELL=dash
 else
-    printf "WARNING: %s" "Unknow shell." >&2
+    ___X_CMD_SHELL="$(
+        res="$(this_command_should_never_exist 2>&1)"
+        if [ "${res#dash}" != "$res" ]; then
+            printf "%s" dash
+        elif [ "${res#/bin/sh}" != "$res" ] && /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
+            printf "%s" ash
+        else
+            printf "WARNING: %s" "Unknown shell." >&2
+        fi
+    )"
 fi
 
 # EndSection
