@@ -180,7 +180,7 @@ A
             ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
         reload)
             if [ "$#" -gt 0 ]; then
-                local ___XRC_RELOAD=1
+                local ___X_CMD_XRC_RELOAD=1
                 ___x_cmd_xrc_source_file "$@"
                 return
             fi
@@ -266,7 +266,7 @@ A
             fi
         fi
 
-        if [ -z "$___XRC_RELOAD" ]; then
+        if [ -z "$___X_CMD_XRC_RELOAD" ]; then
             if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
