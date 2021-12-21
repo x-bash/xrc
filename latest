@@ -144,7 +144,7 @@ A
             return 1;;
         w|which)
             if [ $# -gt 0 ]; then
-                ___x_cmd_which_one "$@"
+                ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$@"
                 printf "%s" "$___X_CMD_WHICH_ONE_RESULT"
                 return
             fi
