@@ -524,7 +524,7 @@ else
         elif [ "${res#/bin/sh}" != "$res" ] && /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
             printf "%s" ash
         else
-            printf "WARNING: %s" "Unknown shell." >&2
+            printf "WARNING: %s\n" "Unknown shell." >&2
         fi
     )"
 fi
