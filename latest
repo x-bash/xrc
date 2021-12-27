@@ -557,6 +557,8 @@ fi
 # [ -f "$(x initrc which)" ] && . "$(x initrc which)"
 x(){    unset -f x; xrc reload x-cmd/v0 && x ${1:+"$@"};    }
 
+alias xws="x ws"
+
 if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
     xrc advise/v0 && advise init xrc && advise init x
