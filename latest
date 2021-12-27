@@ -283,8 +283,8 @@ A
             if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-                shift 2>/dev/null
-                continue    # exixted already. skip
+                [ $# -gt 0 ] && shift
+                continue    # exited already. skip
             fi
         fi
 
@@ -546,7 +546,7 @@ else
         elif /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
             printf "%s" ash
         else
-            printf "WARNING: %s" "Unknown shell." >&2
+            printf "WARNING: %s\n" "Unknown shell." >&2
         fi
     )"
 fi
