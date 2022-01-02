@@ -164,7 +164,7 @@ A
         mirror)
             ___x_cmd_mirror "$@" ;;
         export-all)
-            ( xrc x-bash/xrc/_v0/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
+            ( xrc x-bash/xrc/lib/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
         update)
             (
                 local CACHE="$___X_CMD_ROOT/all.tgz"
