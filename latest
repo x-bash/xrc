@@ -263,7 +263,7 @@ ___x_cmd_xrc_source_file(){
         fi
 
         # Ask whether using http or outside resource.
-        if [ -n "$___X_CMD_UNTRUSTED_RESOURCE" ] && [ -z "$NOWARN" ]; then
+        if [ "$___X_CMD_WHICH_ONE_RESOURCE_TYPE" = http ] && [ -z "$NOWARN" ]; then
 
             # We should do it before ___x_cmd_which_one
             printf "Sourcing script from untrusted location: %s\n" "$___X_CMD_LOCAL_XRCPATH"
@@ -368,15 +368,16 @@ ___x_cmd_which_one(){
     ___X_CMD_WHICH_ONE_RESULT=
 
     local TGT
-    ___X_CMD_UNTRUSTED_RESOURCE=
+    ___X_CMD_WHICH_ONE_RESOURCE_TYPE=official
     case "$RESOURCE_NAME" in
         /*)
+            ___X_CMD_WHICH_ONE_RESOURCE_TYPE=local
             ___xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
             ___X_CMD_WHICH_ONE_RESULT="$RESOURCE_NAME"
             return 0
             ;;
         http://*|https://*)
-            ___X_CMD_UNTRUSTED_RESOURCE=http
+            ___X_CMD_WHICH_ONE_RESOURCE_TYPE=http
             ___xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
 
             TGT="$___X_CMD_ROOT/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
@@ -389,13 +390,14 @@ ___x_cmd_which_one(){
             ;;
         *@*/*)
             xrc hub/v0
-            ___xcmd_hub_file_which "$RESOURCE_NAME"     # Will set ___X_CMD_UNTRUSTED_RESOURCE=1 if from unknow source
+            ___xcmd_hub_file_which "$RESOURCE_NAME"     # Will set ___X_CMD_WHICH_ONE_RESOURCE_TYPE=1 if from unknow source
             ;;
         ./*|../*)
             ___xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
             local tmp
             if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
-                ___X_CMD_UNTRUSTED_RESOURCE="$tmp/$(basename "$RESOURCE_NAME")"
+                ___X_CMD_WHICH_ONE_RESOURCE_TYPE=local
+                ___X_CMD_WHICH_ONE_RESULT="$tmp/$(basename "$RESOURCE_NAME")"
                 return 0
             else
                 ___xrc_log warn "Local file not exists: $RESOURCE_NAME"
@@ -408,7 +410,7 @@ ___x_cmd_which_one(){
                 [ -f "$RESOURCE_NAME" ] && ___X_CMD_WHICH_ONE_RESULT="$RESOURCE_NAME" && return      # local file
 
                 if TGT="$(___x_cmd_search_path . ".x-cmd/$RESOURCE_NAME")"; then
-                    ___X_CMD_UNTRUSTED_RESOURCE=workspace
+                    ___X_CMD_WHICH_ONE_RESOURCE_TYPE=workspace
                     ___X_CMD_WHICH_ONE_RESULT="$TGT/.x-cmd/$RESOURCE_NAME"
                     return                   # .x-cmd
                 fi
