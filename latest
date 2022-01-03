@@ -96,9 +96,10 @@ ___x_cmd_mirror(){
         return
     fi
     if [ ! -f "$fp" ]; then
-        ___x_cmd_mirror \
-            "https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s" \
-            "https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s"
+        tee "$fp" <<A
+https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s
+https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s
+A
     fi
     cat "$fp"
 }
