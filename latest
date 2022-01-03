@@ -392,9 +392,6 @@ ___x_cmd_xrc_cat(){
 ___X_CMD_XRC_MODULE_IMPORTED="
 "
 
-___X_CMD_XRC_SET_MAIN_DICT="
-"
-
 ___x_cmd_xrc_source_file(){
     local ___X_CMD_WHICH_ONE_RESULT
     local ___X_CMD_LOCAL_XRCPATH
@@ -439,14 +436,14 @@ A
             fi
         fi
 
-        ___X_CMD_XRC_MODULE_IMPORTED="$___X_CMD_XRC_MODULE_IMPORTED
-$___X_CMD_WHICH_ONE_RESULT"
+        ___X_CMD_XRC_MODULE_IMPORTED="
+${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
-        ___X_CMD_ENABLE_AUTO_RUN="" ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
+        ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
 
         if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
-            ___X_CMD_XRC_SET_MAIN_DICT="${___X_CMD_XRC_SET_MAIN_DICT}${___X_CMD_WHICH_ONE_RESULT}|${___X_CMD_XRC_SET_MAIN}
-"
+            __x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
+            # TODO: rename module
             ___X_CMD_XRC_SET_MAIN=
         fi
     done
@@ -592,6 +589,7 @@ ___x_cmd_which_one(){
 
 # Section: Instance management.
 
+# TODO: We could use list to replace this facility.
 # ___x_cmd_instance_add class object
 ___x_cmd_instance_new(){
     local name="${2:?Provide object name}"
