@@ -95,13 +95,14 @@ ___x_cmd_mirror(){
         printf "%s" "$*" >"$fp"
         return
     fi
-    if [ ! -f "$fp" ]; then
-        tee "$fp" <<A
+
+    [ -f "$fp" ] && cat "$fp" && return
+
+    tee "$fp" <<A
 https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s
 https://gitee.com/x-cmd/x-cmd/raw/$___X_CMD_BRANCH/mod/%s
 A
-    fi
-    cat "$fp"
+
 }
 
 if [ "$___X_CMD_IN_CHINA_NET" = 1 ]; then
