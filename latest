@@ -53,7 +53,7 @@ TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT 
 if [ -z "$___X_CMD_ROOT" ]; then
     ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
     ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
-    mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
+    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$PATH"
 fi
 
@@ -90,7 +90,6 @@ ___X_CMD_BRANCH=main
 ___x_cmd_mirror(){
     local fp="$___X_CMD_ROOT/.source.mirror.list"
     if [ $# -ne 0 ]; then
-        mkdir -p "$(dirname "$fp")"
         local IFS="
 ";
         printf "%s" "$*" >"$fp"
@@ -294,10 +293,15 @@ ___x_cmd_ldict_get(){
     local name="${1:?Provide dict name}"
     local key="${2:?Provide key}"
 
-    local part1
+    local tmp
 
-    eval "part1=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}}\""
-    printf "%s" "${part1%%${___X_CMD_LDICT_SEP}*}"
+    eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}}\""
+
+    if eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]; then
+        printf "%s" "${tmp%%${___X_CMD_LDICT_SEP}*}"
+    else
+        return 1
+    fi
 }
 
 ___x_cmd_ldict_keys(){
@@ -449,7 +453,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
 
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
-        __x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
+        ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
         # TODO: rename module
         ___X_CMD_XRC_SET_MAIN=
     fi
