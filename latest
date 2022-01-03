@@ -427,26 +427,32 @@ A
             fi
         fi
 
-        if [ -z "$___X_CMD_XRC_RELOAD" ]; then
-            if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
+        ___x_cmd_xrc_source_file_main "$___X_CMD_WHICH_ONE_RESULT" >/dev/null
+    done
+}
+
+___x_cmd_xrc_source_file_main(){
+    ___X_CMD_WHICH_ONE_RESULT="${1:?Provide exact file}"
+
+    if [ -z "$___X_CMD_XRC_RELOAD" ]; then
+        if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-                [ $# -gt 0 ] && shift
-                continue    # exited already. skip
-            fi
+            return    # exited already. skip
         fi
+    fi
 
-        ___X_CMD_XRC_MODULE_IMPORTED="
+    ___X_CMD_XRC_MODULE_IMPORTED="
 ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
-        ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
+    ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
 
-        if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
-            __x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
-            # TODO: rename module
-            ___X_CMD_XRC_SET_MAIN=
-        fi
-    done
+    if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
+        __x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
+        # TODO: rename module
+        printf "%s\n" "$___X_CMD_XRC_SET_MAIN"
+        ___X_CMD_XRC_SET_MAIN=
+    fi
 }
 
 ___x_cmd_curl_gitx(){   # Simple strategy
