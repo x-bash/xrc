@@ -437,7 +437,7 @@ A
             fi
         fi
 
-        ___x_cmd_xrc_source_file_main "$___X_CMD_WHICH_ONE_RESULT" >/dev/null
+        ___x_cmd_xrc_source_file_main "$___X_CMD_WHICH_ONE_RESULT"
     done
 }
 
