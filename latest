@@ -96,6 +96,7 @@ ___x_cmd_mirror(){
         return
     fi
 
+    # TODO: what if the mirror file is wrong or empty? ... We should have a solution for that.
     [ -f "$fp" ] && cat "$fp" && return
 
     tee "$fp" <<A
