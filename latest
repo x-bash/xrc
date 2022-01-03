@@ -97,7 +97,10 @@ ___x_cmd_mirror(){
     fi
 
     # TODO: what if the mirror file is wrong or empty? ... We should have a solution for that.
-    [ -f "$fp" ] && cat "$fp" && return
+    if [ -f "$fp" ]; then
+        cat "$fp"
+        return
+    fi
 
     tee "$fp" <<A
 https://raw.githubusercontent.com/x-cmd/x-cmd/$___X_CMD_BRANCH/mod/%s
