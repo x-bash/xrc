@@ -118,6 +118,10 @@ esac
 
 # Section: main entrance
 
+___x_cmd_xrc_set_main(){
+    ___X_CMD_XRC_SET_MAIN="${1:?Provide function}"
+}
+
 # shellcheck disable=SC1091
 xrc(){
     [ $# -eq 0 ] && set -- "help"
@@ -188,6 +192,8 @@ A
             x log "$@" ;;
         ls)
             ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
+        setmain)
+            ___x_cmd_xrc_set_main "$@" ;;
         reload)
             if [ "$#" -gt 0 ]; then
                 local ___X_CMD_XRC_RELOAD=1
@@ -233,6 +239,120 @@ A
 }
 # EndSection
 
+# Section: ldict
+___X_CMD_LDICT(){
+    local op="$1"; shift
+    case "$op" in
+        put)        ___x_cmd_ldict_put "$@" ;;
+        get)        ___x_cmd_ldict_get "$@" ;;
+        keys)       ___x_cmd_ldict_keys "$@" ;;
+        print)      ___x_cmd_ldict_print "$@" ;;
+        *)
+            printf "Show help for ldict\n" >&2
+            return 1
+    esac
+}
+
+alias ldict="___X_CMD_LDICT"
+
+___X_CMD_LDICT_SEP="$(printf "\001")"
+___X_CMD_LDICT_KVSEP="$(printf "\002")"
+___x_cmd_ldict_put(){
+    local name="${1:?Provide dict name}"
+    local key="${2:?Provide key}"
+    local value="${3:?Provide value}"
+
+    eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}:-\${___X_CMD_LDICT_SEP}}\${key}\${___X_CMD_LDICT_KVSEP}\${value}\${___X_CMD_LDICT_SEP}\""
+}
+
+___x_cmd_ldict_get(){
+    local name="${1:?Provide dict name}"
+    local key="${2:?Provide key}"
+
+    local part1
+
+    eval "part1=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}}\""
+    printf "%s" "${part1%%${___X_CMD_LDICT_SEP}*}"
+}
+
+___x_cmd_ldict_keys(){
+    local name="${1:?Provide dict name}"
+    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
+NR!=1{
+    print $1
+}'
+}
+
+___x_cmd_ldict_print(){
+    local name="${1:?Provide dict name}"
+    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
+NR!=1{
+    print $1 " = " $2
+}'
+}
+
+# EndSection
+
+# Section: llist
+___x_cmd_llist(){
+    local op="$1"; shift
+    case "$op" in
+        init)           ___x_cmd_llist_init "$@" ;;
+        shift)          ___x_cmd_llist_shift "$@" ;;
+        unshift)        ___x_cmd_llist_unshift "$@" ;;
+        push)           ___x_cmd_llist_push "$@" ;;
+        pop)            ___x_cmd_llist_pop "$@" ;;
+        has)            ___x_cmd_llist_has "$@" ;;
+        print)          ___x_cmd_llist_print "$@" ;;
+        *)
+            printf "Show help for llist\n" >&2
+            return 1
+    esac
+}
+
+alias llist="___x_cmd_llist"
+
+___x_cmd_llist_init(){
+    local name="${1:?Provide list name}"
+    eval "___x_cmd_llist_$name=\"\${___X_CMD_LDICT_SEP}\""
+}
+
+___x_cmd_llist_push(){
+    local name="${1:?Provide list name}"
+    local value="${2:?Provide value}"
+
+    eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\${value}\${___X_CMD_LDICT_SEP}\""
+}
+
+___x_cmd_llist_unshift(){
+    local name="${1:?Provide list name}"
+    local value="${2:?Provide value}"
+
+    eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LDICT_SEP}\${value}\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\""
+}
+
+___x_cmd_llist_has(){
+    local name="${1:?Provide dict name}"
+    local value="${2:?Provide key}"
+
+    local part1
+    eval "part1=\"\${___X_CMD_LLIST_${name}#*\${___X_CMD_LDICT_SEP}\${value}\${___X_CMD_LDICT_SEP}}\""
+    eval [ \"\$part1\" != \"\$"___X_CMD_LLIST_${name}"\" ]
+}
+
+___x_cmd_llist_print(){
+    local name="${1:?Provide dict name}"
+    eval printf \"%s\" \"\$"___X_CMD_LLIST_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" '
+NR!=1{
+    print $1
+}'
+}
+# EndSection
+
+# Section: lset
+
+# EndSection
+
 # Section: main entrance helper
 ___x_cmd_xrc_cat(){
     local file
@@ -248,7 +368,12 @@ ___x_cmd_xrc_cat(){
     done
 }
 
-___X_CMD_XRC_MODULE_IMPORTED=""
+___X_CMD_XRC_MODULE_IMPORTED="
+"
+
+___X_CMD_XRC_SET_MAIN_DICT="
+"
+
 ___x_cmd_xrc_source_file(){
     local ___X_CMD_WHICH_ONE_RESULT
     local ___X_CMD_LOCAL_XRCPATH
@@ -293,10 +418,16 @@ A
             fi
         fi
 
-        ___X_CMD_ENABLE_AUTO_RUN="" ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
         ___X_CMD_XRC_MODULE_IMPORTED="$___X_CMD_XRC_MODULE_IMPORTED
 $___X_CMD_WHICH_ONE_RESULT"
 
+        ___X_CMD_ENABLE_AUTO_RUN="" ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
+
+        if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
+            ___X_CMD_XRC_SET_MAIN_DICT="${___X_CMD_XRC_SET_MAIN_DICT}${___X_CMD_WHICH_ONE_RESULT}|${___X_CMD_XRC_SET_MAIN}
+"
+            ___X_CMD_XRC_SET_MAIN=
+        fi
     done
 }
 
