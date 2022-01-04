@@ -73,6 +73,23 @@ ___x_cmd_curl() {
 
     local REDIRECT=            # "&1"
     if [ -n "$CACHE" ]; then
+        if [ -f "$CACHE" ]; then
+            # days
+            case "$___X_CMD_CURL_UPDATE" in
+                "") # infinite time
+                    ___xrc_log debug "Function ___x_cmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
+                    return 0
+                    ;;
+                -)  # force update
+                    ;;
+                *)  # days
+                    if [ -n "$(find "$CACHE" -mtime -$___X_CMD_CURL_UPDATE 2>/dev/null)" ]; then
+                        ___xrc_log debug "Function ___x_cmd_curl() terminated. Because local cache existed within days: $___X_CMD_CURL_UPDATE"
+                        return 0
+                    fi
+            esac
+        fi
+
         if [ -z "$___X_CMD_CURL_UPDATE" ] && [ -f "$CACHE" ]; then
             ___xrc_log debug "Function ___x_cmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
             return 0
