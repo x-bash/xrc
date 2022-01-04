@@ -70,6 +70,7 @@ fi
 ___x_cmd_curl() {
     local URL="${1:?Provide url}"
     local CACHE="$2"
+    local ___X_CMD_CURL_UPDATE="$3"
 
     local REDIRECT=            # "&1"
     if [ -n "$CACHE" ]; then
@@ -114,7 +115,8 @@ ___x_cmd_curl_gitx(){   # Simple strategy
     local reponame="${2:?Provide reponame}"
     local branch="${3:?Provide branch}"
     local suburl="${4:?Provide location like str}"
-    local CACHE="${5}"
+    local cache="${5}"
+    local cache_expiration="${6}"
 
     local IFS
 
@@ -127,7 +129,7 @@ ___x_cmd_curl_gitx(){   # Simple strategy
     while read -r mirror; do
         # shellcheck disable=SC2059
         urlpath="$(printf "$mirror" "$owner" "$reponame" "${branch}" "$suburl")"
-        ___x_cmd_curl "$urlpath" "$CACHE"
+        ___x_cmd_curl "$urlpath" "$cache" "$cache_expiration"
 
         case $? in
             0)  if [ "$lineno" -ne 1 ]; then
@@ -158,7 +160,7 @@ A
 
 
 ___x_cmd_curl_gitx_official(){
-    ___x_cmd_curl_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide url}" "$2"
+    ___x_cmd_curl_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide url}" "$2" "$3"
 }
 
 # EndSection
@@ -259,7 +261,7 @@ A
             (
                 local CACHE="$___X_CMD_ROOT/all.tgz"
                 # rm -rf "$___X_CMD_ROOT" # Dangerous.
-                if ___x_cmd_curl_gitx_official "dist/all.tgz" "$CACHE"; then
+                if ___x_cmd_curl_gitx_official "dist/all.tgz" "$CACHE" -; then
                     cd "$___X_CMD_ROOT" && tar xvf "$CACHE"
                     rm "$CACHE"
                     ___XRC_UDPATE=1
