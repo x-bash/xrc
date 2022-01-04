@@ -14,7 +14,14 @@ ___x_cmd_http_getfile(){
     ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
 
     # TODO: --speed-time 3
-    ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+
+    if [ -z "$cache" ]; then
+        exec 3>&1
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+        exec 3>&-
+    else
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+    fi
 
     local code=$?
     local http_code
@@ -61,7 +68,10 @@ fi
 
 # Section: network & mirror
 ___x_cmd_curl() {
-    local REDIRECT="&1"
+    local URL="${1:?Provide url}"
+    local CACHE="$2"
+
+    local REDIRECT=            # "&1"
     if [ -n "$CACHE" ]; then
         if [ -z "$___X_CMD_CURL_UPDATE" ] && [ -f "$CACHE" ]; then
             ___xrc_log debug "Function ___x_cmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
@@ -179,7 +189,7 @@ A
             (
                 local CACHE="$___X_CMD_ROOT/all.tgz"
                 # rm -rf "$___X_CMD_ROOT" # Dangerous.
-                if ___x_cmd_curl_gitx "dist/all.tgz"; then
+                if ___x_cmd_curl_gitx_official "dist/all.tgz" "$CACHE"; then
                     cd "$___X_CMD_ROOT" && tar xvf "$CACHE"
                     rm "$CACHE"
                     ___XRC_UDPATE=1
@@ -466,8 +476,13 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     fi
 }
 
+# org reponame branch suburl
 ___x_cmd_curl_gitx(){   # Simple strategy
-    local suburl="${1:?Provide location like str}"
+    local owner="${1:?Provide owner}"
+    local reponame="${2:?Provide reponame}"
+    local branch="${3:?Provide branch}"
+    local suburl="${4:?Provide location like str}"
+    local CACHE="${5}"
 
     local IFS
 
@@ -479,8 +494,8 @@ ___x_cmd_curl_gitx(){   # Simple strategy
     local urlpath
     while read -r mirror; do
         # shellcheck disable=SC2059
-        urlpath="$(printf "$mirror" x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "$suburl")"
-        ___x_cmd_curl "$urlpath"
+        urlpath="$(printf "$mirror" "$owner" "$reponame" "${branch}" "$suburl")"
+        ___x_cmd_curl "$urlpath" "$CACHE"
 
         case $? in
             0)  if [ "$lineno" -ne 1 ]; then
@@ -507,6 +522,10 @@ ___x_cmd_curl_gitx(){   # Simple strategy
 ${mirror_list}
 A
     return 1
+}
+
+___x_cmd_curl_gitx_official(){
+    ___x_cmd_curl_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide url}" "$2"
 }
 
 ___x_cmd_search_path(){
@@ -596,7 +615,8 @@ ___x_cmd_which_one(){
             # return 1
 
             ___xrc_log info "Downloading resource=$RESOURCE_NAME to local cache: $TGT"
-            CACHE="$TGT" ___x_cmd_curl_gitx "mod/$module" && ___X_CMD_WHICH_ONE_RESULT="$TGT" && return 0
+            ___x_cmd_curl_gitx_official "mod/$module" "$TGT" \
+                && ___X_CMD_WHICH_ONE_RESULT="$TGT" && return 0
 
             ___xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
