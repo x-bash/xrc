@@ -66,7 +66,7 @@ fi
 
 # EndSection
 
-# Section: network & mirror
+# Section: network curl
 ___x_cmd_curl() {
     local URL="${1:?Provide url}"
     local CACHE="$2"
@@ -94,6 +94,63 @@ ___x_cmd_curl() {
         return $code
     fi
 }
+
+# org reponame branch suburl
+___x_cmd_curl_gitx(){   # Simple strategy
+    local owner="${1:?Provide owner}"
+    local reponame="${2:?Provide reponame}"
+    local branch="${3:?Provide branch}"
+    local suburl="${4:?Provide location like str}"
+    local CACHE="${5}"
+
+    local IFS
+
+    local mirror_list
+    mirror_list="$(___x_cmd_mirror)"
+
+    local mirror
+    local lineno=1
+    local urlpath
+    while read -r mirror; do
+        # shellcheck disable=SC2059
+        urlpath="$(printf "$mirror" "$owner" "$reponame" "${branch}" "$suburl")"
+        ___x_cmd_curl "$urlpath" "$CACHE"
+
+        case $? in
+            0)  if [ "$lineno" -ne 1 ]; then
+                    ___xrc_log debug "Current default mirror is $mirror"
+                    ___x_cmd_mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
+
+                    # Set CHINA_NET FLAG
+                    case "$mirror" in
+                        *gitee*)                    ___X_CMD_IN_CHINA_NET=1 ;;
+                        *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET=  ;;
+                    esac
+                fi
+                return 0;;
+            1)  ___xrc_log debug "Network unavailable."
+                return 1;;
+            4)  ___xrc_log debug "Resource Not Found."
+                return 4;;
+            *)
+                ___xrc_log debug "Network unavailable Or Mirror is down: $urlpath"
+                return 1;;
+        esac
+        lineno=$((lineno+1))
+    done <<A
+${mirror_list}
+A
+    return 1
+}
+
+
+___x_cmd_curl_gitx_official(){
+    ___x_cmd_curl_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide url}" "$2"
+}
+
+# EndSection
+
+# Section: mirror
 
 ___X_CMD_CODESORUCE_REPO_BRANCH=${___X_CMD_CODESORUCE_REPO_BRANCH:-main}
 ___X_CMD_CODESORUCE_REPO=${___X_CMD_CODESORUCE_REPO:-x-cmd}
@@ -474,58 +531,6 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
         # TODO: rename module
         ___X_CMD_XRC_SET_MAIN=
     fi
-}
-
-# org reponame branch suburl
-___x_cmd_curl_gitx(){   # Simple strategy
-    local owner="${1:?Provide owner}"
-    local reponame="${2:?Provide reponame}"
-    local branch="${3:?Provide branch}"
-    local suburl="${4:?Provide location like str}"
-    local CACHE="${5}"
-
-    local IFS
-
-    local mirror_list
-    mirror_list="$(___x_cmd_mirror)"
-
-    local mirror
-    local lineno=1
-    local urlpath
-    while read -r mirror; do
-        # shellcheck disable=SC2059
-        urlpath="$(printf "$mirror" "$owner" "$reponame" "${branch}" "$suburl")"
-        ___x_cmd_curl "$urlpath" "$CACHE"
-
-        case $? in
-            0)  if [ "$lineno" -ne 1 ]; then
-                    ___xrc_log debug "Current default mirror is $mirror"
-                    ___x_cmd_mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
-
-                    # Set CHINA_NET FLAG
-                    case "$mirror" in
-                        *gitee*)                    ___X_CMD_IN_CHINA_NET=1 ;;
-                        *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET=  ;;
-                    esac
-                fi
-                return 0;;
-            1)  ___xrc_log debug "Network unavailable."
-                return 1;;
-            4)  ___xrc_log debug "Resource Not Found."
-                return 4;;
-            *)
-                ___xrc_log debug "Network unavailable Or Mirror is down: $urlpath"
-                return 1;;
-        esac
-        lineno=$((lineno+1))
-    done <<A
-${mirror_list}
-A
-    return 1
-}
-
-___x_cmd_curl_gitx_official(){
-    ___x_cmd_curl_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide url}" "$2"
 }
 
 ___x_cmd_search_path(){
