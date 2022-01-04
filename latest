@@ -90,10 +90,6 @@ ___x_cmd_curl() {
             esac
         fi
 
-        if [ -z "$___X_CMD_CURL_UPDATE" ] && [ -f "$CACHE" ]; then
-            ___xrc_log debug "Function ___x_cmd_curl() terminated. Because local cache existed with update flag unset: $CACHE"
-            return 0
-        fi
         # First make sure it works before webservice. Fail fast.
         mkdir -p "$(dirname "$CACHE")"
         REDIRECT="$TMPDIR/x-bash-temp-download.$RANDOM"
