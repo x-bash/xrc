@@ -554,7 +554,7 @@ ___x_cmd_which_one(){
             fi
             ;;
         *@*/*)
-            xrc hub/v0
+            xrc hub/latest
             ___xcmd_hub_file_which "$RESOURCE_NAME"     # Will set ___X_CMD_WHICH_ONE_RESOURCE_TYPE=1 if from unknow source
             ;;
         ./*|../*)
