@@ -55,6 +55,8 @@ ___x_cmd_source(){
     . "$@"
 }
 
+alias ___x_cmd_shift1='[ $# -gt 0 ] && shift ; '
+
 TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
 
 if [ -z "$___X_CMD_ROOT" ]; then
