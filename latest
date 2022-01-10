@@ -8,6 +8,8 @@
 # Section: Requirement & Initialize
 [ -n "$KSH_VERSION" ] && alias local=typeset
 
+
+if command -v curl >/dev/null; then
 ___x_cmd_http_getfile(){
     local url="${1:?Provide url}"
     local cache="${2}"
@@ -37,6 +39,40 @@ ___x_cmd_http_getfile(){
                 return 2 ;;
     esac
 }
+elif command -v wget >/dev/null; then
+___x_cmd_http_getfile(){
+    local url="${1:?Provide url}"
+    local cache="${2}"
+    ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
+
+    if [ -z "$cache" ]; then
+        exec 3>&1
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+        exec 3>&-
+    else
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+    fi
+
+    local code=$?
+    local http_code
+    http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
+
+    case "$http_code" in
+        20*)   return 0 ;;
+        40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 4 ;;
+        "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                return 1 ;;
+        *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 2 ;;
+    esac
+}
+else
+___x_cmd_http_getfile(){
+    ___xrc_log debug "Please install curl or wget in your computure."
+    return 1
+}
+fi
 
 ___xrc_log(){
     local level="$1"; shift
