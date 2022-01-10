@@ -46,10 +46,10 @@ ___x_cmd_http_getfile(){
 
     if [ -z "$cache" ]; then
         exec 3>&1
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -qS "$url" 2>&3 1>/dev/stdout)"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -qS "$url" 2>&3 1>/dev/stdout)"
         exec 3>&-
     else
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -O "$cache" -qS "$url" 2>&3)"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -O "$cache" -qS "$url" 2>&3)"
     fi
 
     local code=$?
