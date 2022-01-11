@@ -588,6 +588,11 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
         # TODO: rename module
 
         if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
+            echo "
+            $___X_CMD_WHICH_ONE_NAMING(){
+                \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
+            }" >&2
+
             eval "
             $___X_CMD_WHICH_ONE_NAMING(){
                 \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
@@ -618,7 +623,7 @@ ___x_cmd_search_path(){
 # Section: which
 # RETURN ___X_CMD_WHICH_ONE_RESULT
 ___x_cmd_which_one_with_naming(){
-    local RESOURCE_NAME=${1:?Provide resource name}
+    local RESOURCE_NAME="${1:?Provide resource name for ___x_cmd_which_one_with_naming}"
     ___X_CMD_WHICH_ONE_RESULT=
     ___X_CMD_WHICH_ONE_NAMING=
 
@@ -630,18 +635,21 @@ ___x_cmd_which_one_with_naming(){
         *=*)                    ;;
         *)
             # TODO: some future work for http
-            # ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME##*/}"
+            ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME##*/}"
             ___x_cmd_which_one "${RESOURCE_NAME}"
             return
     esac
 
+    echo "--- $RESOURCE_NAME" >&2
+    echo "--- ${RESOURCE_NAME%%=*}" >&2
+    echo "--- ${RESOURCE_NAME#*=}" >&2
     ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME%%=*}"
-    ___x_cmd_which_one "${RESOURCe_NAME#*=}"
+    ___x_cmd_which_one "${RESOURCE_NAME#*=}"
 }
 
 
 ___x_cmd_which_one(){
-    local RESOURCE_NAME=${1:?Provide resource name}
+    local RESOURCE_NAME="${1:?Provide resource name for ___x_cmd_which_one}"
 
     ___X_CMD_WHICH_ONE_RESULT=
 
