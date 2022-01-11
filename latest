@@ -643,7 +643,11 @@ ___x_cmd_which_one_with_naming(){
     echo "--- $RESOURCE_NAME" >&2
     echo "--- ${RESOURCE_NAME%%=*}" >&2
     echo "--- ${RESOURCE_NAME#*=}" >&2
-    ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME%%=*}"
+    # ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME%%=*}"
+    case "$RESOURCE_NAME" in
+        */*)    ;;
+        *)      ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME}" ;;
+    esac
     ___x_cmd_which_one "${RESOURCE_NAME#*=}"
 }
 
