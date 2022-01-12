@@ -15,6 +15,7 @@ elif [ -n "$KSH_VERSION" ]; then
     ___X_CMD_SHELL=ksh
     alias local=typeset
 else
+    # TODO: Otherwise, loading a remarkable script to detect shell
     ___X_CMD_SHELL="$(
         res="$(___x_cmd_readlink_recursive "$(command -v "$0")")"
         if [ "${res%dash}" != "$res" ]; then
