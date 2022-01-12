@@ -275,90 +275,6 @@ case "$(___x_cmd_mirror | head -n1)" in
 esac
 # EndSection
 
-# Section: ldict
-___X_CMD_LDICT(){
-    local op="$1"; shift
-    case "$op" in
-        put)        ___x_cmd_ldict_put "$@" ;;
-        get)        ___x_cmd_ldict_get "$@" ;;
-        keys)       ___x_cmd_ldict_keys "$@" ;;
-        print)      ___x_cmd_ldict_print "$@" ;;
-        *)
-            printf "Show help for ldict\n" >&2
-            return 1
-    esac
-}
-
-alias ldict="___X_CMD_LDICT"
-
-___X_CMD_LDICT_SEP="$(printf "\001")"
-___X_CMD_LDICT_KVSEP="$(printf "\002")"
-
-___x_cmd_ldict_put(){
-    local name="${1:?Provide dict name}"
-    local key="${2:?Provide key}"
-    local value="${3:?Provide value}"
-
-    ___x_cmd_ldict_rm "$name" "$key"
-
-    eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}:-\${___X_CMD_LDICT_SEP}}\${key}\${___X_CMD_LDICT_KVSEP}\${value}\${___X_CMD_LDICT_SEP}\""
-}
-
-___x_cmd_ldict_rm(){
-    local name="${1:?Provide dict name}"
-    local key="${2:?Provide key}"
-
-    local tmp
-    eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}*\${___X_CMD_LDICT_SEP}}\""
-    if eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]; then
-        eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}%%\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}*}\${___X_CMD_LDICT_SEP}\${tmp}\""
-        return 0
-    fi
-    return 1
-}
-
-___x_cmd_ldict_has(){
-    local name="${1:?Provide dict name}"
-    local key="${2:?Provide key}"
-
-    local tmp
-    eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}*\${___X_CMD_LDICT_SEP}}\""
-    eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]
-}
-
-___x_cmd_ldict_get(){
-    local name="${1:?Provide dict name}"
-    local key="${2:?Provide key}"
-
-    local tmp
-
-    eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}}\""
-
-    if eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]; then
-        printf "%s" "${tmp%%${___X_CMD_LDICT_SEP}*}"
-    else
-        return 1
-    fi
-}
-
-___x_cmd_ldict_keys(){
-    local name="${1:?Provide dict name}"
-    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
-NR!=1{
-    print $1
-}'
-}
-
-___x_cmd_ldict_print(){
-    local name="${1:?Provide dict name}"
-    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
-NR!=1{
-    print $1 " = " $2
-}'
-}
-
-# EndSection
-
 # Section: llist
 ___x_cmd_llist(){
     local op="$1"; shift
@@ -859,4 +775,9 @@ if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
     xrc advise/latest && advise init xrc && advise init x
 fi
+
+___x_cmd_ldict(){
+    xrc xrc/ldict && ___x_cmd_ldict "$@" ;
+}
+
 # EndSection
