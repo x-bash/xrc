@@ -429,10 +429,6 @@ ___x_cmd_is_suitable_advise_env(){
     [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
 }
 
-___x_cmd_awk(){
-    xrc awk/latest && ___x_cmd_awk "$@"
-}
-
 ___x_cmd_readlink_recursive(){
     if [ -L "${1:?Provide link}" ]; then
         local next_link
@@ -758,19 +754,7 @@ A
 # EndSection
 
 # Section: other initialization: advise, initrc lazy loading
-# [ -f "$(x initrc which)" ] && . "$(x initrc which)"
-
-if [ -n "$ZSH_VERSION" ]; then
-    alias -- +=xrc
-else
-    alias "+=xrc"
-fi
-
 x(){    unset -f x; xrc reload x-cmd/latest && x ${1:+"$@"};    }
-
-alias xws="x ws"
-alias xdev="x dev"
-
 if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
     xrc advise/latest && advise init xrc && advise init x
@@ -780,4 +764,23 @@ ___x_cmd_ldict(){
     xrc xrc/ldict && ___x_cmd_ldict "$@" ;
 }
 
+___x_cmd_awk(){
+    xrc awk/latest && ___x_cmd_awk "$@"
+}
+
+alias xws="x ws"
+alias xdev="x dev"
+
+if [ -n "$ZSH_VERSION" ]; then
+    alias -- +=xrc
+else
+    alias "+=xrc"
+fi
+
 # EndSection
+
+# Section: lazy loading built-in
+
+
+# EndSection
+
