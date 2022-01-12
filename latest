@@ -5,10 +5,55 @@
 # license:      GPLv3
 
 
-# Section: Requirement & Initialize
-[ -n "$KSH_VERSION" ] && alias local=typeset
+# Section: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
+if [ -n "$BASH_VERSION" ]; then
+    ___X_CMD_SHELL=bash
+    shopt -s expand_aliases
+elif [ -n "$ZSH_VERSION" ]; then
+    ___X_CMD_SHELL=zsh
+elif [ -n "$KSH_VERSION" ]; then
+    ___X_CMD_SHELL=ksh
+    alias local=typeset
+else
+    ___X_CMD_SHELL="$(
+        res="$(___x_cmd_readlink_recursive "$(command -v "$0")")"
+        if [ "${res%dash}" != "$res" ]; then
+            printf "%s" dash
+        elif /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
+            printf "%s" ash
+        else
+            printf "WARNING: %s\n" "Unknown shell." >&2
+        fi
+    )"
+fi
+___X_CMD_CUR_SHELL="${___X_CMD_SHELL:-sh}"      # TODO: will remove
 
+# To prevent dash inline environment problem: just for dash
+if [ "$___X_CMD_SHELL" = dash ]; then
+    ___x_cmd_source(){
+        . "$@"
+    }
+    alias ___x_cmd_shift1='[ $# -gt 0 ] && shift ; '
+fi
+alias ___x_cmd_shift1="shift ; "
 
+___xrc_log(){
+    local level="$1"; shift
+    [ "$level" = debug ] && return
+    printf "[%s]: %s\n" "$level" "$@" 1>&2
+}
+
+TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
+
+if [ -z "$___X_CMD_ROOT" ]; then
+    ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
+    ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
+    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
+    PATH="$___X_CMD_ROOT/.bin:$PATH"
+fi
+# EndSection
+
+# Section: curl, http_getfile
 if command -v curl >/dev/null; then
 ___x_cmd_http_getfile(){
     local url="${1:?Provide url}"
@@ -72,34 +117,6 @@ ___x_cmd_http_getfile(){
     # TODO: provide installation or x curl
     return 1
 }
-fi
-
-___xrc_log(){
-    local level="$1"; shift
-    [ "$level" = debug ] && return
-    printf "[%s]: %s\n" "$level" "$@" 1>&2
-}
-
-___X_CMD_CUR_SHELL="sh"
-if      [ -n "$ZSH_VERSION" ];  then    ___X_CMD_CUR_SHELL="zsh";  setopt aliases
-elif    [ -n "$BASH_VERSION" ]; then    ___X_CMD_CUR_SHELL="bash"; shopt -s expand_aliases
-elif    [ -n "$KSH_VERSION" ];  then    ___X_CMD_CUR_SHELL="ksh"
-fi
-
-# To prevent dash inline environment problem
-___x_cmd_source(){
-    . "$@"
-}
-
-alias ___x_cmd_shift1='[ $# -gt 0 ] && shift ; '
-
-TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
-
-if [ -z "$___X_CMD_ROOT" ]; then
-    ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
-    ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
-    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
-    PATH="$___X_CMD_ROOT/.bin:$PATH"
 fi
 
 # EndSection
@@ -498,24 +515,6 @@ ___x_cmd_readlink_recursive(){
     fi
 }
 
-if [ -n "$BASH_VERSION" ]; then
-    ___X_CMD_SHELL=bash
-elif [ -n "$ZSH_VERSION" ]; then
-    ___X_CMD_SHELL=zsh
-elif [ -n "$KSH_VERSION" ]; then
-    ___X_CMD_SHELL=ksh
-else
-    ___X_CMD_SHELL="$(
-        res="$(___x_cmd_readlink_recursive "$(command -v "$0")")"
-        if [ "${res%dash}" != "$res" ]; then
-            printf "%s" dash
-        elif /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
-            printf "%s" ash
-        else
-            printf "WARNING: %s\n" "Unknown shell." >&2
-        fi
-    )"
-fi
 # EndSection
 
 # Section: main entrance helper: cat, source_file
