@@ -569,7 +569,7 @@ ___x_cmd_search_path(){
 }
 # EndSection
 
-# Section: main entrance helper
+# Section: main entrance helper: cat, source_file
 ___x_cmd_xrc_cat(){
     while [ $# -ne 0 ]; do
         local ___X_CMD_LOCAL_XRCPATH="$1";   shift
@@ -669,7 +669,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
 # EndSection
 
-# Section: xrc_set_main,  which_one, which_one_with_naming
+# Section: main entrance helper: xrc_set_main, which_one, which_one_with_naming
 ___x_cmd_xrc_set_main(){
     ___X_CMD_XRC_SET_MAIN="${1:?Provide function}"
 }
