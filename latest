@@ -4,7 +4,7 @@
 # maintainer:   Li Junhao
 # license:      GPLv3
 
-# if curl --version 1>/dev/null 2>&1; then
+
 # Section: Requirement & Initialize
 [ -n "$KSH_VERSION" ] && alias local=typeset
 
@@ -850,10 +850,3 @@ if ___x_cmd_is_suitable_advise_env; then
     xrc advise/latest && advise init xrc && advise init x
 fi
 # EndSection
-
-# else
-#     printf "boot[ERR]: Cannot found curl or wget for web resource downloader." >&2
-#     return 1 2>/dev/null
-#     ( return 1 )                # Provide error code 1
-#     # return 1 || exit 1
-# fi
