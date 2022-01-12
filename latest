@@ -43,7 +43,7 @@ ___xrc_log(){
     printf "[%s]: %s\n" "$level" "$@" 1>&2
 }
 
-TMPDIR=${TMPDIR:-$(dirname "$(mktemp -u)")/}    # It is posix standard. BUT NOT set in some cases.
+[ -z "$TMPDIR" ] && TMPDIR="$(dirname "$(mktemp -u)")/"     # It is posix standard. BUT NOT set in some cases.
 
 if [ -z "$___X_CMD_ROOT" ]; then
     ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
