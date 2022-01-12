@@ -275,7 +275,7 @@ case "$(___x_cmd_mirror | head -n1)" in
 esac
 # EndSection
 
-# Section 4: llist
+# Section 4: llist: include to speed up for it is used in which_one.
 ___x_cmd_llist(){
     local op="$1"; shift
     case "$op" in
@@ -331,80 +331,7 @@ NR!=1{
 }
 # EndSection
 
-# Section 5: Instance management.
-
-# TODO: We could use list to replace this facility.
-# ___x_cmd_instance_add class object
-___x_cmd_instance_new(){
-    local name="${2:?Provide object name}"
-    name="${name#?}"
-    eval "
-function $name {
-    $1 $2 \"\$@\"
-}
-"
-}
-
-___x_cmd_instance_del(){
-    local name="${2:?Provide object name}"
-    # TODO:
-    if [ $# -gt 2 ];then
-        eval "$@"
-    fi
-    name="${name#?}"
-    if command -v "$name" 1>/dev/null 2>&2; then
-        unset "$name"
-    else
-        printf "%s\n" "Instance not found: $O" >&2
-        return 1
-    fi
-}
-
-___x_cmd_instance_has(){
-    local class="${1:?Provide class name}"
-    local object="${2:?Provide object name}"
-    local name="___X_CMD_INSTANCE_$class"
-    eval "[ \"\$$name\" != \"\${$name#*@\${object}-*}\" ]"
-}
-
-___x_cmd_instance_add(){
-    local class="${1:?Provide class name}"
-    local object="${2:?Provide object name}"
-    local name="___X_CMD_INSTANCE_$class"
-    if ! eval "[ \"\$$name\" != \"\${$name#*@\${object}-*}\" ]"; then
-        eval "$name=\"\${$name}@\${object}-\""
-    else
-        printf "%s\n" "Object already enlisted." >&2
-        return 1
-    fi
-}
-
-# ___x_cmd_instance_rm class object
-# shellcheck disable=SC2034
-___x_cmd_instance_rm(){
-    local class="${1:?Provide class name}"
-    local object="${2:?Provide object name}"
-    local name="___X_CMD_INSTANCE_$class"
-    eval "$name=\"\${$name%@\${object}-*}\${$name##*@\${object}-}\""
-}
-
-# ___x_cmd_instance_rm class
-___x_cmd_instance_list(){
-    local class="${1:?Provide class name}"
-    local name="___X_CMD_INSTANCE_$class"
-    eval "[ -z \"\${$name}\" ]" && return
-    eval printf \"%s\" "\"\${$name}\"" | tr "-" "\n" | tr -d @
-}
-
-___x_cmd_instance_clear(){
-    local class="${1:?Provide class name}"
-    local name="___X_CMD_INSTANCE_$class"
-    eval "$name="
-}
-
-# EndSection
-
-# Section 6: utils: search_path
+# Section 5: utils: search_path
 ___x_cmd_search_path(){
     local cur="${1:?Provide starting path}"
 
@@ -445,7 +372,7 @@ ___x_cmd_readlink_recursive(){
 
 # EndSection
 
-# Section 7: main entrance helper: xrc_set_main, which_one, which_one_with_naming
+# Section 6: main entrance helper: xrc_set_main, which_one, which_one_with_naming
 ___x_cmd_xrc_set_main(){
     ___X_CMD_XRC_SET_MAIN="${1:?Provide function}"
 }
@@ -557,7 +484,7 @@ ___x_cmd_which_one(){
 }
 # EndSection
 
-# Section 8: main entrance helper: cat, source_file
+# Section 7: main entrance helper: cat, source_file
 ___x_cmd_xrc_cat(){
     while [ $# -ne 0 ]; do
         local ___X_CMD_LOCAL_XRCPATH="$1";   shift
@@ -657,7 +584,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
 # EndSection
 
-# Section 9: main entrance
+# Section 8: main entrance
 
 # shellcheck disable=SC1091
 xrc(){
@@ -753,7 +680,7 @@ A
 }
 # EndSection
 
-# Section 10: other initialization: advise, lazy loading: x, ldict, awk
+# Section 9: other initialization: advise, lazy loading: x, ldict, awk
 x(){    unset -f x; xrc reload x-cmd/latest && x ${1:+"$@"};    }
 if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
@@ -776,6 +703,79 @@ if [ -n "$ZSH_VERSION" ]; then
 else
     alias "+=xrc"
 fi
+
+# EndSection
+
+# Section: Instance management. will be moved to a file
+
+# TODO: We could use list to replace this facility.
+# ___x_cmd_instance_add class object
+___x_cmd_instance_new(){
+    local name="${2:?Provide object name}"
+    name="${name#?}"
+    eval "
+function $name {
+    $1 $2 \"\$@\"
+}
+"
+}
+
+___x_cmd_instance_del(){
+    local name="${2:?Provide object name}"
+    # TODO:
+    if [ $# -gt 2 ];then
+        eval "$@"
+    fi
+    name="${name#?}"
+    if command -v "$name" 1>/dev/null 2>&2; then
+        unset "$name"
+    else
+        printf "%s\n" "Instance not found: $O" >&2
+        return 1
+    fi
+}
+
+___x_cmd_instance_has(){
+    local class="${1:?Provide class name}"
+    local object="${2:?Provide object name}"
+    local name="___X_CMD_INSTANCE_$class"
+    eval "[ \"\$$name\" != \"\${$name#*@\${object}-*}\" ]"
+}
+
+___x_cmd_instance_add(){
+    local class="${1:?Provide class name}"
+    local object="${2:?Provide object name}"
+    local name="___X_CMD_INSTANCE_$class"
+    if ! eval "[ \"\$$name\" != \"\${$name#*@\${object}-*}\" ]"; then
+        eval "$name=\"\${$name}@\${object}-\""
+    else
+        printf "%s\n" "Object already enlisted." >&2
+        return 1
+    fi
+}
+
+# ___x_cmd_instance_rm class object
+# shellcheck disable=SC2034
+___x_cmd_instance_rm(){
+    local class="${1:?Provide class name}"
+    local object="${2:?Provide object name}"
+    local name="___X_CMD_INSTANCE_$class"
+    eval "$name=\"\${$name%@\${object}-*}\${$name##*@\${object}-}\""
+}
+
+# ___x_cmd_instance_rm class
+___x_cmd_instance_list(){
+    local class="${1:?Provide class name}"
+    local name="___X_CMD_INSTANCE_$class"
+    eval "[ -z \"\${$name}\" ]" && return
+    eval printf \"%s\" "\"\${$name}\"" | tr "-" "\n" | tr -d @
+}
+
+___x_cmd_instance_clear(){
+    local class="${1:?Provide class name}"
+    local name="___X_CMD_INSTANCE_$class"
+    eval "$name="
+}
 
 # EndSection
 
