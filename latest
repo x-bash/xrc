@@ -706,7 +706,7 @@ fi
 
 # EndSection
 
-# Section: Instance management. will be moved to a file
+# Section: Instance management. will be extracted to a file
 
 # TODO: We could use list to replace this facility.
 # ___x_cmd_instance_add class object
