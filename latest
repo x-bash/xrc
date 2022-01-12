@@ -242,102 +242,6 @@ case "$(___x_cmd_mirror | head -n1)" in
 esac
 # EndSection
 
-# Section: main entrance
-
-# shellcheck disable=SC1091
-xrc(){
-    [ $# -eq 0 ] && set -- "help"
-    local subcmd="$1";  shift
-    case "$subcmd" in
-        ""|help)
-            printf "xrc     x-bash core function.
-    Uasge:  xrc <lib> [<lib>...]
-    Please visit our homepage for more information: https://x-cmd.com
-SUBCOMMAND:
-    cat|c           Show the script in text form.
-    which|w         Download lib files and print the local path.
-    update|u        Update file.
-    cache           Provide cache filepath.
-    clear           Clear the cache.
-    ls              Show the cache modules.
-" >&2
-            ;;
-        c|cat)
-            if [ $# -gt 0 ]; then
-                ___x_cmd_xrc_cat "$@"
-                return
-            fi
-            cat >&2 <<A
-xrc cat         Show the script in text form
-    Uasge:  xrc  cat <lib> [<lib>...]
-    Example: eval "$(xrc cat str)"
-A
-            return 1;;
-        w|which)
-            if [ $# -gt 0 ]; then
-                ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$@"
-                printf "%s" "$___X_CMD_WHICH_ONE_RESULT"
-                return
-            fi
-            cat >&2 <<A
-xrc which       Download lib files and print the local path.
-    Uasge:  xrc which <lib> [<lib>...]
-    Example: source "$(xrc which str)"
-A
-            return 1 ;;
-        root)
-            printf "%s" "$___X_CMD_ROOT" ;;
-        mirror)
-            ___x_cmd_mirror "$@" ;;
-        export-all)
-            ( xrc x-bash/xrc/lib/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
-        update)
-            local CACHE="$___X_CMD_ROOT/all.tgz"
-            # rm -rf "$___X_CMD_ROOT" # Dangerous.
-            local codesrc="${1:-$___X_CMD_CODESORUCE_REPO}"
-            case "$codesrc" in
-                x-cmd|dev|nightly)    ;;
-                *)      printf "%s\n" "Exit because of unknown code src: $codesrc" >&2 ;;
-            esac
-
-            if ___x_cmd_curl_gitx x-cmd "$codesrc" main "dist/all.tgz" "$CACHE" -; then
-                (cd "$___X_CMD_ROOT" && tar xvf "$CACHE")
-                rm "$CACHE"
-                ___XRC_UDPATE=1
-                ___X_CMD_XRC_MODULE_IMPORTED=
-                ___x_cmd_source "$___X_CMD_ROOT"/xrc/latest
-            fi
-            ;;
-        upgrade)
-            ___XRC_UDPATE=1
-            ___X_CMD_XRC_MODULE_IMPORTED=
-            rm -rf "$___X_CMD_ROOT/.boot/boot" && eval "$(curl https://get.x-cmd.com)"
-            ;;
-        log)
-            printf "WARN: xrc log deprecated, you should using 'x log' instead\n" >&2
-            x log "$@" ;;
-        ls)
-            ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
-        setmain)
-            ___x_cmd_xrc_set_main "$@" ;;
-        reload)
-            if [ "$#" -gt 0 ]; then
-                local ___X_CMD_XRC_RELOAD=1
-                ___x_cmd_xrc_source_file "$@"
-                return
-            fi
-            RELOAD=1 xrc xrc/latest; return ;;
-        _x_cmd_advise_json)
-            cat xrc/lib/xrc.json
-            return 126
-            ;;
-        *)
-            ___x_cmd_xrc_source_file "$subcmd" "$@"
-            return
-    esac
-}
-# EndSection
-
 # Section: ldict
 ___X_CMD_LDICT(){
     local op="$1"; shift
@@ -567,6 +471,51 @@ ___x_cmd_search_path(){
     done
     return 1
 }
+
+___x_cmd_is_interative_tty(){
+    [ "${-#*i}" != "$-" ]
+}
+
+___x_cmd_is_suitable_advise_env(){
+    [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
+}
+
+___x_cmd_awk(){
+    xrc awk/latest && ___x_cmd_awk "$@"
+}
+
+___x_cmd_readlink_recursive(){
+    if [ -L "${1:?Provide link}" ]; then
+        local next_link
+        next_link="$(readlink "${1}")" || return
+        if [ "${next_link#/}" = "$next_link" ]; then
+            next_link="$(dirname "${1}")/$next_link"
+        fi
+        ___x_cmd_readlink_recursive "$next_link"
+    else
+        [ ! -e "${1}" ] && return 1        # File Not Exists
+        printf "%s" "$1"
+    fi
+}
+
+if [ -n "$BASH_VERSION" ]; then
+    ___X_CMD_SHELL=bash
+elif [ -n "$ZSH_VERSION" ]; then
+    ___X_CMD_SHELL=zsh
+elif [ -n "$KSH_VERSION" ]; then
+    ___X_CMD_SHELL=ksh
+else
+    ___X_CMD_SHELL="$(
+        res="$(___x_cmd_readlink_recursive "$(command -v "$0")")"
+        if [ "${res%dash}" != "$res" ]; then
+            printf "%s" dash
+        elif /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
+            printf "%s" ash
+        else
+            printf "WARNING: %s\n" "Unknown shell." >&2
+        fi
+    )"
+fi
 # EndSection
 
 # Section: main entrance helper: cat, source_file
@@ -781,54 +730,100 @@ ___x_cmd_which_one(){
 }
 # EndSection
 
-# Section: env
+# Section: main entrance
 
-# TODO: using an environment to mark
-___x_cmd_is_interative_tty(){
-    [ "${-#*i}" != "$-" ]
+# shellcheck disable=SC1091
+xrc(){
+    [ $# -eq 0 ] && set -- "help"
+    local subcmd="$1";  shift
+    case "$subcmd" in
+        ""|help)
+            printf "xrc     x-bash core function.
+    Uasge:  xrc <lib> [<lib>...]
+    Please visit our homepage for more information: https://x-cmd.com
+SUBCOMMAND:
+    cat|c           Show the script in text form.
+    which|w         Download lib files and print the local path.
+    update|u        Update file.
+    cache           Provide cache filepath.
+    clear           Clear the cache.
+    ls              Show the cache modules.
+" >&2
+            ;;
+        c|cat)
+            if [ $# -gt 0 ]; then
+                ___x_cmd_xrc_cat "$@"
+                return
+            fi
+            cat >&2 <<A
+xrc cat         Show the script in text form
+    Uasge:  xrc  cat <lib> [<lib>...]
+    Example: eval "$(xrc cat str)"
+A
+            return 1;;
+        w|which)
+            if [ $# -gt 0 ]; then
+                ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$@"
+                printf "%s" "$___X_CMD_WHICH_ONE_RESULT"
+                return
+            fi
+            cat >&2 <<A
+xrc which       Download lib files and print the local path.
+    Uasge:  xrc which <lib> [<lib>...]
+    Example: source "$(xrc which str)"
+A
+            return 1 ;;
+        root)
+            printf "%s" "$___X_CMD_ROOT" ;;
+        mirror)
+            ___x_cmd_mirror "$@" ;;
+        export-all)
+            ( xrc x-bash/xrc/lib/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
+        update)
+            local CACHE="$___X_CMD_ROOT/all.tgz"
+            # rm -rf "$___X_CMD_ROOT" # Dangerous.
+            local codesrc="${1:-$___X_CMD_CODESORUCE_REPO}"
+            case "$codesrc" in
+                x-cmd|dev|nightly)    ;;
+                *)      printf "%s\n" "Exit because of unknown code src: $codesrc" >&2 ;;
+            esac
+
+            if ___x_cmd_curl_gitx x-cmd "$codesrc" main "dist/all.tgz" "$CACHE" -; then
+                (cd "$___X_CMD_ROOT" && tar xvf "$CACHE")
+                rm "$CACHE"
+                ___XRC_UDPATE=1
+                ___X_CMD_XRC_MODULE_IMPORTED=
+                ___x_cmd_source "$___X_CMD_ROOT"/xrc/latest
+            fi
+            ;;
+        upgrade)
+            ___XRC_UDPATE=1
+            ___X_CMD_XRC_MODULE_IMPORTED=
+            rm -rf "$___X_CMD_ROOT/.boot/boot" && eval "$(curl https://get.x-cmd.com)"
+            ;;
+        log)
+            printf "WARN: xrc log deprecated, you should using 'x log' instead\n" >&2
+            x log "$@" ;;
+        ls)
+            ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
+        setmain)
+            ___x_cmd_xrc_set_main "$@" ;;
+        reload)
+            if [ "$#" -gt 0 ]; then
+                local ___X_CMD_XRC_RELOAD=1
+                ___x_cmd_xrc_source_file "$@"
+                return
+            fi
+            RELOAD=1 xrc xrc/latest; return ;;
+        _x_cmd_advise_json)
+            cat xrc/lib/xrc.json
+            return 126
+            ;;
+        *)
+            ___x_cmd_xrc_source_file "$subcmd" "$@"
+            return
+    esac
 }
-
-___x_cmd_is_suitable_advise_env(){
-    [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
-}
-
-___x_cmd_awk(){
-    xrc awk/latest && ___x_cmd_awk "$@"
-}
-
-___x_cmd_readlink_recursive(){
-    if [ -L "${1:?Provide link}" ]; then
-        local next_link
-        next_link="$(readlink "${1}")" || return
-        if [ "${next_link#/}" = "$next_link" ]; then
-            next_link="$(dirname "${1}")/$next_link"
-        fi
-        ___x_cmd_readlink_recursive "$next_link"
-    else
-        [ ! -e "${1}" ] && return 1        # File Not Exists
-        printf "%s" "$1"
-    fi
-}
-
-if [ -n "$BASH_VERSION" ]; then
-    ___X_CMD_SHELL=bash
-elif [ -n "$ZSH_VERSION" ]; then
-    ___X_CMD_SHELL=zsh
-elif [ -n "$KSH_VERSION" ]; then
-    ___X_CMD_SHELL=ksh
-else
-    ___X_CMD_SHELL="$(
-        res="$(___x_cmd_readlink_recursive "$(command -v "$0")")"
-        if [ "${res%dash}" != "$res" ]; then
-            printf "%s" dash
-        elif /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
-            printf "%s" ash
-        else
-            printf "WARNING: %s\n" "Unknown shell." >&2
-        fi
-    )"
-fi
-
 # EndSection
 
 # Section: other initialization: advise, initrc lazy loading
