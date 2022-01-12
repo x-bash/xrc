@@ -195,8 +195,8 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
 
                     # Set CHINA_NET FLAG
                     case "$mirror" in
-                        *gitee*)                    ___X_CMD_IN_CHINA_NET=1 ;;
-                        *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET=  ;;
+                        *gitee*|*codechina*)                    ___X_CMD_IN_CHINA_NET=1 ;;
+                        *github*|*gitlab*)                      ___X_CMD_IN_CHINA_NET=  ;;
                     esac
                 fi
                 return 0;;
