@@ -53,7 +53,7 @@ if [ -z "$___X_CMD_ROOT" ]; then
 fi
 # EndSection
 
-# Section: curl, http_getfile
+# Section: http_getfile: using curl, wget, and x-curl
 if command -v curl >/dev/null; then
 ___x_cmd_http_getfile(){
     local url="${1:?Provide url}"
