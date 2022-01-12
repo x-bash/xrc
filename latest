@@ -270,8 +270,8 @@ if [ "$___X_CMD_IN_CHINA_NET" = 1 ]; then
 fi
 
 case "$(___x_cmd_mirror | head -n1)" in
-    *gitee*)    ___X_CMD_IN_CHINA_NET=1 ;;
-    *)          ___X_CMD_IN_CHINA_NET=
+    *gitee*|*codechina*)        ___X_CMD_IN_CHINA_NET=1 ;;
+    *)                          ___X_CMD_IN_CHINA_NET=
 esac
 # EndSection
 
