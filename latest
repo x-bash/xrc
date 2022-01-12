@@ -8,6 +8,8 @@
 # Section: Requirement & Initialize
 [ -n "$KSH_VERSION" ] && alias local=typeset
 
+
+if command -v curl >/dev/null; then
 ___x_cmd_http_getfile(){
     local url="${1:?Provide url}"
     local cache="${2}"
@@ -37,6 +39,40 @@ ___x_cmd_http_getfile(){
                 return 2 ;;
     esac
 }
+elif command -v wget >/dev/null; then
+___x_cmd_http_getfile(){
+    local url="${1:?Provide url}"
+    local cache="${2}"
+
+    if [ -z "$cache" ]; then
+        exec 3>&1
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -qS "$url" 2>&3 1>/dev/stdout)"
+        exec 3>&-
+    else
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -O "$cache" -qS "$url" 2>&3)"
+    fi
+
+    local code=$?
+    local http_code
+    http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
+
+    case "$http_code" in
+        20*)   return 0 ;;
+        40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 4 ;;
+        "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                return 1 ;;
+        *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 2 ;;
+    esac
+}
+else
+___x_cmd_http_getfile(){
+    ___xrc_log debug "Please install curl or wget in your computure."
+    # TODO: provide installation or x curl
+    return 1
+}
+fi
 
 ___xrc_log(){
     local level="$1"; shift
@@ -498,7 +534,7 @@ ___x_cmd_xrc_source_file(){
     while [ $# -ne 0 ]; do
         ___X_CMD_LOCAL_XRCPATH="$1";   shift
 
-        if ! ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$___X_CMD_LOCAL_XRCPATH"; then
+        if ! ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one_with_naming "$___X_CMD_LOCAL_XRCPATH"; then
             printf "ERROR: Interrupted because resource not found. %s \n" "$___X_CMD_LOCAL_XRCPATH" >&2
             printf "%s\n" "return 1"
             return 1
@@ -550,6 +586,19 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
         ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
         # TODO: rename module
+
+        if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
+            echo "
+            $___X_CMD_WHICH_ONE_NAMING(){
+                \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
+            }" >&2
+
+            eval "
+            $___X_CMD_WHICH_ONE_NAMING(){
+                \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
+            }"
+        fi
+
         ___X_CMD_XRC_SET_MAIN=
     fi
 }
@@ -573,8 +622,37 @@ ___x_cmd_search_path(){
 
 # Section: which
 # RETURN ___X_CMD_WHICH_ONE_RESULT
+___x_cmd_which_one_with_naming(){
+    local RESOURCE_NAME="${1:?Provide resource name for ___x_cmd_which_one_with_naming}"
+    ___X_CMD_WHICH_ONE_RESULT=
+    ___X_CMD_WHICH_ONE_NAMING=
+
+    case "$RESOURCE_NAME" in
+        *=/*)                   ;;
+        *=http://*|*=https://*) ;;
+        *=*@*/*)                ;;
+        *=./*|*=../*)           ;;
+        *=*)                    ;;
+        *)
+            # TODO: some future work for http
+            case "$RESOURCE_NAME" in
+                */*)    ;;
+                *)      ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME}" ;;     # Only when it is a module name...
+            esac
+            # ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME##*/}"
+            ___x_cmd_which_one "${RESOURCE_NAME}"
+            return
+    esac
+
+
+    ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME%%=*}"
+
+    ___x_cmd_which_one "${RESOURCE_NAME#*=}"
+}
+
+
 ___x_cmd_which_one(){
-    local RESOURCE_NAME=${1:?Provide resource name}
+    local RESOURCE_NAME="${1:?Provide resource name for ___x_cmd_which_one}"
 
     ___X_CMD_WHICH_ONE_RESULT=
 
