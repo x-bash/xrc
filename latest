@@ -502,7 +502,6 @@ ___x_cmd_search_path(){
 
 # Section: main entrance helper
 ___x_cmd_xrc_cat(){
-    local file
     while [ $# -ne 0 ]; do
         local ___X_CMD_LOCAL_XRCPATH="$1";   shift
 
