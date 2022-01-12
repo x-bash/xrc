@@ -580,15 +580,12 @@ ___x_cmd_xrc_source_file_main(){
 ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
     ___X_CMD_XRC_SET_MAIN=
-    local local_which_one_naming="$___X_CMD_WHICH_ONE_NAMING"
+    local local_which_one_naming="$___X_CMD_WHICH_ONE_NAMING"       # We have to put the value in local variable for ___x_cmd_source will change this global variable
     ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
-
-    echo "here: $___X_CMD_XRC_SET_MAIN" >&2
 
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
         ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
         # TODO: rename module
-
         if [ -n "$local_which_one_naming" ] && [ "$local_which_one_naming" != "$___X_CMD_XRC_SET_MAIN" ]; then
             eval "
             $local_which_one_naming(){
