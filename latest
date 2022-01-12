@@ -332,34 +332,7 @@ A
             fi
             RELOAD=1 xrc xrc/latest; return ;;
         _x_cmd_advise_json)
-            cat <<A
-{
-    "cat": {
-        "#n": "ls $___X_CMD_ROOT | grep -v BASE64",
-        "#desc": "Show the script in text form"
-    },
-    "which": {
-        "#n": "ls $___X_CMD_ROOT | grep -v BASE64",
-        "#desc": "Download lib files and print the local path"
-    },
-    "cache": "--- Provide cache filepath",
-    "clear": "--- Clear the cache",
-    "update": "--- Update file",
-    "ls": "--- Show the cache modules",
-    "upgrade": {},
-    "reload": {},
-    "root": {},
-    "export-all": {},
-    "mirror": {
-        "#n": [
-            "https://x-bash.gitee.io",
-            "https://x-bash.github.io",
-            "https://x-bash.gitlab.io",
-            "https://bitbucket.com/x-bash/x-bash"
-        ]
-    }
-}
-A
+            cat xrc/lib/xrc.json
             return 126
             ;;
         *)
@@ -509,6 +482,24 @@ NR!=1{
 }
 # EndSection
 
+# Section: utils: search_path
+___x_cmd_search_path(){
+    local cur="${1:?Provide starting path}"
+
+    cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
+
+    local relative_filepath="${2:?Provide relative filepath}"
+    while [ ! "$cur" = "" ]; do
+        if [ -f "$cur/$relative_filepath" ]; then
+            printf "%s" "$cur"
+            return 0
+        fi
+        cur=${cur%/*}
+    done
+    return 1
+}
+# EndSection
+
 # Section: main entrance helper
 ___x_cmd_xrc_cat(){
     local file
@@ -592,9 +583,14 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     ___X_CMD_XRC_SET_MAIN=
     ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
 
+    echo "here: $___X_CMD_XRC_SET_MAIN" >&2
+
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
         ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
         # TODO: rename module
+
+        echo "here 123: $___X_CMD_XRC_SET_MAIN" >&2
+        echo "111: $___X_CMD_WHICH_ONE_NAMING"
 
         if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
             eval "
@@ -607,24 +603,10 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     fi
 }
 
-___x_cmd_search_path(){
-    local cur="${1:?Provide starting path}"
 
-    cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
-
-    local relative_filepath="${2:?Provide relative filepath}"
-    while [ ! "$cur" = "" ]; do
-        if [ -f "$cur/$relative_filepath" ]; then
-            printf "%s" "$cur"
-            return 0
-        fi
-        cur=${cur%/*}
-    done
-    return 1
-}
 # EndSection
 
-# Section: which
+# Section: which_one_with_naming and which_one
 # RETURN ___X_CMD_WHICH_ONE_RESULT
 ___x_cmd_which_one_with_naming(){
     local RESOURCE_NAME="${1:?Provide resource name for ___x_cmd_which_one_with_naming}"
