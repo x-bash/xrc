@@ -55,68 +55,68 @@ fi
 
 # Section: httpget: using curl, wget, and x-curl
 if command -v curl >/dev/null; then
-___x_cmd_httpget_inner(){
-    local url="${1:?Provide url}"
-    local cache="${2}"
-    ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
+    ___x_cmd_httpget_inner(){
+        local url="${1:?Provide url}"
+        local cache="${2}"
+        ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
 
-    # TODO: --speed-time 3
+        # TODO: --speed-time 3
 
-    if [ -z "$cache" ]; then
-        exec 3>&1
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
-        exec 3>&-
-    else
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
-    fi
+        if [ -z "$cache" ]; then
+            exec 3>&1
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+            exec 3>&-
+        else
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+        fi
 
-    local code=$?
-    local http_code
-    http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
+        local code=$?
+        local http_code
+        http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
 
-    case "$http_code" in
-        20*)   return 0 ;;
-        40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                return 4 ;;
-        "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
-                return 1 ;;
-        *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                return 2 ;;
-    esac
-}
+        case "$http_code" in
+            20*)   return 0 ;;
+            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 4 ;;
+            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                    return 1 ;;
+            *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 2 ;;
+        esac
+    }
 elif command -v wget >/dev/null; then
-___x_cmd_httpget_inner(){
-    local url="${1:?Provide url}"
-    local cache="${2}"
+    ___x_cmd_httpget_inner(){
+        local url="${1:?Provide url}"
+        local cache="${2}"
 
-    if [ -z "$cache" ]; then
-        exec 3>&1
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -qS "$url" 2>&3 1>/dev/stdout)"
-        exec 3>&-
-    else
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -O "$cache" -qS "$url" 2>&3)"
-    fi
+        if [ -z "$cache" ]; then
+            exec 3>&1
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -qS "$url" 2>&3 1>/dev/stdout)"
+            exec 3>&-
+        else
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -O "$cache" -qS "$url" 2>&3)"
+        fi
 
-    local code=$?
-    local http_code
-    http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
+        local code=$?
+        local http_code
+        http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
 
-    case "$http_code" in
-        20*)   return 0 ;;
-        40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                return 4 ;;
-        "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
-                return 1 ;;
-        *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                return 2 ;;
-    esac
-}
+        case "$http_code" in
+            20*)   return 0 ;;
+            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 4 ;;
+            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                    return 1 ;;
+            *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                    return 2 ;;
+        esac
+    }
 else
-___x_cmd_httpget_inner(){
-    ___xrc_log debug "Please install curl or wget in your computure."
-    # TODO: provide installation or x curl
-    return 1
-}
+    ___x_cmd_httpget_inner(){
+        ___xrc_log debug "Please install curl or wget in your computure."
+        # TODO: provide installation or x curl
+        return 1
+    }
 fi
 
 # TODO: rename to ___x_cmd_httpget_with_cache
