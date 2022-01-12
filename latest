@@ -5,7 +5,7 @@
 # license:      GPLv3
 
 
-# Section: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
+# Section 1: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
 if [ -n "$BASH_VERSION" ]; then
     ___X_CMD_SHELL=bash
     shopt -s expand_aliases
@@ -56,7 +56,7 @@ if [ -z "$___X_CMD_ROOT" ]; then
 fi
 # EndSection
 
-# Section: httpget: using curl, wget, and x-curl
+# Section 2: httpget: using curl, wget, and x-curl
 if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
@@ -236,7 +236,7 @@ ___x_cmd_curl_gitx_official(){
 
 # EndSection
 
-# Section: mirror
+# Section 3: mirror
 
 ___X_CMD_CODESORUCE_REPO_BRANCH=${___X_CMD_CODESORUCE_REPO_BRANCH:-main}
 ___X_CMD_CODESORUCE_REPO=${___X_CMD_CODESORUCE_REPO:-x-cmd}
@@ -275,7 +275,7 @@ case "$(___x_cmd_mirror | head -n1)" in
 esac
 # EndSection
 
-# Section: llist
+# Section 4: llist
 ___x_cmd_llist(){
     local op="$1"; shift
     case "$op" in
@@ -331,7 +331,7 @@ NR!=1{
 }
 # EndSection
 
-# Section: Instance management.
+# Section 5: Instance management.
 
 # TODO: We could use list to replace this facility.
 # ___x_cmd_instance_add class object
@@ -404,7 +404,7 @@ ___x_cmd_instance_clear(){
 
 # EndSection
 
-# Section: utils: search_path
+# Section 6: utils: search_path
 ___x_cmd_search_path(){
     local cur="${1:?Provide starting path}"
 
@@ -445,7 +445,7 @@ ___x_cmd_readlink_recursive(){
 
 # EndSection
 
-# Section: main entrance helper: xrc_set_main, which_one, which_one_with_naming
+# Section 7: main entrance helper: xrc_set_main, which_one, which_one_with_naming
 ___x_cmd_xrc_set_main(){
     ___X_CMD_XRC_SET_MAIN="${1:?Provide function}"
 }
@@ -557,7 +557,7 @@ ___x_cmd_which_one(){
 }
 # EndSection
 
-# Section: main entrance helper: cat, source_file
+# Section 8: main entrance helper: cat, source_file
 ___x_cmd_xrc_cat(){
     while [ $# -ne 0 ]; do
         local ___X_CMD_LOCAL_XRCPATH="$1";   shift
@@ -657,7 +657,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
 # EndSection
 
-# Section: main entrance
+# Section 9: main entrance
 
 # shellcheck disable=SC1091
 xrc(){
@@ -753,7 +753,7 @@ A
 }
 # EndSection
 
-# Section: other initialization: advise, lazy loading: x, ldict, awk
+# Section 10: other initialization: advise, lazy loading: x, ldict, awk
 x(){    unset -f x; xrc reload x-cmd/latest && x ${1:+"$@"};    }
 if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
