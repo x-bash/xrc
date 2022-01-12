@@ -753,7 +753,7 @@ A
 }
 # EndSection
 
-# Section: other initialization: advise, initrc lazy loading
+# Section: other initialization: advise, lazy loading: x, ldict, awk
 x(){    unset -f x; xrc reload x-cmd/latest && x ${1:+"$@"};    }
 if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
@@ -776,11 +776,6 @@ if [ -n "$ZSH_VERSION" ]; then
 else
     alias "+=xrc"
 fi
-
-# EndSection
-
-# Section: lazy loading built-in
-
 
 # EndSection
 
