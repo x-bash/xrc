@@ -195,8 +195,8 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
 
                     # Set CHINA_NET FLAG
                     case "$mirror" in
-                        *gitee*|*codechina*)                    ___X_CMD_IN_CHINA_NET=1 ;;
-                        *github*|*gitlab*)                      ___X_CMD_IN_CHINA_NET=  ;;
+                        *gitee*|*codechina*)                    ___X_CMD_IN_CHINA_NET=1; ___X_CMD_WHICHNET=cn ;;
+                        *github*|*gitlab*)                      ___X_CMD_IN_CHINA_NET= ; ___X_CMD_WHICHNET=default ;;
                     esac
                 fi
                 return 0;;
@@ -270,8 +270,10 @@ if [ "$___X_CMD_IN_CHINA_NET" = 1 ]; then
 fi
 
 case "$(___x_cmd_mirror | head -n1)" in
-    *gitee*|*codechina*)        ___X_CMD_IN_CHINA_NET=1 ;;
-    *)                          ___X_CMD_IN_CHINA_NET=
+    *gitee*|*codechina*)        ___X_CMD_IN_CHINA_NET=1 ; ___X_CMD_WHICHNET=cn ;;
+    *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET= ; ___X_CMD_WHICHNET=default ;;
+    *)                          printf "%s\n" "Unknown mirror: $(___x_cmd_mirror | head -n1)" >&2
+                                ___X_CMD_IN_CHINA_NET=  ; ___X_CMD_WHICHNET=unknown ;;
 esac
 # EndSection
 
