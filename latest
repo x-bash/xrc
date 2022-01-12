@@ -669,9 +669,9 @@ ___x_cmd_which_one(){
     local RESOURCE_NAME="${1:?Provide resource name for ___x_cmd_which_one}"
 
     ___X_CMD_WHICH_ONE_RESULT=
+    ___X_CMD_WHICH_ONE_RESOURCE_TYPE=official
 
     local TGT
-    ___X_CMD_WHICH_ONE_RESOURCE_TYPE=official
     case "$RESOURCE_NAME" in
         /*)
             ___X_CMD_WHICH_ONE_RESOURCE_TYPE=local
