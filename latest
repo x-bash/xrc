@@ -53,7 +53,7 @@ if [ -z "$___X_CMD_ROOT" ]; then
 fi
 # EndSection
 
-# Section: http_getfile: using curl, wget, and x-curl
+# Section: httpget: using curl, wget, and x-curl
 if command -v curl >/dev/null; then
 ___x_cmd_httpget_inner(){
     local url="${1:?Provide url}"
@@ -118,10 +118,6 @@ ___x_cmd_httpget_inner(){
     return 1
 }
 fi
-
-# EndSection
-
-# Section: network curl
 
 # TODO: rename to ___x_cmd_httpget_with_cache
 ___x_cmd_httpget() {
@@ -219,6 +215,20 @@ A
 # rename to ___x_cmd_httpget_gitx_official
 ___x_cmd_httpget_gitx_official(){
     ___x_cmd_httpget_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide url}" "$2" "$3"
+}
+
+
+# TODO: will remove the following functions
+___x_cmd_curl(){
+    ___x_cmd_httpget "$@"
+}
+
+___x_cmd_curl_gitx(){
+    ___x_cmd_httpget_gitx "$@"
+}
+
+___x_cmd_curl_gitx_official(){
+    ___x_cmd_httpget_gitx_official "$@"
 }
 
 # EndSection
