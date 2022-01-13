@@ -680,7 +680,7 @@ A
             fi
             RELOAD=1 xrc xrc/latest; return ;;
         _x_cmd_advise_json)
-            cat xrc/lib/xrc.json
+            xrc cat xrc/lib/xrc.json
             return 126
             ;;
         *)
