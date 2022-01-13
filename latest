@@ -234,6 +234,14 @@ ___x_cmd_curl_gitx_official(){
     ___x_cmd_httpget_gitx_official "$@"
 }
 
+___x_cmd_ldict(){
+    xrc xrc/lib/ldict && ___x_cmd_ldict "$@" ;
+}
+
+___x_cmd_awk(){
+    xrc awk/latest && ___x_cmd_awk "$@"
+}
+
 # EndSection
 
 # Section 3: mirror
@@ -550,7 +558,7 @@ ___x_cmd_xrc_source_file_main(){
         if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict_get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
+            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
 
             if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
                 eval "
@@ -570,7 +578,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
 
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
-        ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
+        ___x_cmd_ldict put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
         # TODO: rename module
         if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
             eval "
@@ -689,13 +697,6 @@ if ___x_cmd_is_suitable_advise_env; then
     xrc advise/latest && advise init xrc && advise init x
 fi
 
-___x_cmd_ldict(){
-    xrc xrc/ldict && ___x_cmd_ldict "$@" ;
-}
-
-___x_cmd_awk(){
-    xrc awk/latest && ___x_cmd_awk "$@"
-}
 
 alias xws="x ws"
 alias xdev="x dev"
