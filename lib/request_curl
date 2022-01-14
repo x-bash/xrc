@@ -4,11 +4,13 @@ ___x_cmd_http_not_secure_request_nc(){
 }
 
 ___x_cmd_http_not_secure_request_bash()(
-    exec 88<>"/dev/tcp/$host/80"
-    printf "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\nConnection: close\r\n\r\n" "$path" "$host" >&88
-    cat <&88
-    exec 88>&- >&2
-    exec 88<&- >&2
+    host="$host" path="$path" bash -c '
+        exec 88<>"/dev/tcp/$host/80"
+        printf "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\nConnection: close\r\n\r\n" "$path" "$host" >&88
+        cat <&88
+        exec 88>&- >&2
+        exec 88<&- >&2
+    '
 )
 
 ___X_CMD_HTTP_NOT_SECURE_REQUEST_HANDLER_R="$(printf "\r")"
