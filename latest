@@ -8,7 +8,6 @@
 # Section 1: utils: search_path
 ___x_cmd_search_path(){
     local cur="${1:?Provide starting path}"
-
     cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
 
     local relative_filepath="${2:?Provide relative filepath}"
