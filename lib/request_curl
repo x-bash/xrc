@@ -27,6 +27,7 @@ ___x_cmd_http_not_secure_request_handler(){
     cat >"$file"
 }
 
+# Test: ___x_cmd_http_not_secure_get gitee.com/ a.txt
 ___x_cmd_http_not_secure_get(){
     local path="${1:?Provide path}"
     local file="${2:?Provide cache file}"
