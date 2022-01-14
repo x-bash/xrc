@@ -5,7 +5,48 @@
 # license:      GPLv3
 
 
-# Section 1: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
+# Section 1: utils: search_path
+___x_cmd_search_path(){
+    local cur="${1:?Provide starting path}"
+
+    cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
+
+    local relative_filepath="${2:?Provide relative filepath}"
+    while [ ! "$cur" = "" ]; do
+        if [ -f "$cur/$relative_filepath" ]; then
+            printf "%s" "$cur"
+            return 0
+        fi
+        cur=${cur%/*}
+    done
+    return 1
+}
+
+___x_cmd_is_interative_tty(){
+    [ "${-#*i}" != "$-" ]
+}
+
+___x_cmd_is_suitable_advise_env(){
+    [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
+}
+
+___x_cmd_readlink_recursive(){
+    if [ -L "${1:?Provide link}" ]; then
+        local next_link
+        next_link="$(readlink "${1}")" || return
+        if [ "${next_link#/}" = "$next_link" ]; then
+            next_link="$(dirname "${1}")/$next_link"
+        fi
+        ___x_cmd_readlink_recursive "$next_link"
+    else
+        [ ! -e "${1}" ] && return 1        # File Not Exists
+        printf "%s" "$1"
+    fi
+}
+
+# EndSection
+
+# Section 2: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
 if [ -n "$BASH_VERSION" ]; then
     ___X_CMD_SHELL=bash
     shopt -s expand_aliases
@@ -56,7 +97,7 @@ if [ -z "$___X_CMD_ROOT" ]; then
 fi
 # EndSection
 
-# Section 2: httpget: using curl, wget, and x-curl
+# Section 3: httpget: using curl, wget, and x-curl
 if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
@@ -244,7 +285,7 @@ ___x_cmd_awk(){
 
 # EndSection
 
-# Section 3: mirror
+# Section 4: mirror
 
 ___X_CMD_CODESORUCE_REPO_BRANCH=${___X_CMD_CODESORUCE_REPO_BRANCH:-main}
 ___X_CMD_CODESORUCE_REPO=${___X_CMD_CODESORUCE_REPO:-x-cmd}
@@ -285,7 +326,7 @@ case "$(___x_cmd_mirror | head -n1)" in
 esac
 # EndSection
 
-# Section 4: llist: include to speed up for it is used in which_one.
+# Section 5: llist: include to speed up for it is used in which_one.
 ___x_cmd_llist(){
     local op="$1"; shift
     case "$op" in
@@ -339,47 +380,6 @@ NR!=1{
     print $1
 }'
 }
-# EndSection
-
-# Section 5: utils: search_path
-___x_cmd_search_path(){
-    local cur="${1:?Provide starting path}"
-
-    cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
-
-    local relative_filepath="${2:?Provide relative filepath}"
-    while [ ! "$cur" = "" ]; do
-        if [ -f "$cur/$relative_filepath" ]; then
-            printf "%s" "$cur"
-            return 0
-        fi
-        cur=${cur%/*}
-    done
-    return 1
-}
-
-___x_cmd_is_interative_tty(){
-    [ "${-#*i}" != "$-" ]
-}
-
-___x_cmd_is_suitable_advise_env(){
-    [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
-}
-
-___x_cmd_readlink_recursive(){
-    if [ -L "${1:?Provide link}" ]; then
-        local next_link
-        next_link="$(readlink "${1}")" || return
-        if [ "${next_link#/}" = "$next_link" ]; then
-            next_link="$(dirname "${1}")/$next_link"
-        fi
-        ___x_cmd_readlink_recursive "$next_link"
-    else
-        [ ! -e "${1}" ] && return 1        # File Not Exists
-        printf "%s" "$1"
-    fi
-}
-
 # EndSection
 
 # Section 6: main entrance helper: xrc_set_main, which_one, which_one_with_naming
