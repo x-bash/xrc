@@ -1,0 +1,83 @@
+
+___x_cmd_http_not_secure_request_nc(){
+    printf "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80
+}
+
+___x_cmd_http_not_secure_request_bash(){
+    exec 88<>"/dev/tcp/$host/80"
+    printf "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\nConnection: close\r\n\r\n" "$path" "$host" >&88
+    cat <&88
+    exec 88>&- >&2
+    exec 88<&- >&2
+}
+
+___X_CMD_HTTP_NOT_SECURE_REQUEST_HANDLER_R="$(printf "\r")"
+
+___x_cmd_http_not_secure_request_handler(){
+    local file="${1:?Provide cache filepath}"
+    local line
+    while read -r line; do
+        line="${line%"${___X_CMD_HTTP_NOT_SECURE_REQUEST_HANDLER_R}"}"
+        printf "%s\n" "$line"
+
+        if [ "$line" = "" ]; then
+            break
+        fi
+    done
+    cat >"$file"
+}
+
+
+___x_cmd_http_not_secure_get(){
+    local path="${1:?Provide path}"
+    local file="${2:?Provide cache file}"
+
+    path="${path#http*://}"
+    host="${path%%/*}"
+    local origin_path="$path"
+    path="${path#*/}"
+    if [ "$path" = "$origin_path" ]; then
+        path=""
+    fi
+    path="/$path"
+
+    if command -v bash 1>/dev/null; then
+        ___x_cmd_http_not_secure_request(){
+            ___x_cmd_http_not_secure_request_bash
+        }
+    elif command -v wget >/dev/null; then
+        ___x_cmd_http_not_secure_request(){
+            wget "http://${host}${path}" -O -
+        }
+    elif command -v nc 1>/dev/null; then
+        ___x_cmd_http_not_secure_request(){
+           ___x_cmd_http_not_secure_request_nc
+        }
+    else
+        printf "Not support without wget, bash or nc." >&2
+        return 1
+    fi
+
+    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file"
+}
+
+___x_cmd_http_download_curl(){
+    # TODO: download
+    # https://gitee.com/static-build/curl/raw/main/bin/curl.linux.arm64.7z
+    # https://gitee.com/static-build/curl/raw/main/bin/curl.linux.x64.7z
+
+    # TODO: this is for docker's alpine legacy version(lack of wget https) or docker's debian version(lack of curl and wget)
+
+    # TODO: exit if not linux
+
+    xrc os
+    local arch
+    arch="$(os arch)"
+
+    ___x_cmd_http_not_secure_get "https://gitee.com/static-build/curl/raw/main/bin/curl.linux.${arch}.7z.1"
+    ___x_cmd_http_not_secure_get "https://gitee.com/static-build/curl/raw/main/bin/curl.linux.${arch}.7z.2"
+    # TODO: unzip
+    # TODO: check md5
+    # TODO
+
+}
