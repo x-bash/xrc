@@ -3,13 +3,13 @@ ___x_cmd_http_not_secure_request_nc(){
     printf "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80
 }
 
-___x_cmd_http_not_secure_request_bash(){
+___x_cmd_http_not_secure_request_bash()(
     exec 88<>"/dev/tcp/$host/80"
     printf "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\nConnection: close\r\n\r\n" "$path" "$host" >&88
     cat <&88
     exec 88>&- >&2
     exec 88<&- >&2
-}
+)
 
 ___X_CMD_HTTP_NOT_SECURE_REQUEST_HANDLER_R="$(printf "\r")"
 
@@ -26,7 +26,6 @@ ___x_cmd_http_not_secure_request_handler(){
     done
     cat >"$file"
 }
-
 
 ___x_cmd_http_not_secure_get(){
     local path="${1:?Provide path}"
@@ -58,7 +57,8 @@ ___x_cmd_http_not_secure_get(){
         return 1
     fi
 
-    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file"
+    local code=0
+    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file" | ___x_cmd_httpget_handle_resp_header
 }
 
 ___x_cmd_http_download_curl(){

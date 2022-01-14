@@ -97,6 +97,21 @@ fi
 # EndSection
 
 # Section 3: httpget: using curl, wget, and x-curl
+
+___x_cmd_httpget_handle_resp_header(){
+    local http_code
+    http_code="$(awk 'NR==1{ printf("%s", $2); }')"
+    case "$http_code" in
+        20*)    return 0 ;;
+        40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 4 ;;
+        "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
+                return 1 ;;
+        *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
+                return 2 ;;
+    esac
+}
+
 if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
@@ -114,18 +129,7 @@ if command -v curl >/dev/null; then
         fi
 
         local code=$?
-        local http_code
-        http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
-
-        case "$http_code" in
-            20*)   return 0 ;;
-            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                    return 4 ;;
-            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
-                    return 1 ;;
-            *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                    return 2 ;;
-        esac
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$1"
     }
 elif command -v wget >/dev/null; then
     ___x_cmd_httpget_inner(){
@@ -141,18 +145,7 @@ elif command -v wget >/dev/null; then
         fi
 
         local code=$?
-        local http_code
-        http_code="$(printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | awk 'NR==1{ printf("%s", $2); }')"
-
-        case "$http_code" in
-            20*)   return 0 ;;
-            40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                    return 4 ;;
-            "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
-                    return 1 ;;
-            *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                    return 2 ;;
-        esac
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$1"
     }
 else
     ___x_cmd_httpget_inner(){
