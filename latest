@@ -104,9 +104,11 @@ ___x_cmd_httpget_handle_resp_header(){
     case "$http_code" in
         20*)    return 0 ;;
         40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $1"
-                return 4 ;;
+                return 4 ;;     # TODO: consider using exit code 70
         "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $1"
                 return 1 ;;
+        5*)     ___xrc_log debug "Return code: $code. Server internal error. Fail to retrieve file from: $1"
+                return 5 ;;     # TODO: consider using exit code 69
         *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $1"
                 return 2 ;;
     esac
