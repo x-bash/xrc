@@ -120,8 +120,6 @@ if command -v curl >/dev/null; then
         local cache="${2}"
         ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
 
-        # TODO: --speed-time 3
-
         if [ -z "$cache" ]; then
             exec 3>&1
             ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
