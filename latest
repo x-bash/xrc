@@ -445,14 +445,14 @@ ___x_cmd_which_one_with_naming(){
 ___x_cmd_which_one(){
     local RESOURCE_NAME="${1:?Provide resource name for ___x_cmd_which_one}"
 
-    ___X_CMD_WHICH_ONE_RESULT=
     ___X_CMD_WHICH_ONE_RESOURCE_TYPE=
+    ___X_CMD_WHICH_ONE_RESULT=
 
     local TGT
     case "$RESOURCE_NAME" in
         /*)
-            ___X_CMD_WHICH_ONE_RESOURCE_TYPE=local
             ___xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
+            ___X_CMD_WHICH_ONE_RESOURCE_TYPE=local
             ___X_CMD_WHICH_ONE_RESULT="$RESOURCE_NAME"
             return 0
             ;;
@@ -500,6 +500,7 @@ ___x_cmd_which_one(){
                 fi
             fi
 
+            ___X_CMD_WHICH_ONE_RESOURCE_TYPE=official
             # x-bash module
             ___xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
             local module="$RESOURCE_NAME"
@@ -510,7 +511,6 @@ ___x_cmd_which_one(){
 
             TGT="$___X_CMD_ROOT/$module"
             if [ -f "$TGT" ]; then
-                ___X_CMD_WHICH_ONE_RESOURCE_TYPE=official
                 ___X_CMD_WHICH_ONE_RESULT="$TGT"
                 return 0
             fi
@@ -519,7 +519,6 @@ ___x_cmd_which_one(){
 
             ___xrc_log info "Downloading resource=$RESOURCE_NAME to local cache: $TGT"
             if ___x_cmd_httpget_gitx_official "mod/$module" "$TGT"; then
-                ___X_CMD_WHICH_ONE_RESOURCE_TYPE=official
                 ___X_CMD_WHICH_ONE_RESULT="$TGT"
                 return 0
             fi
