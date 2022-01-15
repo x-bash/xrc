@@ -134,7 +134,7 @@ if command -v curl >/dev/null; then
         local code=$?
         printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
     }
-elif command -v wget >/dev/null; then
+elif command -v wget >/dev/null && command -v ssl_client 1>/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
         local cache="${2}"
@@ -186,6 +186,8 @@ ___x_cmd_httpget() {
         # First make sure it works before webservice. Fail fast.
         mkdir -p "$(dirname "$cache")"
         redirect_path="$TMPDIR/x-bash-temp-download.$RANDOM"
+        # TODO: Consider using following code
+        # redirect_path="$(dirname "$cache")/x-bash-temp-download.$RANDOM"
     fi
 
     printf "URL is %s\n" "$url" >&2

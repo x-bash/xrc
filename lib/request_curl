@@ -83,4 +83,7 @@ ___x_cmd_http_download_curl(){
     # TODO: check md5
     # TODO
 
+    # ___x_cmd_httpget
+    # ___x_cmd_curl
+
 }
