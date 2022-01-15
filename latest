@@ -691,7 +691,7 @@ A
             ;;
         upgrade)
             ___X_CMD_XRC_MODULE_IMPORTED=
-            rm -rf "$___X_CMD_ROOT/.boot/boot" && eval "$(curl https://get.x-cmd.com)"
+            rm -f "$___X_CMD_ROOT/.boot/boot" && eval "$(curl https://get.x-cmd.com)"
             ;;
         log)
             printf "WARN: xrc log deprecated, you should using 'x log' instead\n" >&2
