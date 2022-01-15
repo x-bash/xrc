@@ -229,7 +229,7 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
         case $? in
             0)  if [ "$lineno" -ne 1 ]; then
                     ___xrc_log debug "Current default mirror is $mirror"
-                    ___x_cmd_mirror "$mirror" "$(echo "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
+                    ___x_cmd_mirror "$mirror" "$(printf "%s" "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
 
                     # Set CHINA_NET FLAG
                     case "$mirror" in
@@ -255,7 +255,7 @@ A
 
 # rename to ___x_cmd_httpget_gitx_official
 ___x_cmd_httpget_gitx_official(){
-    ___x_cmd_httpget_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide url}" "$2" "$3"
+    ___x_cmd_httpget_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide resource path}" "$2" "$3"
 }
 
 
