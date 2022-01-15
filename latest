@@ -267,8 +267,8 @@ ___x_cmd_curl_gitx_official(){
     ___x_cmd_httpget_gitx_official "$@"
 }
 
-___x_cmd_ldict(){
-    xrc xrc/lib/ldict && ___x_cmd_ldict "$@" ;
+___x_cmd_llist(){
+    xrc xrc/lib/llist && ___x_cmd_llist "$@" ;
 }
 
 ___x_cmd_awk(){
@@ -318,60 +318,88 @@ case "$(___x_cmd_mirror | head -n1)" in
 esac
 # EndSection
 
-# Section 5: llist: include to speed up for it is used in which_one.
-___x_cmd_llist(){
+# Section 5: ldict
+___x_cmd_ldict(){
     local op="$1"; shift
     case "$op" in
-        init)           ___x_cmd_llist_init "$@" ;;
-        shift)          ___x_cmd_llist_shift "$@" ;;
-        unshift)        ___x_cmd_llist_unshift "$@" ;;
-        push)           ___x_cmd_llist_push "$@" ;;
-        pop)            ___x_cmd_llist_pop "$@" ;;
-        has)            ___x_cmd_llist_has "$@" ;;
-        print)          ___x_cmd_llist_print "$@" ;;
+        put)        ___x_cmd_ldict_put "$@" ;;
+        get)        ___x_cmd_ldict_get "$@" ;;
+        keys)       ___x_cmd_ldict_keys "$@" ;;
+        print)      ___x_cmd_ldict_print "$@" ;;
         *)
-            printf "Show help for llist\n" >&2
+            printf "Show help for ldict\n" >&2
             return 1
     esac
 }
 
-alias llist="___x_cmd_llist"
+alias ldict="___x_cmd_ldict"
 
-___x_cmd_llist_init(){
-    local name="${1:?Provide list name}"
-    eval "___x_cmd_llist_$name=\"\${___X_CMD_LDICT_SEP}\""
-}
+___X_CMD_LDICT_SEP="$(printf "\001")"
+___X_CMD_LDICT_KVSEP="$(printf "\002")"
 
-___x_cmd_llist_push(){
-    local name="${1:?Provide list name}"
-    local value="${2:?Provide value}"
-
-    eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\${value}\${___X_CMD_LDICT_SEP}\""
-}
-
-___x_cmd_llist_unshift(){
-    local name="${1:?Provide list name}"
-    local value="${2:?Provide value}"
-
-    eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LDICT_SEP}\${value}\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\""
-}
-
-___x_cmd_llist_has(){
+___x_cmd_ldict_put(){
     local name="${1:?Provide dict name}"
-    local value="${2:?Provide key}"
+    local key="${2:?Provide key}"
+    local value="${3:?Provide value}"
 
-    local part1
-    eval "part1=\"\${___X_CMD_LLIST_${name}#*\${___X_CMD_LDICT_SEP}\${value}\${___X_CMD_LDICT_SEP}}\""
-    eval [ \"\$part1\" != \"\$"___X_CMD_LLIST_${name}"\" ]
+    ___x_cmd_ldict_rm "$name" "$key"
+
+    eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}:-\${___X_CMD_LDICT_SEP}}\${key}\${___X_CMD_LDICT_KVSEP}\${value}\${___X_CMD_LDICT_SEP}\""
 }
 
-___x_cmd_llist_print(){
+___x_cmd_ldict_rm(){
     local name="${1:?Provide dict name}"
-    eval printf \"%s\" \"\$"___X_CMD_LLIST_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" '
+    local key="${2:?Provide key}"
+
+    local tmp
+    eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}*\${___X_CMD_LDICT_SEP}}\""
+    if eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]; then
+        eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}%%\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}*}\${___X_CMD_LDICT_SEP}\${tmp}\""
+        return 0
+    fi
+    return 1
+}
+
+___x_cmd_ldict_has(){
+    local name="${1:?Provide dict name}"
+    local key="${2:?Provide key}"
+
+    local tmp
+    eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}*\${___X_CMD_LDICT_SEP}}\""
+    eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]
+}
+
+___x_cmd_ldict_get(){
+    local name="${1:?Provide dict name}"
+    local key="${2:?Provide key}"
+
+    local tmp
+
+    eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}}\""
+
+    if eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]; then
+        printf "%s" "${tmp%%${___X_CMD_LDICT_SEP}*}"
+    else
+        return 1
+    fi
+}
+
+___x_cmd_ldict_keys(){
+    local name="${1:?Provide dict name}"
+    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
 NR!=1{
     print $1
 }'
 }
+
+___x_cmd_ldict_print(){
+    local name="${1:?Provide dict name}"
+    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
+NR!=1{
+    print $1 " = " $2
+}'
+}
+
 # EndSection
 
 # Section 6: main entrance helper: xrc_set_main, which_one, which_one_with_naming
