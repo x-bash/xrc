@@ -654,7 +654,8 @@ xrc cat         Show the script in text form
     Uasge:  xrc  cat <lib> [<lib>...]
     Example: eval "$(xrc cat str)"
 A
-            return 1;;
+            return 1
+            ;;
         w|which)
             if [ $# -gt 0 ]; then
                 ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$@"
@@ -666,13 +667,17 @@ xrc which       Download lib files and print the local path.
     Uasge:  xrc which <lib> [<lib>...]
     Example: source "$(xrc which str)"
 A
-            return 1 ;;
+            return 1
+            ;;
         root)
-            printf "%s" "$___X_CMD_ROOT" ;;
+            printf "%s" "$___X_CMD_ROOT"
+            ;;
         mirror)
-            ___x_cmd_mirror "$@" ;;
+            ___x_cmd_mirror "$@"
+            ;;
         export-all)
-            ( xrc x-bash/xrc/lib/export &&  ___x_cmd_xrc_export_all "$@" ) ;;
+            ( xrc x-bash/xrc/lib/export &&  ___x_cmd_xrc_export_all "$@" )
+            ;;
         update)
             local CACHE="$___X_CMD_ROOT/all.tgz"
             # rm -rf "$___X_CMD_ROOT" # Dangerous.
@@ -695,18 +700,22 @@ A
             ;;
         log)
             printf "WARN: xrc log deprecated, you should using 'x log' instead\n" >&2
-            x log "$@" ;;
+            x log "$@"
+            ;;
         ls)
-            ls "$___X_CMD_ROOT" ;;  # If tar.gz, using tar ls. If folder, ls $folder
+            ls "$___X_CMD_ROOT"
+            ;;  # If tar.gz, using tar ls. If folder, ls $folder
         setmain)
-            ___x_cmd_xrc_set_main "$@" ;;
+            ___x_cmd_xrc_set_main "$@"
+            ;;
         reload)
+            local ___X_CMD_XRC_RELOAD=1
             if [ "$#" -gt 0 ]; then
-                local ___X_CMD_XRC_RELOAD=1
                 ___x_cmd_xrc_source_file "$@"
-                return
+            else
+                ___x_cmd_xrc_source_file xrc/latest
             fi
-            RELOAD=1 xrc xrc/latest; return ;;
+            ;;
         _x_cmd_advise_json)
             xrc cat xrc/lib/xrc.json
             return 126
