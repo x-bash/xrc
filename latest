@@ -584,6 +584,20 @@ A
     done
 }
 
+___x_cmd_xrc_source_file_main_define_by_setmain(){
+    if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
+        eval "
+        $___X_CMD_WHICH_ONE_NAMING(){
+            \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
+        }"
+
+        if ___x_cmd_is_suitable_advise_env; then
+            # TODO: fix it ...
+            advise "$___X_CMD_WHICH_ONE_NAMING" "" "$___X_CMD_XRC_SET_MAIN"
+        fi
+    fi
+}
+
 ___x_cmd_xrc_source_file_main(){
     ___X_CMD_WHICH_ONE_RESULT="${1:?Provide exact file}"
 
@@ -591,15 +605,10 @@ ___x_cmd_xrc_source_file_main(){
         if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
+            local ___X_CMD_XRC_SET_MAIN
             ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
 
-            if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
-                eval "
-                $___X_CMD_WHICH_ONE_NAMING(){
-                    \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
-                }"
-            fi
-            ___X_CMD_XRC_SET_MAIN=
+            ___x_cmd_xrc_source_file_main_define_by_setmain
             return    # exited already. skip
         fi
     fi
@@ -612,12 +621,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
         ___x_cmd_ldict put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
-        if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
-            eval "
-            $___X_CMD_WHICH_ONE_NAMING(){
-                \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
-            }"
-        fi
+        ___x_cmd_xrc_source_file_main_define_by_setmain
     fi
 }
 
