@@ -61,7 +61,7 @@ ___x_cmd_http_not_secure_get(){
     fi
 
     local code=0
-    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file" | ___x_cmd_httpget_handle_resp_header
+    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file" | ___x_cmd_httpget_handle_resp_header "http://${host}${path}" 1
 }
 
 ___x_cmd_http_download_curl(){
