@@ -51,6 +51,8 @@ if [ -n "$BASH_VERSION" ]; then
     shopt -s expand_aliases
 elif [ -n "$ZSH_VERSION" ]; then
     ___X_CMD_SHELL=zsh
+    # The same as 'shopt -s expand_aliases' in bash, refer: https://stackoverflow.com/questions/23258413/expand-aliases-in-non-interactive-shells
+    setopt aliases
 elif [ -n "$KSH_VERSION" ]; then
     ___X_CMD_SHELL=ksh
     alias local=typeset
@@ -593,7 +595,7 @@ ___x_cmd_xrc_source_file_main_define_by_setmain(){
 
         if ___x_cmd_is_suitable_advise_env; then
             # TODO: fix it ...
-            advise "$___X_CMD_WHICH_ONE_NAMING" "" "$___X_CMD_XRC_SET_MAIN"
+            advise "$___X_CMD_XRC_SET_MAIN" "" "$___X_CMD_WHICH_ONE_NAMING"
         fi
     fi
 }
