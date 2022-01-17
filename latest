@@ -51,6 +51,8 @@ if [ -n "$BASH_VERSION" ]; then
     shopt -s expand_aliases
 elif [ -n "$ZSH_VERSION" ]; then
     ___X_CMD_SHELL=zsh
+    # The same as 'shopt -s expand_aliases' in bash, refer: https://stackoverflow.com/questions/23258413/expand-aliases-in-non-interactive-shells
+    setopt aliases
 elif [ -n "$KSH_VERSION" ]; then
     ___X_CMD_SHELL=ksh
     alias local=typeset
@@ -584,6 +586,20 @@ A
     done
 }
 
+___x_cmd_xrc_source_file_main_define_by_setmain(){
+    if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
+        eval "
+        $___X_CMD_WHICH_ONE_NAMING(){
+            \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
+        }"
+
+        if ___x_cmd_is_suitable_advise_env; then
+            # TODO: fix it ...
+            advise "$___X_CMD_XRC_SET_MAIN" "" "$___X_CMD_WHICH_ONE_NAMING"
+        fi
+    fi
+}
+
 ___x_cmd_xrc_source_file_main(){
     ___X_CMD_WHICH_ONE_RESULT="${1:?Provide exact file}"
 
@@ -591,15 +607,10 @@ ___x_cmd_xrc_source_file_main(){
         if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
+            local ___X_CMD_XRC_SET_MAIN
+            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict_get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
 
-            if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
-                eval "
-                $___X_CMD_WHICH_ONE_NAMING(){
-                    \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
-                }"
-            fi
-            ___X_CMD_XRC_SET_MAIN=
+            ___x_cmd_xrc_source_file_main_define_by_setmain
             return    # exited already. skip
         fi
     fi
@@ -611,13 +622,8 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
 
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
-        ___x_cmd_ldict put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
-        if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
-            eval "
-            $___X_CMD_WHICH_ONE_NAMING(){
-                \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
-            }"
-        fi
+        ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
+        ___x_cmd_xrc_source_file_main_define_by_setmain
     fi
 }
 
