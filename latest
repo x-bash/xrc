@@ -593,8 +593,7 @@ ___x_cmd_xrc_source_file_main_define_by_setmain(){
             \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
         }"
 
-        if ___x_cmd_is_suitable_advise_env; then
-            # TODO: fix it ...
+        if ___x_cmd_is_suitable_advise_env && [ -n "$___X_CMD_XRC_SET_MAIN" ] && [ -n "$___X_CMD_WHICH_ONE_NAMING" ] ; then
             advise "$___X_CMD_XRC_SET_MAIN" "" "$___X_CMD_WHICH_ONE_NAMING"
         fi
     fi
