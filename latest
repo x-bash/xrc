@@ -154,9 +154,7 @@ elif command -v wget >/dev/null && command -v ssl_client 1>/dev/null; then
     }
 else
     ___x_cmd_httpget_inner(){
-        ___xrc_log debug "Please install curl or wget in your computure."
-        # TODO: provide installation or x curl
-        return 1
+        xrc xrc/lib/request_curl && ___x_cmd_http_download_curl "$@" ;
     }
 fi
 
