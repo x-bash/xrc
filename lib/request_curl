@@ -65,32 +65,45 @@ ___x_cmd_http_not_secure_get(){
     fi
 
     local code=0
-    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file"
+    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file"| ___x_cmd_httpget_handle_resp_header "$file" "$code"
 }
 
 ___x_cmd_http_download_curl(){
-    local url="${1:?Provide url}"
-    local cache="${2}"
-    # xrc os
-    # local arch
-    # arch="$(os arch)"
-    # if [ "$arch" != "linux" ];then
+    xrc os
+    local arch
+    arch="$(os arch)"
+    # if [ "$(os name)" != "linux" ];then
     #     return 1
     # fi
+    local url="${1:-"static-build.gitee.io/curl/bin"}"
+    local app="${2:-"curl.linux.$arch"}"
+    local target="$HOME/.x-cmd/.bin/${app%%.}"
+    local sha="2e8196fae25ab2f2a5c0b117432ffb829be0ac785760ad7a35c58c1ab6d3ec65"
+    echo "http://$url/$app.7z">a
+    ___x_cmd_http_not_secure_get "http://$url/$app.7z" "$target/$app.7z" 2>/dev/stdout || return 1
 
-    if [ -z "$cache" ]; then
-        exec 3>&1
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(___x_cmd_http_not_secure_get "$url" 1>&3 2>/dev/stdout)"
-        exec 3>&-
-    else
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(___x_cmd_http_not_secure_get "$url" "$cache" 2>/dev/stdout)"
+    local size
+    size=$(wc -c "$target/$app.7z")
+    size=${size% *}
+    size=$(printf "%s" "$size")   # Notice: Intentionary let it unquoted.
+    if [ "$size" -lt 20 ]; then
+        size="$(cat "$app.7z")"
+            local i
+            local suffix
+        for i in $(seq "$size"); do
+            suffix="$(printf "%3s" "$i" | tr " " 0)"
+            ___x_cmd_http_not_secure_get "http://$url/$app.7z.$suffix" "$target/$app.7z.$suffix" 2>/dev/stdout || return 1
+        done && cat "$target"/"$app".7z.0* > "$app".7z
     fi
-    local code=$?
-    printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
-    # TODO: unzip
-    # TODO: check md5
-    # TODO
 
+    if command -v 7zr 1>/dev/null 2>&1; then
+        7zr x "$target"/"$app".7z
+        else
+        ## TODO:giteePages
+        ___x_cmd_http_not_secure_get "http://gitee.com/static-build/p7zip/raw/main/bin/7zd.linux.$arch" "$HOME/.x-cmd/.bin/7zd/7zd.linux.$arch"
+        "$HOME/.x-cmd/.bin/7zd/7zd.linux.$arch" x "$target"/"$app".7z
+    fi
+    [ "$sha" != "$(sha256sum "$target"/"$app")" ] && return 1
     # ___x_cmd_httpget
     # ___x_cmd_curl
 

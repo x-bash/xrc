@@ -153,8 +153,19 @@ elif command -v wget >/dev/null && command -v ssl_client 1>/dev/null; then
         printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
     }
 else
-    ___x_cmd_httpget_inner(){
-        xrc xrc/lib/request_curl && ___x_cmd_http_download_curl "$@" ;
+    xrc xrc/lib/request_curl && ___x_cmd_http_download_curl && ___x_cmd_httpget_inner(){
+        local url="${1:?Provide url}"
+        local cache="${2}"
+        if [ -z "$cache" ]; then
+            exec 3>&1
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+            exec 3>&-
+        else
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+        fi
+
+        local code=$?
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
     }
 fi
 
