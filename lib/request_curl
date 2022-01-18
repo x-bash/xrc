@@ -1,4 +1,8 @@
+# shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
+# author:       Li Junhao           l@x-cmd.com
+# maintainer:   Li Junhao
+# license:      GPLv3
 ___x_cmd_http_not_secure_request_nc(){
     printf "GET %s HTTP/1.1\r\nHost: %s\r\nUser-Agent: curl/7.64.1\r\nAccept: */*\r\nConnection: close\r\n\r\n" "$path" "$host" | nc "$host" 80
 }
@@ -61,24 +65,28 @@ ___x_cmd_http_not_secure_get(){
     fi
 
     local code=0
-    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file" | ___x_cmd_httpget_handle_resp_header "http://${host}${path}" 1
+    ___x_cmd_http_not_secure_request | ___x_cmd_http_not_secure_request_handler "$file"
 }
 
 ___x_cmd_http_download_curl(){
-    # TODO: download
-    # https://gitee.com/static-build/curl/raw/main/bin/curl.linux.arm64.7z
-    # https://gitee.com/static-build/curl/raw/main/bin/curl.linux.x64.7z
+    local url="${1:?Provide url}"
+    local cache="${2}"
+    # xrc os
+    # local arch
+    # arch="$(os arch)"
+    # if [ "$arch" != "linux" ];then
+    #     return 1
+    # fi
 
-    # TODO: this is for docker's alpine legacy version(lack of wget https) or docker's debian version(lack of curl and wget)
-
-    # TODO: exit if not linux
-
-    xrc os
-    local arch
-    arch="$(os arch)"
-
-    ___x_cmd_http_not_secure_get "https://gitee.com/static-build/curl/raw/main/bin/curl.linux.${arch}.7z.1"
-    ___x_cmd_http_not_secure_get "https://gitee.com/static-build/curl/raw/main/bin/curl.linux.${arch}.7z.2"
+    if [ -z "$cache" ]; then
+        exec 3>&1
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(___x_cmd_http_not_secure_get "$url" 1>&3 2>/dev/stdout)"
+        exec 3>&-
+    else
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(___x_cmd_http_not_secure_get "$url" "$cache" 2>/dev/stdout)"
+    fi
+    local code=$?
+    printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
     # TODO: unzip
     # TODO: check md5
     # TODO
