@@ -546,7 +546,7 @@ A
 }
 
 ___x_cmd_xrc_source_file_main_define_by_setmain(){
-    if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
+    if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ -n "$___X_CMD_XRC_SET_MAIN" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
         eval "
         $___X_CMD_WHICH_ONE_NAMING(){
             \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
