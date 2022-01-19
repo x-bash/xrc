@@ -81,10 +81,12 @@ ___x_cmd_http_download_curl(){
     local target="$HOME/.x-cmd/.bin/${app%%.*}"
     local sha
     sha="2e8196fae25ab2f2a5c0b117432ffb829be0ac785760ad7a35c58c1ab6d3ec65"
-    if [ ! -e "$app" ];then
+    if [ ! -e "$target/$app" ];then
         mkdir -p "$target"
         ___x_cmd_http_not_secure_get "http://$url/$app.tar.gz" "$target/$app.tar.gz" 2>/dev/stdout || return 1
         tar zxvf "$target/$app.tar.gz" -C "$target"
     fi
-    [ "$sha" != "$(sha256sum "$target"/"$app")" ] && return 1
+    local tarsha
+    tarsha="$(sha256sum "$target"/"$app")"
+    [ "$sha" = "${tarsha%% *}" ] && return 0
 }
