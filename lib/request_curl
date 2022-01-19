@@ -72,39 +72,19 @@ ___x_cmd_http_download_curl(){
     xrc os
     local arch
     arch="$(os arch)"
-    # if [ "$(os name)" != "linux" ];then
-    #     return 1
-    # fi
-    local url="${1:-"static-build.gitee.io/curl/bin"}"
-    local app="${2:-"curl.linux.$arch"}"
-    local target="$HOME/.x-cmd/.bin/${app%%.}"
-    local sha="2e8196fae25ab2f2a5c0b117432ffb829be0ac785760ad7a35c58c1ab6d3ec65"
-    echo "http://$url/$app.7z">a
-    ___x_cmd_http_not_secure_get "http://$url/$app.7z" "$target/$app.7z" 2>/dev/stdout || return 1
-
-    local size
-    size=$(wc -c "$target/$app.7z")
-    size=${size% *}
-    size=$(printf "%s" "$size")   # Notice: Intentionary let it unquoted.
-    if [ "$size" -lt 20 ]; then
-        size="$(cat "$app.7z")"
-            local i
-            local suffix
-        for i in $(seq "$size"); do
-            suffix="$(printf "%3s" "$i" | tr " " 0)"
-            ___x_cmd_http_not_secure_get "http://$url/$app.7z.$suffix" "$target/$app.7z.$suffix" 2>/dev/stdout || return 1
-        done && cat "$target"/"$app".7z.0* > "$app".7z
+    name="$(os name)"
+    if [ "$(os name)" != "linux" ];then
+        return 1
     fi
-
-    if command -v 7zr 1>/dev/null 2>&1; then
-        7zr x "$target"/"$app".7z
-        else
-        ## TODO:giteePages
-        ___x_cmd_http_not_secure_get "http://gitee.com/static-build/p7zip/raw/main/bin/7zd.linux.$arch" "$HOME/.x-cmd/.bin/7zd/7zd.linux.$arch"
-        "$HOME/.x-cmd/.bin/7zd/7zd.linux.$arch" x "$target"/"$app".7z
+    local url="${1:-"static-build.gitee.io/curl/bin"}"
+    local app="${2:-"curl.$name.$arch"}"
+    local target="$HOME/.x-cmd/.bin/${app%%.*}"
+    local sha
+    sha="2e8196fae25ab2f2a5c0b117432ffb829be0ac785760ad7a35c58c1ab6d3ec65"
+    if [ ! -e "$app" ];then
+        mkdir -p "$target"
+        ___x_cmd_http_not_secure_get "http://$url/$app.tar.gz" "$target/$app.tar.gz" 2>/dev/stdout || return 1
+        tar zxvf "$target/$app.tar.gz" -C "$target"
     fi
     [ "$sha" != "$(sha256sum "$target"/"$app")" ] && return 1
-    # ___x_cmd_httpget
-    # ___x_cmd_curl
-
 }
