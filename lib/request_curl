@@ -80,13 +80,21 @@ ___x_cmd_http_download_curl(){
     local app="${2:-"curl.$name.$arch"}"
     local target="$HOME/.x-cmd/.bin/${app%%.*}"
     local sha
-    sha="2e8196fae25ab2f2a5c0b117432ffb829be0ac785760ad7a35c58c1ab6d3ec65"
+    sha="a45e65f60321c3bdf382a404e1413a3b7b1224b1da22fc3906f40c272849e06a"
+    # TODO:sha
+    # case "${arch}" in
+    #     x86_64 | amd64 | x64)  sha="a45e65f60321c3bdf382a404e1413a3b7b1224b1da22fc3906f40c272849e06a";;
+    #     i*86 | x86)            sha="a45e65f60321c3bdf382a404e1413a3b7b1224b1da22fc3906f40c272849e06a";;
+    #     aarch64|arm64)         sha="a45e65f60321c3bdf382a404e1413a3b7b1224b1da22fc3906f40c272849e06a";;
+    # esac
     if [ ! -e "$target/$app" ];then
         mkdir -p "$target"
         ___x_cmd_http_not_secure_get "http://$url/$app.tar.gz" "$target/$app.tar.gz" 2>/dev/stdout || return 1
-        tar zxvf "$target/$app.tar.gz" -C "$target"
+        local tarsha
+        tarsha="$(sha256sum "$target"/"$app".tar.gz)"
+        [ "$sha" = "${tarsha%% *}" ] && tar zxvf "$target/$app.tar.gz" -C "$target" && return 0
+        ___xrc_log error "$app sha256 match fail"
+        return 1
     fi
-    local tarsha
-    tarsha="$(sha256sum "$target"/"$app")"
-    [ "$sha" = "${tarsha%% *}" ] && return 0
+    return 0
 }
