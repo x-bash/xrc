@@ -377,6 +377,11 @@ NR!=1{
 }'
 }
 
+___x_cmd_ldict_dump(){
+    local name="${1:?Provide dict name}"
+    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\"
+}
+
 # EndSection
 
 # Section 6: main entrance helper: xrc_set_main, which_one, which_one_with_naming
