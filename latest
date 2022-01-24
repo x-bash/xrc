@@ -51,6 +51,8 @@ if [ -n "$BASH_VERSION" ]; then
     shopt -s expand_aliases
 elif [ -n "$ZSH_VERSION" ]; then
     ___X_CMD_SHELL=zsh
+    # The same as 'shopt -s expand_aliases' in bash, refer: https://stackoverflow.com/questions/23258413/expand-aliases-in-non-interactive-shells
+    setopt aliases
 elif [ -n "$KSH_VERSION" ]; then
     ___X_CMD_SHELL=ksh
     alias local=typeset
@@ -116,47 +118,6 @@ ___x_cmd_httpget_handle_resp_header(){
                 return 2 ;;
     esac
 }
-
-if command -v curl >/dev/null; then
-    ___x_cmd_httpget_inner(){
-        local url="${1:?Provide url}"
-        local cache="${2}"
-        ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
-
-        if [ -z "$cache" ]; then
-            exec 3>&1
-            ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
-            exec 3>&-
-        else
-            ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
-        fi
-
-        local code=$?
-        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
-    }
-elif command -v wget >/dev/null && command -v ssl_client 1>/dev/null; then
-    ___x_cmd_httpget_inner(){
-        local url="${1:?Provide url}"
-        local cache="${2}"
-
-        if [ -z "$cache" ]; then
-            exec 3>&1
-            ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -qS "$url" 1>&3 2>/dev/stdout)"
-            exec 3>&-
-        else
-            ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -O "$cache" -qS "$url" 2>/dev/stdout)"
-        fi
-
-        local code=$?
-        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
-    }
-else
-    ___x_cmd_httpget_inner(){
-        ___xrc_log debug "Please install curl or wget in your computure."
-        # TODO: provide installation or x curl
-        return 1
-    }
-fi
 
 # TODO: rename to ___x_cmd_httpget_with_cache
 ___x_cmd_httpget() {
@@ -596,15 +557,14 @@ A
 }
 
 ___x_cmd_xrc_source_file_main_define_by_setmain(){
-    if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
+    if [ -n "$___X_CMD_WHICH_ONE_NAMING" ] && [ -n "$___X_CMD_XRC_SET_MAIN" ] && [ "$___X_CMD_WHICH_ONE_NAMING" != "$___X_CMD_XRC_SET_MAIN" ]; then
         eval "
         $___X_CMD_WHICH_ONE_NAMING(){
             \"$___X_CMD_XRC_SET_MAIN\" \"\$@\"
         }"
 
-        if ___x_cmd_is_suitable_advise_env; then
-            # TODO: fix it ...
-            advise "$___X_CMD_WHICH_ONE_NAMING" "" "$___X_CMD_XRC_SET_MAIN"
+        if ___x_cmd_is_suitable_advise_env && [ -n "$___X_CMD_XRC_SET_MAIN" ] && [ -n "$___X_CMD_WHICH_ONE_NAMING" ] ; then
+            advise init "$___X_CMD_XRC_SET_MAIN" "" "$___X_CMD_WHICH_ONE_NAMING"
         fi
     fi
 }
@@ -617,7 +577,7 @@ ___x_cmd_xrc_source_file_main(){
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
             local ___X_CMD_XRC_SET_MAIN
-            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
+            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict_get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
 
             ___x_cmd_xrc_source_file_main_define_by_setmain
             return    # exited already. skip
@@ -631,7 +591,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
     ___x_cmd_source "$___X_CMD_WHICH_ONE_RESULT"
 
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
-        ___x_cmd_ldict put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
+        ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
         ___x_cmd_xrc_source_file_main_define_by_setmain
     fi
 }
@@ -831,4 +791,52 @@ ___x_cmd_instance_clear(){
 }
 
 # EndSection
+if command -v curl >/dev/null; then
+    ___x_cmd_httpget_inner(){
+        local url="${1:?Provide url}"
+        local cache="${2}"
+        ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
 
+        if [ -z "$cache" ]; then
+            exec 3>&1
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+            exec 3>&-
+        else
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+        fi
+
+        local code=$?
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
+    }
+elif command -v wget >/dev/null && command -v ssl_client 1>/dev/null; then
+    ___x_cmd_httpget_inner(){
+        local url="${1:?Provide url}"
+        local cache="${2}"
+
+        if [ -z "$cache" ]; then
+            exec 3>&1
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -qS "$url" 1>&3 2>/dev/stdout)"
+            exec 3>&-
+        else
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(wget -T 5 -O "$cache" -qS "$url" 2>/dev/stdout)"
+        fi
+
+        local code=$?
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
+    }
+else
+    xrc xrc/lib/request_curl && ___x_cmd_http_download_curl 1>/dev/null && ___x_cmd_httpget_inner(){
+        local url="${1:?Provide url}"
+        local cache="${2}"
+        if [ -z "$cache" ]; then
+            exec 3>&1
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+            exec 3>&-
+        else
+            ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+        fi
+
+        local code=$?
+        printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
+    }
+fi
