@@ -328,6 +328,7 @@ ___x_cmd_ldict(){
     local op="$1"; shift
     case "$op" in
         put)        ___x_cmd_ldict_put "$@" ;;
+        unshift)    ___x_cmd_ldict_unshift "$@" ;;
         get)        ___x_cmd_ldict_get "$@" ;;
         keys)       ___x_cmd_ldict_keys "$@" ;;
         print)      ___x_cmd_ldict_print "$@" ;;
@@ -341,6 +342,16 @@ alias ldict="___x_cmd_ldict"
 
 ___X_CMD_LDICT_SEP="$(printf "\001")"
 ___X_CMD_LDICT_KVSEP="$(printf "\002")"
+
+___x_cmd_ldict_unshift(){
+    local name="${1:?Provide dict name}"
+    local key="${2:?Provide key}"
+    local value="${3:?Provide value}"
+
+    ___x_cmd_ldict_rm "$name" "$key"
+
+    eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}\${value}\${___X_CMD_LDICT_${name}:-\${___X_CMD_LDICT_SEP}}\""
+}
 
 ___x_cmd_ldict_put(){
     local name="${1:?Provide dict name}"
