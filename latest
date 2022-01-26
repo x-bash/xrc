@@ -43,6 +43,25 @@ ___x_cmd_readlink_recursive(){
     fi
 }
 
+___x_cmd_lazyloading(){
+    local funcname="${1:?Provide function name}"
+    local respath="${2:?Provide resource path}"
+    eval "$funcname(){
+        if [ \"\$___X_CMD_LAZYLOADING\" = \"$funcname\" ]; then
+            printf \"No such function [%s] in [%s]\" \"$funcname\" \"$respath\"
+            return 1
+        fi
+
+        if ! xrc $respath; then
+            printf \"Fail to xrc: %s\" \"$respath\"
+            return 1
+        fi
+
+        local ___X_CMD_LAZYLOADING=$funcname
+        $funcname \"\$@\"
+    }"
+}
+
 # EndSection
 
 # Section 2: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
@@ -709,6 +728,7 @@ A
 
 # Section 9: other initialization: advise, lazy loading: x, ldict, awk
 x(){    unset -f x; xrc reload x-cmd/latest && x "$@";    }
+
 if ___x_cmd_is_suitable_advise_env; then
     ___xrc_log debug "Using module advise for completion."
     xrc advise/latest && advise init xrc && advise init x
