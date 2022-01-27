@@ -43,11 +43,11 @@ ___x_cmd_readlink_recursive(){
     fi
 }
 
-___x_cmd_definelazyloading(){
+___x_cmd_definelazyloader(){
     local funcname="${1:?Provide function name}"
     local respath="${2:?Provide resource path}"
     eval "$funcname(){
-        if [ \"\$___X_CMD_DEFINELAZYLOADING\" = \"$funcname\" ]; then
+        if [ \"\$___X_CMD_DEFINELAZYLOADER\" = \"$funcname\" ]; then
             printf \"No such function [%s] in [%s]\" \"$funcname\" \"$respath\"
             return 1
         fi
@@ -57,7 +57,7 @@ ___x_cmd_definelazyloading(){
             return 1
         fi
 
-        local ___X_CMD_DEFINELAZYLOADING=$funcname
+        local ___X_CMD_DEFINELAZYLOADER=$funcname
         $funcname \"\$@\"
     }"
 }
