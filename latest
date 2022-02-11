@@ -115,6 +115,42 @@ if [ -z "$___X_CMD_ROOT" ]; then
     [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$PATH"
 fi
+
+case "$___X_CMD_SHELL" in
+    bash|zsh)
+___x_cmd_q1(){
+    printf "'%s'" "${1//\'/\\\'}"
+}
+
+___x_cmd_q2(){
+    printf "\"%s\"" "${1//\"/\\\"}"
+}
+    ;;
+    *)
+___x_cmd_q1(){
+    awk '
+BEGIN{ RS="\001"; S="'\''"; }
+{
+    gsub(S, "\\" S, $0)
+    printf(S "%s" S, $0)
+}' <<A
+$1
+A
+}
+
+___x_cmd_q2(){
+    awk '
+BEGIN{ RS="\001"; S="\""; }
+{
+    gsub(S, "\\" S, $0)
+    printf(S "%s" S, $0)
+}' <<A
+$1
+A
+}
+    ;;
+esac
+
 # EndSection
 
 # Section 3: httpget: using curl, wget, and x-curl
