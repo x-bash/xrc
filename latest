@@ -851,6 +851,8 @@ ___x_cmd_instance_clear(){
 }
 
 # EndSection
+
+# TODO: &3 is a global var. Must be handled in the proper way.
 if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
