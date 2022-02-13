@@ -1,7 +1,6 @@
 # shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
 
 # author:       Li Junhao           l@x-cmd.com
-# maintainer:   Li Junhao
 # license:      GPLv3
 
 
@@ -117,6 +116,42 @@ if [ -z "$___X_CMD_ROOT" ]; then
     export ___X_CMD_ROOT
     export PATH
 fi
+
+case "$___X_CMD_SHELL" in
+    bash|zsh)
+___x_cmd_q1(){
+    printf "'%s'" "${1//\'/\\\'}"
+}
+
+___x_cmd_q2(){
+    printf "\"%s\"" "${1//\"/\\\"}"
+}
+    ;;
+    *)
+___x_cmd_q1(){
+    awk '
+BEGIN{ RS="\001"; S="'\''"; }
+{
+    gsub(S, "\\" S, $0)
+    printf(S "%s" S, $0)
+}' <<A
+$1
+A
+}
+
+___x_cmd_q2(){
+    awk '
+BEGIN{ RS="\001"; S="\""; }
+{
+    gsub(S, "\\" S, $0)
+    printf(S "%s" S, $0)
+}' <<A
+$1
+A
+}
+    ;;
+esac
+
 # EndSection
 
 # Section 3: httpget: using curl, wget, and x-curl
@@ -818,6 +853,8 @@ ___x_cmd_instance_clear(){
 }
 
 # EndSection
+
+# TODO: &3 is a global var. Must be handled in the proper way.
 if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
