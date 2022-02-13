@@ -114,6 +114,8 @@ if [ -z "$___X_CMD_ROOT" ]; then
     ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
     [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$PATH"
+    export ___X_CMD_ROOT
+    export PATH
 fi
 # EndSection
 
