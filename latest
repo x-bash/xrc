@@ -112,7 +112,9 @@ if [ -z "$___X_CMD_ROOT" ]; then
     ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
     ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
     [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
-    PATH="$___X_CMD_ROOT/.bin:$PATH"
+    PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
+    export ___X_CMD_ROOT
+    export PATH
 fi
 
 case "$___X_CMD_SHELL" in
