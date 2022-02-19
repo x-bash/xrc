@@ -491,7 +491,7 @@ ___x_cmd_which_one_with_naming(){
             # TODO: some future work for http
             case "$RESOURCE_NAME" in
 
-                */*)    ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME%%/}" ;;  # TODO: Why didn't you do this before? Need to review.
+                */*)    ;;  # Should no set alias function when is a path
                 *)      ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME}" ;;     # Only when it is a module name...
             esac
             # ___X_CMD_WHICH_ONE_NAMING="${RESOURCE_NAME##*/}"
