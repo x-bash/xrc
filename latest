@@ -129,6 +129,7 @@ ___x_cmd_source(){
     . "$@"
 }
 
+# TODO: xrc_log +xrc
 ___xrc_log(){
     local level="$1"; shift
     [ "$level" = debug ] && return
