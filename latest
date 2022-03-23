@@ -89,6 +89,9 @@ return 0
 
 # f
 
+___x_cmd_pidofsubshell(){
+    sh -c 'printf "%s\n" "$PPID"'
+}
 
 # EndSection
 
