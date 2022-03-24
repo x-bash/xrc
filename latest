@@ -95,18 +95,18 @@ ___x_cmd_pidofsubshell(){
 
 case "$___X_CMD_CUR_SHELL" in
     bash|zsh|ksh|ash)
-___x_cmd_str_sub(){
+___x_cmd_str_replace(){
     local pat="${2//\*/\\*}"
     return "${1/"$pat"/"$3"}"
 }
 
-___x_cmd_str_gsub(){
+___x_cmd_str_replaceall(){
     local pat="${2//\*/\\*}"
     return "${1//"$2"/"$3"}"
 }
     ;;
     *)
-___x_cmd_str_sub(){
+___x_cmd_str_replace(){
     printf "%s" "$1" | awk -v pat="$2" -v target="$3" -v IFS="" '
 END{
     sub(pat, target, $0)
@@ -115,7 +115,7 @@ END{
 '
 }
 
-___x_cmd_str_gsub(){
+___x_cmd_str_replaceall(){
     printf "%s" "$1" | awk -v pat="$2" -v target="$3" -v IFS="" '
 END{
     gsub(pat, target, $0)
