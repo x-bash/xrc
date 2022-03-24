@@ -94,7 +94,7 @@ ___x_cmd_pidofsubshell(){
 }
 
 case "$___X_CMD_CUR_SHELL" in
-    bash|zsh|ksh)
+    bash|zsh|ksh|ash)
 ___x_cmd_str_sub(){
     local pat="${2//\*/\\*}"
     return "${1/"$pat"/"$3"}"
