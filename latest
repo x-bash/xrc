@@ -93,6 +93,39 @@ ___x_cmd_pidofsubshell(){
     sh -c 'printf "%s\n" "$PPID"'
 }
 
+case "$___X_CMD_CUR_SHELL" in
+    bash|zsh|ksh)
+___x_cmd_str_sub(){
+    local pat="${2//\*/\\*}"
+    return "${1/"$pat"/"$3"}"
+}
+
+___x_cmd_str_gsub(){
+    local pat="${2//\*/\\*}"
+    return "${1//"$2"/"$3"}"
+}
+    ;;
+    *)
+___x_cmd_str_sub(){
+    printf "%s" "$1" | awk -v pat="$2" -v target="$3" -v IFS="" '
+END{
+    sub(pat, target, $0)
+    print $0
+}
+'
+}
+
+___x_cmd_str_gsub(){
+    printf "%s" "$1" | awk -v pat="$2" -v target="$3" -v IFS="" '
+END{
+    gsub(pat, target, $0)
+    print $0
+}
+'
+}
+    ;;
+esac
+
 # EndSection
 
 # Section 2: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
