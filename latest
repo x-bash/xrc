@@ -139,6 +139,7 @@ ___x_cmd_source_inner(){
     done
 }
 
+# deprecated
 alias xrc:inner=___x_cmd_source_inner
 
 alias xrc:mod=___x_cmd_source_inner
@@ -151,7 +152,9 @@ ___x_cmd_source_inner_lib(){
     done
 }
 
+# deprecated
 alias xrc:inner:lib=___x_cmd_source_inner_lib
+
 alias xrc:mod:lib=___x_cmd_source_inner_lib
 
 # TODO: xrc_log +xrc
@@ -175,7 +178,7 @@ if [ -z "$___X_CMD_ROOT" ]; then
     export PATH
 fi
 
-xrc:inner log/latest
+xrc:mod log/latest
 
 case "$___X_CMD_SHELL" in
     bash|zsh)
