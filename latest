@@ -142,7 +142,7 @@ ___x_cmd_source_inner(){
 alias xrc:inner=___x_cmd_source_inner
 
 ___x_cmd_source_inner_lib(){
-    local mod="${1:?Provide module name}"
+    local mod="${1:?Provide module name}"; shift
     while [ $# -gt 0 ]; do
         . "$___X_CMD_ROOT/$mod/lib/$1"
         shift
