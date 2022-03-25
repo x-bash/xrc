@@ -151,8 +151,6 @@ ___x_cmd_source_inner_lib(){
 
 alias xrc:inner:lib=___x_cmd_source_inner_lib
 
-xrc:inner log/latest
-
 # TODO: xrc_log +xrc
 ___xrc_log(){
     local level="$1"; shift
@@ -170,6 +168,8 @@ if [ -z "$___X_CMD_ROOT" ]; then
     export ___X_CMD_ROOT
     export PATH
 fi
+
+xrc:inner log/latest
 
 case "$___X_CMD_SHELL" in
     bash|zsh)
