@@ -903,7 +903,7 @@ if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
         local cache="${2}"
-        ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
+        ___xrc_log debug "curl --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
 
         if [ -z "$cache" ]; then
             exec 3>&1
