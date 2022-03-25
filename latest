@@ -141,6 +141,8 @@ ___x_cmd_source_inner(){
 
 alias xrc:inner=___x_cmd_source_inner
 
+alias xrc:mod=___x_cmd_source_inner
+
 ___x_cmd_source_inner_lib(){
     local mod="${1:?Provide module name}"; shift
     while [ $# -gt 0 ]; do
@@ -150,6 +152,7 @@ ___x_cmd_source_inner_lib(){
 }
 
 alias xrc:inner:lib=___x_cmd_source_inner_lib
+alias xrc:mod:lib=___x_cmd_source_inner_lib
 
 # TODO: xrc_log +xrc
 ___xrc_log(){
