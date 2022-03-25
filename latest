@@ -141,6 +141,8 @@ ___x_cmd_source_inner(){
 
 alias xrc:inner=___x_cmd_source_inner
 
+xrc:inner log/latest
+
 # TODO: xrc_log +xrc
 ___xrc_log(){
     local level="$1"; shift
