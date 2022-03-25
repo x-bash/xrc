@@ -132,10 +132,29 @@ ___x_cmd_source(){
     . "$@"
 }
 
+___x_cmd_source_inner(){
+    while [ $# -gt 0 ]; do
+        . "$___X_CMD_ROOT/$1"
+        shift
+    done
+}
+
+alias xrc:inner=___x_cmd_source_inner
+
+___x_cmd_source_inner_lib(){
+    local mod="${1:?Provide module name}"; shift
+    while [ $# -gt 0 ]; do
+        . "$___X_CMD_ROOT/$mod/lib/$1"
+        shift
+    done
+}
+
+alias xrc:inner:lib=___x_cmd_source_inner_lib
+
 # TODO: xrc_log +xrc
 ___xrc_log(){
     local level="$1"; shift
-    [ "$level" = debug ] && return
+    [ "$level" = debug ] && [ -z "$___X_CMD_XRC_LOG_DEBUG_MODE" ] && return
     printf "[%s]: %s\n" "$level" "$@" 1>&2
 }
 
@@ -152,6 +171,8 @@ if [ -z "$___X_CMD_ROOT" ]; then
     export ___X_CMD_ROOT
     export PATH
 fi
+
+xrc:inner log/latest
 
 case "$___X_CMD_SHELL" in
     bash|zsh)
@@ -243,7 +264,7 @@ ___x_cmd_httpget() {
         # redirect_path="$(dirname "$cache")/x-bash-temp-download.$RANDOM"
     fi
 
-    printf "URL is %s\n" "$url" >&2
+    ___xrc_log debug "URL is $url"
     if ___x_cmd_httpget_inner "$url" "$redirect_path"; then
         if [ -n "$cache" ]; then
             ___xrc_log debug "Copy the temp file to CACHE file: $cache"
@@ -538,7 +559,7 @@ ___x_cmd_which_one(){
             ;;
         *@*/*)
             xrc hub/latest
-            ___x_cmd_hub_file_which "$RESOURCE_NAME"     # Will set ___X_CMD_WHICH_ONE_RESOURCE_TYPE=1 if from unknow source
+            ___X_CMD_WHICH_ONE_RESULT="$(___x_cmd_hub_file_which "$RESOURCE_NAME")"     # Will set ___X_CMD_WHICH_ONE_RESOURCE_TYPE=1 if from unknow source
             ;;
         ./*|../*)
             ___xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
@@ -897,7 +918,7 @@ if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
         local cache="${2}"
-        ___xrc_log debug curl --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url"
+        ___xrc_log debug "curl --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
 
         if [ -z "$cache" ]; then
             exec 3>&1
