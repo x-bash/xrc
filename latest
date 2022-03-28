@@ -152,8 +152,6 @@ fi
 # TODO:Because it should be in the install script
 [ -z "$___X_CMD_ROOT_MOD" ] && ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
 
-xrc:mod log/latest
-
 ___x_cmd_source(){
     . "$@"
 }
@@ -169,6 +167,8 @@ ___x_cmd_source_inner(){
 alias xrc:inner=___x_cmd_source_inner
 
 alias xrc:mod=___x_cmd_source_inner
+
+xrc:mod log/latest
 
 ___x_cmd_source_inner_lib(){
     local mod="${1:?Provide module name}"; shift
