@@ -128,6 +128,32 @@ else
     alias ___x_cmd_shift1="shift ; "
 fi
 
+# TODO: xrc_log +xrc
+___xrc_log(){
+    local level="$1"; shift
+    [ "$level" = debug ] && [ -z "$___X_CMD_XRC_LOG_DEBUG_MODE" ] && return
+    printf "[%s]: %s\n" "$level" "$@" 1>&2
+}
+
+[ -z "$TMPDIR" ] && TMPDIR="$(dirname "$(mktemp -u)")/"     # It is posix standard. BUT NOT set in some cases.
+
+if [ -z "$___X_CMD_ROOT" ]; then
+    ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
+    ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
+    ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
+
+    ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
+    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
+    PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
+    export ___X_CMD_ROOT
+    export PATH
+fi
+
+# TODO:Because it should be in the install script
+[ -z "$___X_CMD_ROOT_MOD" ] && ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
+
+xrc:mod log/latest
+
 ___x_cmd_source(){
     . "$@"
 }
@@ -156,29 +182,6 @@ ___x_cmd_source_inner_lib(){
 alias xrc:inner:lib=___x_cmd_source_inner_lib
 
 alias xrc:mod:lib=___x_cmd_source_inner_lib
-
-# TODO: xrc_log +xrc
-___xrc_log(){
-    local level="$1"; shift
-    [ "$level" = debug ] && [ -z "$___X_CMD_XRC_LOG_DEBUG_MODE" ] && return
-    printf "[%s]: %s\n" "$level" "$@" 1>&2
-}
-
-[ -z "$TMPDIR" ] && TMPDIR="$(dirname "$(mktemp -u)")/"     # It is posix standard. BUT NOT set in some cases.
-
-if [ -z "$___X_CMD_ROOT" ]; then
-    ___X_CMD_ROOT="$HOME/.x-cmd"           # boot will be placed in "$HOME/.x-cmd/boot"
-    ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
-    ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
-
-    ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
-    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
-    PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
-    export ___X_CMD_ROOT
-    export PATH
-fi
-
-xrc:mod log/latest
 
 case "$___X_CMD_SHELL" in
     bash|zsh)
