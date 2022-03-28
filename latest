@@ -146,10 +146,10 @@ if [ -z "$___X_CMD_ROOT" ]; then
     [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
 
-    export ___X_CMD_ROOT
-    export ___X_CMD_ROOT_MOD
-    export ___X_CMD_ROOT_TMP
-    export PATH
+    # export ___X_CMD_ROOT
+    # export ___X_CMD_ROOT_MOD
+    # export ___X_CMD_ROOT_TMP
+    # export PATH
 fi
 
 ___x_cmd_source(){
