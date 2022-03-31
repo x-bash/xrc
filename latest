@@ -4,6 +4,10 @@
 # license:      GPLv3
 
 
+# Section 0: Prepare source 0
+
+# EndSection
+
 # Section 1: utils: search_path
 ___x_cmd_search_path(){
     local cur="${1:?Provide starting path}"
@@ -143,7 +147,6 @@ ___xrc_log(){
     ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
     ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
 
-    ___xrc_log debug "Setting env ___X_CMD_ROOT: $___X_CMD_ROOT"
     [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
 
