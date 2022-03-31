@@ -335,12 +335,12 @@ xrc(){
         ""|help)                cat "$___X_CMD_ROOT_MOD/xrc/lib/help/main.txt" >&2 ;;
         root)                   printf "%s" "$___X_CMD_ROOT" ;;
         mirror)                 ___x_cmd_mirror "$@" ;;
-        export-all)             xrc:mod xrc/lib/export; ___x_cmd_xrc_export_all "$@" ;;
-        update)                 xrc:mod xrc/lib/update; ___x_cmd_xrc_update "$@" ;;
-        upgrade)                xrc:mod xrc/lib/upgrade ;;
+        export-all)             xrc:mod xrc/lib/export && ___x_cmd_xrc_export_all "$@" ;;
+        update)                 xrc:mod xrc/lib/update && ___x_cmd_xrc_update "$@" ;;
+        upgrade)                xrc:mod xrc/lib/upgrade && ___x_cmd_xrc_upgrade "$@" ;;
         ls)                     ls "$___X_CMD_ROOT" ;;                      # If tar.gz, using tar ls. If folder, ls $folder
         setmain)                ___x_cmd_xrc_set_main "$@" ;;
-        reload)                 xrc:mod xrc/lib/reload; ___x_cmd_reload "$@" ;;
+        reload)                 xrc:mod xrc/lib/reload && ___x_cmd_reload "$@" ;;
         _x_cmd_advise_json)     xrc cat xrc/lib/xrc.json; return 126 ;;
         *)                      ___x_cmd_xrc_source_file "$subcmd" "$@";    return
     esac
