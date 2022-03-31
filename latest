@@ -320,7 +320,7 @@ xrc(){
                 ___x_cmd_xrc_cat "$@"
                 return
             fi
-            cat "$___X_CMD_ROOT_MOD/lib/help/cat.txt" >&2
+            cat "$___X_CMD_ROOT_MOD/xrc/lib/help/cat.txt" >&2
             return 1
             ;;
         which)
@@ -329,10 +329,10 @@ xrc(){
                 printf "%s" "$___X_CMD_WHICH_ONE_RESULT"
                 return
             fi
-            cat "$___X_CMD_ROOT_MOD/lib/help/which.txt" >&2
+            cat "$___X_CMD_ROOT_MOD/xrc/lib/help/which.txt" >&2
             return 1
             ;;
-        ""|help)                cat "$___X_CMD_ROOT_MOD/lib/help/main.txt" >&2 ;;
+        ""|help)                cat "$___X_CMD_ROOT_MOD/xrc/lib/help/main.txt" >&2 ;;
         root)                   printf "%s" "$___X_CMD_ROOT" ;;
         mirror)                 ___x_cmd_mirror "$@" ;;
         export-all)             xrc:mod xrc/lib/export; ___x_cmd_xrc_export_all "$@" ;;
@@ -340,7 +340,7 @@ xrc(){
         upgrade)                xrc:mod xrc/lib/upgrade ;;
         ls)                     ls "$___X_CMD_ROOT" ;;                      # If tar.gz, using tar ls. If folder, ls $folder
         setmain)                ___x_cmd_xrc_set_main "$@" ;;
-        reload)                 ___x_cmd_reload "$@" ;;
+        reload)                 xrc:mod xrc/lib/reload; ___x_cmd_reload "$@" ;;
         _x_cmd_advise_json)     xrc cat xrc/lib/xrc.json; return 126 ;;
         *)                      ___x_cmd_xrc_source_file "$subcmd" "$@";    return
     esac
@@ -349,6 +349,8 @@ xrc(){
 
 # Section 6: other initialization: advise, lazy loading: x, ldict, awk
 x(){    unset -f x; xrc reload x-cmd/latest && x "$@";    }
+
+# xrc:mod x-cmd/latest
 
 if ___x_cmd_is_suitable_advise_env; then
     x:debug "Using module advise for completion."
