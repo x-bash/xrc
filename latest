@@ -315,10 +315,7 @@ xrc(){
     [ $# -eq 0 ] && set -- "help"
     local subcmd="$1";  shift
     case "$subcmd" in
-        ""|help)
-            cat "$___X_CMD_ROOT_MOD/lib/help/main.txt" >&2
-            ;;
-        c|cat)
+        cat)
             if [ $# -gt 0 ]; then
                 ___x_cmd_xrc_cat "$@"
                 return
@@ -326,7 +323,7 @@ xrc(){
             cat "$___X_CMD_ROOT_MOD/lib/help/cat.txt" >&2
             return 1
             ;;
-        w|which)
+        which)
             if [ $# -gt 0 ]; then
                 ___X_CMD_NO_LOCAL=1 ___x_cmd_which_one "$@"
                 printf "%s" "$___X_CMD_WHICH_ONE_RESULT"
@@ -335,6 +332,7 @@ xrc(){
             cat "$___X_CMD_ROOT_MOD/lib/help/which.txt" >&2
             return 1
             ;;
+        ""|help)                cat "$___X_CMD_ROOT_MOD/lib/help/main.txt" >&2 ;;
         root)                   printf "%s" "$___X_CMD_ROOT" ;;
         mirror)                 ___x_cmd_mirror "$@" ;;
         export-all)             xrc:mod xrc/lib/export; ___x_cmd_xrc_export_all "$@" ;;
