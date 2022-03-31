@@ -1,11 +1,55 @@
-# shellcheck shell=sh disable=SC2039,SC1090,SC3043,SC2263
+# Author:       Li Junhao       l@x-cmd.com
+# shellcheck    shell=sh        disable=SC2039,SC1090,SC3043,SC2263
 
-# author:       Li Junhao           l@x-cmd.com
 # license:      GPLv3
 
-
 # Section 0: Prepare source 0
+{
+# if [ -z "$___X_CMD_ROOT" ]; then
+    ___X_CMD_ROOT="${___X_CMD_ROOT:-$HOME/.x-cmd}"           # boot will be placed in "$HOME/.x-cmd/boot"
+    ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
+    ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
 
+    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
+    PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
+
+    # export ___X_CMD_ROOT
+    # export ___X_CMD_ROOT_MOD
+    # export ___X_CMD_ROOT_TMP
+    # export PATH
+# fi
+}
+
+___x_cmd_source(){
+    . "$@"
+}
+
+___x_cmd_source_inner(){
+    while [ $# -gt 0 ]; do
+        . "$___X_CMD_ROOT_MOD/$1"
+        shift
+    done
+}
+
+# deprecated
+alias xrc:inner=___x_cmd_source_inner
+
+alias xrc:mod=___x_cmd_source_inner
+
+xrc:mod log/latest
+
+___x_cmd_source_inner_lib(){
+    local mod="${1:?Provide module name}"; shift
+    while [ $# -gt 0 ]; do
+        . "$___X_CMD_ROOT_MOD/$mod/lib/$1"
+        shift
+    done
+}
+
+# deprecated
+alias xrc:inner:lib=___x_cmd_source_inner_lib
+
+alias xrc:mod:lib=___x_cmd_source_inner_lib
 # EndSection
 
 # Section 1: utils: search_path
@@ -140,53 +184,6 @@ ___xrc_log(){
 }
 
 [ -z "$TMPDIR" ] && TMPDIR="$(dirname "$(mktemp -u)")/"     # It is posix standard. BUT NOT set in some cases.
-
-{
-# if [ -z "$___X_CMD_ROOT" ]; then
-    ___X_CMD_ROOT="${___X_CMD_ROOT:-$HOME/.x-cmd}"           # boot will be placed in "$HOME/.x-cmd/boot"
-    ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
-    ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
-
-    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
-    PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
-
-    # export ___X_CMD_ROOT
-    # export ___X_CMD_ROOT_MOD
-    # export ___X_CMD_ROOT_TMP
-    # export PATH
-# fi
-}
-
-___x_cmd_source(){
-    . "$@"
-}
-
-___x_cmd_source_inner(){
-    while [ $# -gt 0 ]; do
-        . "$___X_CMD_ROOT_MOD/$1"
-        shift
-    done
-}
-
-# deprecated
-alias xrc:inner=___x_cmd_source_inner
-
-alias xrc:mod=___x_cmd_source_inner
-
-xrc:mod log/latest
-
-___x_cmd_source_inner_lib(){
-    local mod="${1:?Provide module name}"; shift
-    while [ $# -gt 0 ]; do
-        . "$___X_CMD_ROOT_MOD/$mod/lib/$1"
-        shift
-    done
-}
-
-# deprecated
-alias xrc:inner:lib=___x_cmd_source_inner_lib
-
-alias xrc:mod:lib=___x_cmd_source_inner_lib
 
 case "$___X_CMD_SHELL" in
     bash|zsh)
