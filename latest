@@ -11,7 +11,7 @@
     ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
 
     [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
-    PATH="$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
+    PATH="$___X_CMD_ROOT/.bin:$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
 
     # export ___X_CMD_ROOT
     # export ___X_CMD_ROOT_MOD
