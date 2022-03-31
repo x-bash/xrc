@@ -137,3 +137,12 @@ esac
 #     [ "$level" = debug ] && [ -z "$___X_CMD_XRC_LOG_DEBUG_MODE" ] && return
 #     printf "[%s]: %s\n" "$level" "$@" 1>&2
 # }
+
+
+___x_cmd_llist(){
+    xrc xrc/lib/llist && ___x_cmd_llist "$@" ;
+}
+
+___x_cmd_awk(){
+    xrc awk/latest && ___x_cmd_awk "$@"
+}
