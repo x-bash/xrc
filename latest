@@ -87,7 +87,7 @@ ___x_cmd_log init x
 xrc:mod:lib xrc         util  mirror httpget ldict
 # EndSection
 
-# Section 6: main entrance helper: xrc_set_main, which_one, which_one_with_naming
+# Section 3: main entrance helper: xrc_set_main, which_one, which_one_with_naming
 ___x_cmd_xrc_set_main(){
     ___X_CMD_XRC_SET_MAIN="${1:?Provide function}"
 }
@@ -208,7 +208,7 @@ ___x_cmd_which_one(){
 }
 # EndSection
 
-# Section 7: main entrance helper: cat, source_file
+# Section 4: main entrance helper: cat, source_file
 ___x_cmd_xrc_cat(){
     while [ $# -ne 0 ]; do
         local ___X_CMD_LOCAL_XRCPATH="$1";   shift
@@ -308,7 +308,7 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
 # EndSection
 
-# Section 8: main entrance
+# Section 5: main entrance
 
 # shellcheck disable=SC1091
 xrc(){
@@ -412,7 +412,7 @@ A
 }
 # EndSection
 
-# Section 9: other initialization: advise, lazy loading: x, ldict, awk
+# Section 6: other initialization: advise, lazy loading: x, ldict, awk
 x(){    unset -f x; xrc reload x-cmd/latest && x "$@";    }
 
 if ___x_cmd_is_suitable_advise_env; then
