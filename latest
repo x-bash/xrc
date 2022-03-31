@@ -36,8 +36,6 @@ alias xrc:inner=___x_cmd_source_inner
 
 alias xrc:mod=___x_cmd_source_inner
 
-xrc:mod log/latest
-
 ___x_cmd_source_inner_lib(){
     local mod="${1:?Provide module name}"; shift
     while [ $# -gt 0 ]; do
@@ -52,98 +50,7 @@ alias xrc:inner:lib=___x_cmd_source_inner_lib
 alias xrc:mod:lib=___x_cmd_source_inner_lib
 # EndSection
 
-# Section 1: utils: search_path
-___x_cmd_search_path(){
-    local cur="${1:?Provide starting path}"
-    cur="$(cd "$cur" 1>/dev/null 2>&1 && pwd)"
-
-    local relative_filepath="${2:?Provide relative filepath}"
-    while [ ! "$cur" = "" ]; do
-        if [ -f "$cur/$relative_filepath" ]; then
-            printf "%s" "$cur"
-            return 0
-        fi
-        cur=${cur%/*}
-    done
-    return 1
-}
-
-___x_cmd_is_interative_tty(){
-    [ "${-#*i}" != "$-" ]
-}
-
-___x_cmd_is_suitable_advise_env(){
-    [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
-}
-
-___x_cmd_readlink_recursive(){
-    if [ -L "${1:?Provide link}" ]; then
-        local next_link
-        next_link="$(readlink "${1}")" || return
-        if [ "${next_link#/}" = "$next_link" ]; then
-            next_link="$(dirname "${1}")/$next_link"
-        fi
-        ___x_cmd_readlink_recursive "$next_link"
-    else
-        [ ! -e "${1}" ] && return 1        # File Not Exists
-        printf "%s" "$1"
-    fi
-}
-
-___x_cmd_definelazyloader(){
-    local funcname="${1:?Provide function name}"
-    local respath="${2:?Provide resource path}"
-    eval "$funcname(){
-        if [ \"\$___X_CMD_DEFINELAZYLOADER\" = \"$funcname\" ]; then
-            printf \"No such function [%s] in [%s]\" \"$funcname\" \"$respath\"
-            return 1
-        fi
-
-        if ! xrc $respath; then
-            printf \"Fail to xrc: %s\" \"$respath\"
-            return 1
-        fi
-
-        local ___X_CMD_DEFINELAZYLOADER=$funcname
-        $funcname \"\$@\"
-    }"
-}
-
-# VAR   SEP    IT
-___x_cmd_trimutil(){
-    eval "
-[ -z \"\$${O}\" ] && return 1
-IT=\"\${${O}%%${SEP:-
-}*}\"
-if [ \"\${IT}\" = \"\${$O}\" ]; then
-    $O=\"\"
-else
-    $O=\"\${${O}#*${SEP:-
-}}\"
-fi
-return 0
-"
-}
-
-# f(){
-#     local IT
-#     local SEP=,
-#     local a
-#     a="abc,cde,eft"
-#     while O=a ___x_cmd_trimutil; do
-#         printf "%s\n" "$IT"
-#     done
-# }
-
-# f
-
-___x_cmd_pidofsubshell(){
-    sh -c 'printf "%s\n" "$PPID"'
-}
-
-# EndSection
-
-# Section 2: get ___X_CMD_SHELL, ___xrc_log, ___x_cmd_source, ___x_cmd_shift1
+# Section 1: get ___X_CMD_SHELL
 if [ -n "$BASH_VERSION" ]; then
     ___X_CMD_SHELL=bash
     shopt -s expand_aliases
@@ -169,56 +76,16 @@ else
 fi
 ___X_CMD_CUR_SHELL="${___X_CMD_SHELL:-sh}"      # TODO: will remove
 
-# To prevent dash inline environment problem: just for dash
-if [ "$___X_CMD_SHELL" = dash ]; then
-    alias ___x_cmd_shift1='[ $# -gt 0 ] && shift ; '
-else
-    alias ___x_cmd_shift1="shift ; "
-fi
-
-# TODO: xrc_log +xrc
-___xrc_log(){
-    local level="$1"; shift
-    [ "$level" = debug ] && [ -z "$___X_CMD_XRC_LOG_DEBUG_MODE" ] && return
-    printf "[%s]: %s\n" "$level" "$@" 1>&2
-}
-
 [ -z "$TMPDIR" ] && TMPDIR="$(dirname "$(mktemp -u)")/"     # It is posix standard. BUT NOT set in some cases.
 
-case "$___X_CMD_SHELL" in
-    bash|zsh)
-___x_cmd_q1(){
-    printf "'%s'" "${1//\'/\\\'}"
-}
+# EndSection
 
-___x_cmd_q2(){
-    printf "\"%s\"" "${1//\"/\\\"}"
-}
-    ;;
-    *)
-___x_cmd_q1(){
-    awk '
-BEGIN{ RS="\001"; S="'\''"; }
-{
-    gsub(S, "\\" S, $0)
-    printf(S "%s" S, $0)
-}' <<A
-$1
-A
-}
+# Section 2: facility, utils: search_path
 
-___x_cmd_q2(){
-    awk '
-BEGIN{ RS="\001"; S="\""; }
-{
-    gsub(S, "\\" S, $0)
-    printf(S "%s" S, $0)
-}' <<A
-$1
-A
-}
-    ;;
-esac
+xrc:mod log/latest
+___x_cmd_log init x
+
+xrc:mod:lib xrc         util
 
 # EndSection
 
@@ -232,13 +99,13 @@ ___x_cmd_httpget_handle_resp_header(){
     http_code="$(awk 'NR==1{ printf("%s", $2); }')"
     case "$http_code" in
         20*)    return 0 ;;
-        40*)    ___xrc_log debug "HTTP_CODE: $http_code. Fail to retrieve file from: $url"
+        40*)    x:debug "HTTP_CODE: $http_code. Fail to retrieve file from: $url"
                 return 4 ;;     # TODO: consider using exit code 70
-        "")     ___xrc_log debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $url"
+        "")     x:debug "Return code: $code. HTTP_CODE Unavialable. Fail to retrieve file from: $url"
                 return 1 ;;
-        5*)     ___xrc_log debug "Return code: $code. Server internal error. Fail to retrieve file from: $url"
+        5*)     x:debug "Return code: $code. Server internal error. Fail to retrieve file from: $url"
                 return 5 ;;     # TODO: consider using exit code 69
-        *)      ___xrc_log debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $url"
+        *)      x:debug "Unknow error. HTTP_CODE: $http_code. Fail to retrieve file from: $url"
                 return 2 ;;
     esac
 }
@@ -255,14 +122,14 @@ ___x_cmd_httpget() {
             # days
             case "$cache_expiration" in
                 "") # infinite time
-                    ___xrc_log debug "Function ___x_cmd_httpget() terminated. Because local cache existed with update flag unset: $cache"
+                    x:debug "Function ___x_cmd_httpget() terminated. Because local cache existed with update flag unset: $cache"
                     return 0
                     ;;
                 -)  # force update
                     ;;
                 *)  # days
                     if [ -n "$(find "$cache" -mtime "-$cache_expiration" 2>/dev/null)" ]; then
-                        ___xrc_log debug "Function ___x_cmd_httpget() terminated. Because local cache existed within days: $cache_expiration"
+                        x:debug "Function ___x_cmd_httpget() terminated. Because local cache existed within days: $cache_expiration"
                         return 0
                     fi
             esac
@@ -275,10 +142,10 @@ ___x_cmd_httpget() {
         # redirect_path="$(dirname "$cache")/x-bash-temp-download.$RANDOM"
     fi
 
-    ___xrc_log debug "URL is $url"
+    x:debug "URL is $url"
     if ___x_cmd_httpget_inner "$url" "$redirect_path"; then
         if [ -n "$cache" ]; then
-            ___xrc_log debug "Copy the temp file to CACHE file: $cache"
+            x:debug "Copy the temp file to CACHE file: $cache"
             mv "$redirect_path" "$cache"
         fi
     else
@@ -313,7 +180,7 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
 
         case $? in
             0)  if [ "$lineno" -ne 1 ]; then
-                    ___xrc_log debug "Current default mirror is $mirror"
+                    x:debug "Current default mirror is $mirror"
                     ___x_cmd_mirror "$mirror" "$(printf "%s" "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
 
                     # Set CHINA_NET FLAG
@@ -323,12 +190,12 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
                     esac
                 fi
                 return 0;;
-            1)  ___xrc_log debug "Network unavailable."
+            1)  x:debug "Network unavailable."
                 return 1;;
-            4)  ___xrc_log debug "Resource Not Found."
+            4)  x:debug "Resource Not Found."
                 return 4;;
             *)
-                ___xrc_log debug "Network unavailable Or Mirror is down: $urlpath"
+                x:debug "Network unavailable Or Mirror is down: $urlpath"
                 return 1;;
         esac
         lineno=$((lineno+1))
@@ -551,18 +418,18 @@ ___x_cmd_which_one(){
     local TGT
     case "$RESOURCE_NAME" in
         /*)
-            ___xrc_log debug "Resource recognized as local file: $RESOURCE_NAME"
+            x:debug "Resource recognized as local file: $RESOURCE_NAME"
             ___X_CMD_WHICH_ONE_RESOURCE_TYPE=local
             ___X_CMD_WHICH_ONE_RESULT="$RESOURCE_NAME"
             return 0
             ;;
         http://*|https://*)
             ___X_CMD_WHICH_ONE_RESOURCE_TYPE=http
-            ___xrc_log debug "Resource recognized as http resource: $RESOURCE_NAME"
+            x:debug "Resource recognized as http resource: $RESOURCE_NAME"
 
             TGT="$___X_CMD_ROOT/.http_resource/BASE64-URL-$(printf "%s" "$RESOURCE_NAME" | base64 | tr -d '\r\n')"
             if ! CACHE="$TGT" ___x_cmd_httpget "$RESOURCE_NAME"; then
-                ___xrc_log debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
+                x:debug "ERROR: Fail to load http resource due to network error or other: $RESOURCE_NAME "
                 return 1
             else
                 ___X_CMD_WHICH_ONE_RESULT="$TGT"
@@ -573,14 +440,14 @@ ___x_cmd_which_one(){
             ___X_CMD_WHICH_ONE_RESULT="$(___x_cmd_hub_file_which "$RESOURCE_NAME")"     # Will set ___X_CMD_WHICH_ONE_RESOURCE_TYPE=1 if from unknow source
             ;;
         ./*|../*)
-            ___xrc_log debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
+            x:debug "Resource recognized as local file with relative path: $RESOURCE_NAME"
             local tmp
             if tmp="$(cd "$(dirname "$RESOURCE_NAME")" || exit 1; pwd)"; then
                 ___X_CMD_WHICH_ONE_RESOURCE_TYPE=local
                 ___X_CMD_WHICH_ONE_RESULT="$tmp/$(basename "$RESOURCE_NAME")"
                 return 0
             else
-                ___xrc_log warn "Local file not exists: $RESOURCE_NAME"
+                x:warn "Local file not exists: $RESOURCE_NAME"
                 return 1
             fi
             ;;
@@ -602,11 +469,11 @@ ___x_cmd_which_one(){
 
             ___X_CMD_WHICH_ONE_RESOURCE_TYPE=official
             # x-bash module
-            ___xrc_log debug "Resource recognized as x-bash module: $RESOURCE_NAME"
+            x:debug "Resource recognized as x-bash module: $RESOURCE_NAME"
             local module="$RESOURCE_NAME"
             if [ "${RESOURCE_NAME#*/}" = "$RESOURCE_NAME" ] ; then
                 module="$module/latest"         # If it is short alias like str (short for str/latest)
-                ___xrc_log debug "Version suffix unavailable. Using \"latest\" by default: $module"
+                x:debug "Version suffix unavailable. Using \"latest\" by default: $module"
             fi
 
             TGT="$___X_CMD_ROOT/$module"
@@ -614,16 +481,16 @@ ___x_cmd_which_one(){
                 ___X_CMD_WHICH_ONE_RESULT="$TGT"
                 return 0
             fi
-            # ___xrc_log debug "Module not found: $module"
+            # x:debug "Module not found: $module"
             # return 1
 
-            ___xrc_log info "Downloading resource=$RESOURCE_NAME to local cache: $TGT"
+            x:info "Downloading resource=$RESOURCE_NAME to local cache: $TGT"
             if ___x_cmd_httpget_gitx_official "mod/$module" "$TGT"; then
                 ___X_CMD_WHICH_ONE_RESULT="$TGT"
                 return 0
             fi
 
-            ___xrc_log warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+            x:warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
             return 1
     esac
 }
@@ -837,7 +704,7 @@ A
 x(){    unset -f x; xrc reload x-cmd/latest && x "$@";    }
 
 if ___x_cmd_is_suitable_advise_env; then
-    ___xrc_log debug "Using module advise for completion."
+    x:debug "Using module advise for completion."
     xrc advise/latest && advise init xrc && advise init x
 fi
 
@@ -929,7 +796,7 @@ if command -v curl >/dev/null; then
     ___x_cmd_httpget_inner(){
         local url="${1:?Provide url}"
         local cache="${2}"
-        ___xrc_log debug "curl --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
+        x:debug "curl --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
 
         if [ -z "$cache" ]; then
             exec 3>&1
