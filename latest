@@ -316,28 +316,14 @@ xrc(){
     local subcmd="$1";  shift
     case "$subcmd" in
         ""|help)
-            printf "xrc     x-bash core function.
-    Uasge:  xrc <lib> [<lib>...]
-    Please visit our homepage for more information: https://x-cmd.com
-SUBCOMMAND:
-    cat|c           Show the script in text form.
-    which|w         Download lib files and print the local path.
-    update|u        Update file.
-    cache           Provide cache filepath.
-    clear           Clear the cache.
-    ls              Show the cache modules.
-" >&2
+            cat "$___X_CMD_ROOT_MOD/lib/help/main.txt" >&2
             ;;
         c|cat)
             if [ $# -gt 0 ]; then
                 ___x_cmd_xrc_cat "$@"
                 return
             fi
-            cat >&2 <<A
-xrc cat         Show the script in text form
-    Uasge:  xrc  cat <lib> [<lib>...]
-    Example: eval "$(xrc cat str)"
-A
+            cat "$___X_CMD_ROOT_MOD/lib/help/cat.txt" >&2
             return 1
             ;;
         w|which)
@@ -346,68 +332,19 @@ A
                 printf "%s" "$___X_CMD_WHICH_ONE_RESULT"
                 return
             fi
-            cat >&2 <<A
-xrc which       Download lib files and print the local path.
-    Uasge:  xrc which <lib> [<lib>...]
-    Example: source "$(xrc which str)"
-A
+            cat "$___X_CMD_ROOT_MOD/lib/help/which.txt" >&2
             return 1
             ;;
-        root)
-            printf "%s" "$___X_CMD_ROOT"
-            ;;
-        mirror)
-            ___x_cmd_mirror "$@"
-            ;;
-        export-all)
-            ( xrc x-bash/xrc/lib/export &&  ___x_cmd_xrc_export_all "$@" )
-            ;;
-        update)
-            local CACHE="$___X_CMD_ROOT/all.tgz"
-            # rm -rf "$___X_CMD_ROOT" # Dangerous.
-            local codesrc="${1:-$___X_CMD_CODESORUCE_REPO}"
-            case "$codesrc" in
-                x-cmd|dev|nightly)    ;;
-                *)      printf "%s\n" "Exit because of unknown code src: $codesrc" >&2 ;;
-            esac
-
-            if ___x_cmd_httpget_gitx x-cmd "$codesrc" main "dist/all.tgz" "$CACHE" -; then
-                (cd "$___X_CMD_ROOT" && tar xvf "$CACHE")
-                rm "$CACHE"
-                rm "$___X_CMD_ROOT/.boot/boot" && x boot setup
-                ___X_CMD_XRC_MODULE_IMPORTED=
-                ___x_cmd_source "$___X_CMD_ROOT"/xrc/latest
-            fi
-            ;;
-        upgrade)
-            ___X_CMD_XRC_MODULE_IMPORTED=
-            rm -f "$___X_CMD_ROOT/.boot/boot" && eval "$(curl https://get.x-cmd.com)"
-            ;;
-        log)
-            printf "WARN: xrc log deprecated, you should using 'x log' instead\n" >&2
-            x log "$@"
-            ;;
-        ls)
-            ls "$___X_CMD_ROOT"
-            ;;  # If tar.gz, using tar ls. If folder, ls $folder
-        setmain)
-            ___x_cmd_xrc_set_main "$@"
-            ;;
-        reload)
-            local ___X_CMD_XRC_RELOAD=1
-            if [ "$#" -gt 0 ]; then
-                ___x_cmd_xrc_source_file "$@"
-            else
-                ___x_cmd_xrc_source_file xrc/latest
-            fi
-            ;;
-        _x_cmd_advise_json)
-            xrc cat xrc/lib/xrc.json
-            return 126
-            ;;
-        *)
-            ___x_cmd_xrc_source_file "$subcmd" "$@"
-            return
+        root)                   printf "%s" "$___X_CMD_ROOT" ;;
+        mirror)                 ___x_cmd_mirror "$@" ;;
+        export-all)             xrc:mod xrc/lib/export; ___x_cmd_xrc_export_all "$@" ;;
+        update)                 xrc:mod xrc/lib/update; ___x_cmd_xrc_update "$@" ;;
+        upgrade)                xrc:mod xrc/lib/upgrade ;;
+        ls)                     ls "$___X_CMD_ROOT" ;;                      # If tar.gz, using tar ls. If folder, ls $folder
+        setmain)                ___x_cmd_xrc_set_main "$@" ;;
+        reload)                 ___x_cmd_reload "$@" ;;
+        _x_cmd_advise_json)     xrc cat xrc/lib/xrc.json; return 126 ;;
+        *)                      ___x_cmd_xrc_source_file "$subcmd" "$@";    return
     esac
 }
 # EndSection
