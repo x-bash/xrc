@@ -50,6 +50,14 @@ alias xrc:inner:lib=___x_cmd_source_inner_lib
 alias xrc:mod:lib=___x_cmd_source_inner_lib
 # EndSection
 
+# Section 1: special chars
+___X_CMD_SPECIALCHAR_001=""
+___X_CMD_SPECIALCHAR_002=""
+___X_CMD_SPECIALCHAR_003=""
+___X_CMD_SPECIALCHAR_NEWLINE="
+"
+# EndSection
+
 # Section 1: get ___X_CMD_SHELL and TMPDIR
 if [ -n "$BASH_VERSION" ]; then
     ___X_CMD_SHELL=bash
