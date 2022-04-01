@@ -366,7 +366,8 @@ xrc:mod x-cmd/latest
 
 if ___x_cmd_is_suitable_advise_env; then
     x:debug "Using module advise for completion."
-    x advise init xrc
+    command -v ___x_cmd_advise 2>/dev/null || xrc advise
+    ___x_cmd_advise init xrc
 fi
 
 alias xws="x ws"
