@@ -360,14 +360,14 @@ xrc(){
 }
 # EndSection
 
-if ___x_cmd_is_suitable_advise_env; then
-    x:debug "Using module advise for completion."
-    xrc advise/latest && advise init xrc # && advise init x
-fi
-
 # Section 6: other initialization: advise, lazy loading: x, ldict, awk
 # x(){    unset -f x; xrc reload x-cmd/latest && x "$@";    }
 xrc:mod x-cmd/latest
+
+if ___x_cmd_is_suitable_advise_env; then
+    x:debug "Using module advise for completion."
+    xrc advise/latest && advise init xrc && advise init x
+fi
 
 alias xws="x ws"
 alias xdev="x dev"
