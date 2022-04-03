@@ -147,7 +147,7 @@ ___x_cmd_awk(){
     xrc awk/latest && ___x_cmd_awk "$@"
 }
 
-___x_cmd_eval_or_exec(){
+___x_cmd_eval(){
     if [ "$#" -lt 2 ]; then
         eval "${1:-:}"
     else
