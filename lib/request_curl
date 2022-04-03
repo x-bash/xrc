@@ -33,8 +33,8 @@ ___x_cmd_http___not_secure_request_handler(){
     cat >"$file"
 }
 
-# Test: ___x_cmd_http_not_secure_get gitee.com/ a.txt
-___x_cmd_http_not_secure_get(){
+# Test: ___x_cmd_http___not_secure_get gitee.com/ a.txt
+___x_cmd_http___not_secure_get(){
     local path="${1:?Provide path}"
     local file="${2:?Provide cache file}"
 
@@ -68,7 +68,7 @@ ___x_cmd_http_not_secure_get(){
     ___x_cmd_http_not_secure_request | ___x_cmd_http___not_secure_request_handler "$file"| ___x_cmd_httpget_handle_resp_header "$file" "$code"
 }
 
-___x_cmd_http_download_curl(){
+___x_cmd_http___download_curl(){
     xrc os
     local arch
     arch="$(os arch)"
@@ -86,7 +86,7 @@ ___x_cmd_http_download_curl(){
     esac
     if [ ! -e "$target/$app" ];then
         mkdir -p "$target"
-        ___x_cmd_http_not_secure_get "http://$url/$app.tar.gz" "$target/$app.tar.gz" 2>/dev/stdout || return 1
+        ___x_cmd_http___not_secure_get "http://$url/$app.tar.gz" "$target/$app.tar.gz" 2>/dev/stdout || return 1
         local tarsha
         tarsha="$(sha256sum "$target"/"$app".tar.gz)"
         [ "$sha" = "${tarsha%% *}" ] && tar zxvf "$target/$app.tar.gz" -C "$target" && return 0
