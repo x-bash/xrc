@@ -30,6 +30,7 @@ if [ "$___X_CMD_IN_CHINA_NET" = 1 ] || [ "$___X_CMD_WHICHNET" = cn ]; then
             "https://raw.githubusercontent.com/%s/%s/%s/%s"
 fi
 
+___x_cmd_mirror
 case "${___X_CMD_MIRROR_LIST%%
 *}" in
     *gitee*|*codechina*)        ___X_CMD_IN_CHINA_NET=1 ;   ___X_CMD_WHICHNET=cn ;;
