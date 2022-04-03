@@ -1,4 +1,5 @@
 pt="$(x wsroot)/latest"
-time . "$pt"
+time bash <<A
+. "$pt"
+A
 
-___x_cmd_is_suitable_advise_env && echo advise-load
