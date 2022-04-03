@@ -16,8 +16,11 @@ ___x_cmd_ldict(){
 
 alias ldict="___x_cmd_ldict"
 
-___X_CMD_LDICT_SEP="$(printf "\001")"
-___X_CMD_LDICT_KVSEP="$(printf "\002")"
+# ___X_CMD_LDICT_SEP="$(printf "\001")"
+# ___X_CMD_LDICT_KVSEP="$(printf "\002")"
+
+___X_CMD_LDICT_SEP="$___X_CMD_UNSEENCHAR_003"
+___X_CMD_LDICT_KVSEP="$___X_CMD_UNSEENCHAR_004"
 
 ___x_cmd_ldict_unshift(){
     local name="${1:?Provide dict name}"
