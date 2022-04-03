@@ -75,8 +75,7 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
 
     local IFS
 
-    local mirror_list
-    mirror_list="$(___x_cmd_mirror)"
+    ___x_cmd_mirror     # Reload ___X_CMD_MIRROR_LIST
 
     local mirror
     local lineno=1
@@ -89,7 +88,7 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
         case $? in
             0)  if [ "$lineno" -ne 1 ]; then
                     x:debug "Current default mirror is $mirror"
-                    ___x_cmd_mirror "$mirror" "$(printf "%s" "$mirror_list" | awk "NR!=$lineno{ print \$0 }" )"
+                    ___x_cmd_mirror "$mirror" "$(printf "%s" "$___X_CMD_MIRROR_LIST" | awk "NR!=$lineno{ print \$0 }" )"
 
                     # Set CHINA_NET FLAG
                     case "$mirror" in
@@ -108,7 +107,7 @@ ___x_cmd_httpget_gitx(){   # Simple strategy
         esac
         lineno=$((lineno+1))
     done <<A
-${mirror_list}
+$___X_CMD_MIRROR_LIST
 A
     return 1
 }

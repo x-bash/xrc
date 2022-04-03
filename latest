@@ -347,7 +347,7 @@ xrc(){
             ;;
         ""|help)                cat "$___X_CMD_ROOT_MOD/xrc/lib/help/main.txt" >&2 ;;
         root)                   printf "%s" "$___X_CMD_ROOT" ;;
-        mirror)                 ___x_cmd_mirror "$@" ;;
+        mirror)                 ___x_cmd_mirror "$@"; printf "%s\n" "$___X_CMD_MIRROR_LIST" ;;
         export-all)             xrc:mod xrc/lib/export && ___x_cmd_xrc_export_all "$@" ;;
         update)                 xrc:mod xrc/lib/update && ___x_cmd_xrc_update "$@" ;;
         upgrade)                xrc:mod xrc/lib/upgrade && ___x_cmd_xrc_upgrade "$@" ;;
