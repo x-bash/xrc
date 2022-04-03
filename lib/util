@@ -18,8 +18,9 @@ ___x_cmd_is_interative_tty(){
     [ "${-#*i}" != "$-" ]
 }
 
+___X_CMD_ADVISE_DISABLE=1
 ___x_cmd_is_suitable_advise_env(){
-    [ -z "$XRC_NO_ADVISE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
+    [ -z "$___X_CMD_ADVISE_DISABLE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
 }
 
 ___x_cmd_readlink_recursive(){
