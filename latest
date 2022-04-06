@@ -349,8 +349,8 @@ xrc(){
         root)                   printf "%s" "$___X_CMD_ROOT" ;;
         mirror)                 ___x_cmd_mirror "$@"; printf "%s\n" "$___X_CMD_MIRROR_LIST" ;;
         export-all)             xrc:mod xrc/lib/export && ___x_cmd_xrc_export_all "$@" ;;
-        update)                 xrc:mod xrc/lib/update && ___x_cmd_xrc_update "$@" ;;
-        upgrade)                xrc:mod xrc/lib/upgrade && ___x_cmd_xrc_upgrade "$@" ;;
+        update)                 xrc:mod xrc/lib/setup/update && ___x_cmd_xrc_update "$@" ;;
+        upgrade)                xrc:mod xrc/lib/setup/upgrade && ___x_cmd_xrc_upgrade "$@" ;;
         ls)                     ls "$___X_CMD_ROOT" ;;                      # If tar.gz, using tar ls. If folder, ls $folder
         setmain)                ___x_cmd_xrc_set_main "$@" ;;
         reload)                 xrc:mod xrc/lib/reload && ___x_cmd_reload "$@" ;;
