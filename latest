@@ -366,7 +366,7 @@ xrc:mod x-cmd/latest
 
 if ___x_cmd_is_suitable_advise_env; then
     x:debug "Using module advise for completion."
-    command -v ___x_cmd_advise >/dev/null || xrc advise/lateset
+    command -v ___x_cmd_advise >/dev/null || xrc advise/latest
     ___x_cmd_advise init xrc
 fi
 
