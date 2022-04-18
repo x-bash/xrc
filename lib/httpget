@@ -65,6 +65,8 @@ ___x_cmd_httpget() {
                     if [ "$___X_CMD_FILEAGE" -lt "$cache_expiration" ]; then
                         x:debug "Function ___x_cmd_httpget() terminated. Because local cache existed within days: $cache_expiration"
                         return 0
+                    else
+                        ___X_CMD_FILEAGE="-$___X_CMD_FILEAGE"
                     fi
             esac
         fi
