@@ -1,3 +1,4 @@
+# shellcheck    shell=sh        disable=SC2039,SC1090,SC3043,SC2263
 
 ___x_cmd_httpget_handle_resp_header(){
     local url="${1:?Provide url}"
