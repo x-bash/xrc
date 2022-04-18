@@ -55,11 +55,14 @@ ___x_cmd_httpget() {
                 -)  # force update
                     ;;
                 *)
-                    # ___x_cmd_fileage "$cache"
-                    # if [ "$___X_CMD_FILEAGE" -lt "$cache_expiration" ]; then
-
                     # days
-                    if [ -n "$(find "$cache" -mtime "-$cache_expiration" 2>/dev/null)" ]; then
+                    # if [ -n "$(find "$cache" -mtime "-$cache_expiration" 2>/dev/null)" ]; then
+                    if ! ___x_cmd_fileage "$cache"; then
+                        x:error "Fail to get file age: $cache"
+                        return 1
+                    fi
+
+                    if [ "$___X_CMD_FILEAGE" -lt "$cache_expiration" ]; then
                         x:debug "Function ___x_cmd_httpget() terminated. Because local cache existed within days: $cache_expiration"
                         return 0
                     fi
