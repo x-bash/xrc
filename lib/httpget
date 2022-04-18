@@ -19,8 +19,16 @@ ___x_cmd_httpget_handle_resp_header(){
     esac
 }
 
+
+___x_cmd_httpget_fileage(){
+    FILEAGE="$(( $(date +%s) - $(stat -f "%m" "$1") ))"
+    echo "$FILEAGE"
+}
+
 # TODO: rename to ___x_cmd_httpget_with_cache
 ___x_cmd_httpget() {
+    ___X_CMD_HTTPGET_AGE=-1
+
     local url="${1:?Provide url}"
     local cache="$2"
     local cache_expiration="$3"
@@ -56,6 +64,7 @@ ___x_cmd_httpget() {
         if [ -n "$cache" ]; then
             x:debug "Copy the temp file to CACHE file: $cache"
             mv "$redirect_path" "$cache"
+            ___X_CMD_HTTPGET_AGE=0
         fi
     else
         code=$?
