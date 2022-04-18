@@ -19,10 +19,20 @@ ___x_cmd_httpget_handle_resp_header(){
     esac
 }
 
+___x_cmd_fileage(){
+    if stat -c "%Y" /bin/sh 2>/dev/null 1>&2; then
+        ___x_cmd_httpget_fileage(){
+            ___X_CMD_FILEAGE="$(( $(date +%s) - $(stat -c "%Y" "$1") ))"
+        }
+    elif stat -f "%m" /bin/sh 2>/dev/null 1>&2; then
+        ___x_cmd_httpget_fileage(){
+            ___X_CMD_FILEAGE="$(( $(date +%s) - $(stat -f "%m" "$1") ))"
+        }
+    else
+        return 1
+    fi
 
-___x_cmd_httpget_fileage(){
-    FILEAGE="$(( $(date +%s) - $(stat -f "%m" "$1") ))"
-    echo "$FILEAGE"
+    ___x_cmd_httpget_fileage "$@"
 }
 
 # TODO: rename to ___x_cmd_httpget_with_cache
@@ -44,7 +54,11 @@ ___x_cmd_httpget() {
                     ;;
                 -)  # force update
                     ;;
-                *)  # days
+                *)
+                    # ___x_cmd_fileage "$cache"
+                    # if [ "$___X_CMD_FILEAGE" -lt "$cache_expiration" ]; then
+
+                    # days
                     if [ -n "$(find "$cache" -mtime "-$cache_expiration" 2>/dev/null)" ]; then
                         x:debug "Function ___x_cmd_httpget() terminated. Because local cache existed within days: $cache_expiration"
                         return 0
