@@ -42,6 +42,7 @@ ___x_cmd_httpget() {
     local url="${1:?Provide url}"
     local cache="$2"
     local cache_expiration="$3"
+    local error_msg_varname="$4"
 
     local redirect_path=            # "&1"
     if [ -n "$cache" ]; then
@@ -87,7 +88,10 @@ ___x_cmd_httpget() {
         fi
     else
         code=$?
-        [ -n "$cache" ] && rm -f "$redirect_path"    # In centos, file in "$redirect_path" is write protected.
+        if [ -n "$cache" ] ; then
+            [ -n "$error_msg_varname" ] && eval "$error_msg_varname=\"$(cat "$redirect_path")\""
+            rm -f "$redirect_path" # In centos, file in "$redirect_path" is write protected.
+        fi
         return $code
     fi
 }
