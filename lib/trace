@@ -38,8 +38,8 @@ ___x_cmd_trace_debugtrig_stop(){
 }
 
 ___X_CMD_TRACE_DEBUGTRIG=1
-alias x:trace:dbgtrig:stop=___x_cmd_trace_debugtrig
-alias x:trace:dbgtrig=___x_cmd_trace_debugtrig_stop
+alias x:trace:dbgtrig:stop=___x_cmd_trace_debugtrig_stop
+alias x:trace:dbgtrig=___x_cmd_trace_debugtrig
 
 alias x:trace='local ___X_CMD_LOG_DEBUG="${___X_CMD_LOG_DEBUG}"; local ___X_CMD_TRACE_LINE_LOCAL="${___X_CMD_TRACE_LINE_LOCAL}" 2>/dev/null; ___x_cmd_trace'
 
