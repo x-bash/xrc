@@ -33,8 +33,9 @@ ___x_cmd_trace(){
         rest="${e#/}"
     done
 
+    shift
     common="${common#/}"
-    ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${1#"$common/"}]"
+    ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${1#"$common/"}]: $*"
 }
 
 ___x_cmd_trace_debugtrig(){
