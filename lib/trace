@@ -1,4 +1,12 @@
 
+___x_cmd_trace_log(){
+    if [ -n "$___X_CMD_LOG_C_TF" ] || [ -t 2 ]; then
+        printf "\033[1;7;32m%s\033[0m\n"   "$1"  >&2
+    else
+        printf "%s\n"               "$1"  >&2
+    fi
+}
+
 ___x_cmd_trace(){
     local old_trace_name="${___X_CMD_TRACE_LINE_LOCAL}"
     ___X_CMD_TRACE_LINE_LOCAL="$1"
@@ -9,7 +17,7 @@ ___x_cmd_trace(){
     { [ -n "$___X_CMD_LOG_DEBUG" ] || eval [ "\${___X_CMD_LOG__${new_trace_name%%/*}:-2}" -le 1 ] \&\& [ "\${___X_CMD_LOG__${old_trace_name%%/*}:-2}" -le 1 ]; } || return
 
     if [ -z "$old_trace_name" ] || [ "${1#"$old_trace_name"}" != "$1" ]; then
-        x:info "TRACE: [/${old_trace_name:-/}] >>> [${1#"$old_trace_name"/}] "
+        ___x_cmd_trace_log "[TRACE]: [${old_trace_name:-/}] >>> [${1#"$old_trace_name"/}] "
         return
     fi
 
@@ -26,7 +34,7 @@ ___x_cmd_trace(){
     done
 
     common="${common#/}"
-    x:info "TRACE: [${common}]: [$rest => ${1#"$common/"}]"
+    ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${1#"$common/"}]"
 }
 
 ___x_cmd_trace_debugtrig(){
