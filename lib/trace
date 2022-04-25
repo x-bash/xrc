@@ -35,6 +35,7 @@ ___x_cmd_trace(){
 
     shift
     common="${common#/}"
+    IFS=" "
     ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${1#"$common/"}]: $*"
 }
 
