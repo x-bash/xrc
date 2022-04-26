@@ -52,6 +52,36 @@ alias x.trace.dbgtrig=___x_cmd_trace_debugtrig
 
 alias x:trace='local ___X_CMD_LOG_DEBUG="${___X_CMD_LOG_DEBUG}"; local ___X_CMD_TRACE_LINE_LOCAL="${___X_CMD_TRACE_LINE_LOCAL}" 2>/dev/null; ___x_cmd_trace'
 
+___x_cmd_trace_evex(){
+    if [ -z "$___X_CMD_LOG_DEBUG" ] && eval [ "\${___X_CMD_LOG__${___X_CMD_TRACE_LINE_LOCAL%%/*}:-2}" -gt 1 ]; then
+        ___x_cmd_evex "$@"
+    else
+        ___x_cmd_trace_log "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: $*"      # repr $*
+        local code
+        ___x_cmd_evex "$@"
+        code=$?
+        ___x_cmd_trace_log "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: [exit: $code] $*"
+    fi
+}
+
+alias x:trace:evex=___x_cmd_trace_evex
+
+___x_cmd_trace_time(){
+    if [ -z "$___X_CMD_LOG_DEBUG" ] && eval [ "\${___X_CMD_LOG__${___X_CMD_TRACE_LINE_LOCAL%%/*}:-2}" -gt 1 ]; then
+        ___x_cmd_evex "$@"
+    else
+        local ___x_cmd_trace_time_timestamp
+        ___x_cmd_trace_time_timestamp="$(date +%s)"
+        ___x_cmd_trace_log "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: $*"      # repr $*
+        local code
+        ___x_cmd_evex "$@"
+        code=$?
+        ___x_cmd_trace_log "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: [exit: $code] [elapsed: $(($(date +%s) - "$___x_cmd_trace_time_timestamp"))]: $*"
+    fi
+}
+
+alias x:trace:time=___x_cmd_trace_time
+
 # f_a_c(){
 #     x:trace f/a/c
 #     echo "$1"
