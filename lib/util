@@ -151,6 +151,8 @@ ___x_cmd_evex(){
     if [ "$#" -lt 2 ]; then
         eval "${1:-:}"
     else
-        "$@"
+        # "$@"
+        local ___x_cmd_evex_op="$1"; shift
+        eval "$___x_cmd_evex_op" "\"\$@\""
     fi
 }
