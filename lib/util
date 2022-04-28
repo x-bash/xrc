@@ -168,3 +168,7 @@ ___x_cmd_eval(){
         eval "$___x_cmd_evex_op" "\"\$@\""
     fi
 }
+
+___x_cmd_abspath(){
+    cd "${1:?Provide Path}" && ___X_CMD_ABSPATH="$PWD" && cd -
+}
