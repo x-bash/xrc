@@ -170,5 +170,5 @@ ___x_cmd_eval(){
 }
 
 ___x_cmd_abspath(){
-    cd "${1:?Provide Path}" && ___X_CMD_ABSPATH="$PWD" && cd -
+    cd "${1:?Provide Path}" && ___X_CMD_ABSPATH="$PWD" && cd "$OLDPWD" || return
 }
