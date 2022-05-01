@@ -4,13 +4,21 @@
 # license:      GPLv3
 
 # Section 0: Prepare source 0
+
+___x_cmd_ensuredir(){
+    while [ $# -gt 0 ]; do
+        [ -d "${1}" ] || mkdir -p "$1" || return 1
+        shift
+    done
+}
+
 {
 # if [ -z "$___X_CMD_ROOT" ]; then
     ___X_CMD_ROOT="${___X_CMD_ROOT:-$HOME/.x-cmd}"           # boot will be placed in "$HOME/.x-cmd/boot"
     ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
     ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
 
-    [ -d "$___X_CMD_ROOT" ] || mkdir -p "$___X_CMD_ROOT" || return 1 || exit 1
+    ___x_cmd_ensuredir "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
 
     # export ___X_CMD_ROOT
