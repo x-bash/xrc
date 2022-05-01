@@ -37,7 +37,8 @@ ___x_cmd_fileage(){
 
 # TODO: rename to ___x_cmd_httpget_with_cache
 ___x_cmd_httpget() {
-    ___X_CMD_HTTPGET_AGE=-1
+    # ___X_CMD_HTTPGET_AGE=-1
+    ___X_CMD_HTTPGET_AGE=
 
     local url="${1:?Provide url}"
     local cache="$2"
@@ -64,9 +65,11 @@ ___x_cmd_httpget() {
                     fi
 
                     if [ "$___X_CMD_FILEAGE" -lt "$cache_expiration" ]; then
+                        ___X_CMD_HTTPGET_AGE="$___X_CMD_FILEAGE"
                         x:debug "Function ___x_cmd_httpget() terminated. Because local cache existed within days: $cache_expiration"
                         return 0
                     else
+                        ___X_CMD_HTTPGET_AGE="-$___X_CMD_FILEAGE"
                         ___X_CMD_FILEAGE="-$___X_CMD_FILEAGE"
                     fi
             esac
