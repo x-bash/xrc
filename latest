@@ -363,7 +363,7 @@ xrc(){
         ls)                     ls "$___X_CMD_ROOT" ;;                      # If tar.gz, using tar ls. If folder, ls $folder
         setmain)                ___x_cmd_xrc_set_main "$@" ;;
         reload)                 xrc:mod xrc/lib/reload && ___x_cmd_reload "$@" ;;
-        _x_cmd_advise_json)     xrc cat xrc/lib/xrc.json; return 126 ;;
+        _x_cmd_advise_json)     xrc cat xrc/lib/xrc.json ;;
         *)                      ___x_cmd_xrc_source_file "$subcmd" "$@";    return
     esac
 }
