@@ -54,7 +54,7 @@ ___x_cmd_httpget() {
                     x:debug "Function ___x_cmd_httpget() terminated. Because local cache existed with update flag unset: $cache"
                     return 0
                     ;;
-                -)  # force update
+                -|0) # force update
                     ;;
                 *)
                     # days
