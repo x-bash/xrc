@@ -34,7 +34,7 @@ ___x_cmd_mirror
 case "${___X_CMD_MIRROR_LIST%%
 *}" in
     *gitee*|*codechina*)        ___X_CMD_IN_CHINA_NET=1 ;   ___X_CMD_WHICHNET=cn ;;
-    *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET= ;    ___X_CMD_WHICHNET=default ;;
+    *github*|*gitlab*)          ___X_CMD_IN_CHINA_NET= ;    ___X_CMD_WHICHNET=_ ;;
     *)                          printf "%s\n" "Unknown mirror: $(___x_cmd_mirror | head -n1)" >&2
                                 ___X_CMD_IN_CHINA_NET= ;    ___X_CMD_WHICHNET=unknown ;;
 esac
