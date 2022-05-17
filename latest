@@ -215,17 +215,17 @@ ___x_cmd_which_one(){
                 ___X_CMD_WHICH_ONE_RESULT="$TGT"
                 return 0
             fi
-            # x:debug "Module not found: $module"
-            # return 1
-
-            x:info "Downloading resource=$RESOURCE_NAME to local cache: $TGT"
-            if ___x_cmd_httpget_gitx_official "mod/$module" "$TGT"; then
-                ___X_CMD_WHICH_ONE_RESULT="$TGT"
-                return 0
-            fi
-
-            x:warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+            x:debug "Module not found: $module"
             return 1
+
+            # x:info "Downloading resource=$RESOURCE_NAME to local cache: $TGT"
+            # if ___x_cmd_httpget_gitx_official "mod/$module" "$TGT"; then
+            #     ___X_CMD_WHICH_ONE_RESULT="$TGT"
+            #     return 0
+            # fi
+
+            # x:warn "ERROR: Fail to load module due to network error or other: $RESOURCE_NAME"
+            # return 1
     esac
 }
 # EndSection
