@@ -4,9 +4,11 @@ ___x_cmd_llist(){
     case "$op" in
         init)           ___x_cmd_llist_init "$@" ;;
         shift)          ___x_cmd_llist_shift "$@" ;;
+        shift_)         ___x_cmd_llist_shift_ "$@" ;;
         unshift)        ___x_cmd_llist_unshift "$@" ;;
         push)           ___x_cmd_llist_push "$@" ;;
         pop)            ___x_cmd_llist_pop "$@" ;;
+        pop_)           ___x_cmd_llist_pop_ "$@" ;;
         has)            ___x_cmd_llist_has "$@" ;;
         print)          ___x_cmd_llist_print "$@" ;;
         *)
@@ -35,6 +37,10 @@ ___x_cmd_llist_pop_(){
     eval "___X_CMD_LLIST_${name}=\"\${tmp%\$___X_CMD_LLIST_POP_}\""
 }
 
+___x_cmd_llist_pop(){
+    printf "%s\n" "$(___x_cmd_llist_pop_ "$@")"
+}
+
 ___x_cmd_llist_unshift(){
     local name="${1:?Provide list name}"
     local value="${2:?Provide value}"
@@ -48,6 +54,10 @@ ___x_cmd_llist_shift_(){
     eval tmp="\"\${___X_CMD_LLIST_${name}#\${___X_CMD_LDICT_SEP}}\""
     ___X_CMD_LLIST_SHIFT_="${tmp%%${___X_CMD_LDICT_SEP}*}"
     eval "___X_CMD_LLIST_${name}=\"\${tmp#\$___X_CMD_LLIST_POP_}\""
+}
+
+___x_cmd_llist_shift(){
+    printf "%s\n" "$(___x_cmd_llist_shift_ "$@")"
 }
 
 ___x_cmd_llist_has(){
