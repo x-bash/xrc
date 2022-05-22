@@ -29,11 +29,25 @@ ___x_cmd_llist_push(){
     eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\${value}\${___X_CMD_LDICT_SEP}\""
 }
 
+___x_cmd_llist_pop_(){
+    local name="${1:?Provide list name}"
+    local value="${2:?Provide value}"
+
+    # eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\${value}\${___X_CMD_LDICT_SEP}\""
+}
+
 ___x_cmd_llist_unshift(){
     local name="${1:?Provide list name}"
     local value="${2:?Provide value}"
 
     eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LDICT_SEP}\${value}\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\""
+}
+
+___x_cmd_llist_shift_(){
+    local name="${1:?Provide list name}"
+    local value="${2:?Provide value}"
+
+    # eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\${value}\${___X_CMD_LDICT_SEP}\""
 }
 
 ___x_cmd_llist_has(){
