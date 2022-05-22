@@ -29,9 +29,10 @@ ___x_cmd_llist_push(){
 
 ___x_cmd_llist_pop_(){
     local name="${1:?Provide list name}"
-    eval ___X_CMD_LLIST_POP_="\"\${___X_CMD_LLIST_${name}##*\${___X_CMD_LDICT_SEP}}\""
-
-    # eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\${value}\${___X_CMD_LDICT_SEP}\""
+    local tmp
+    eval tmp="\"\${___X_CMD_LLIST_${name}%\${___X_CMD_LDICT_SEP}}\""
+    ___X_CMD_LLIST_POP_="${tmp##*${___X_CMD_LDICT_SEP}}"
+    eval "___X_CMD_LLIST_${name}=\"\${tmp%\$___X_CMD_LLIST_POP_}\""
 }
 
 ___x_cmd_llist_unshift(){
@@ -43,8 +44,10 @@ ___x_cmd_llist_unshift(){
 
 ___x_cmd_llist_shift_(){
     local name="${1:?Provide list name}"
-
-    # eval "___X_CMD_LLIST_${name}=\"\${___X_CMD_LLIST_${name}:-\${___X_CMD_LDICT_SEP}}\${value}\${___X_CMD_LDICT_SEP}\""
+    local tmp
+    eval tmp="\"\${___X_CMD_LLIST_${name}#\${___X_CMD_LDICT_SEP}}\""
+    ___X_CMD_LLIST_SHIFT_="${tmp%%${___X_CMD_LDICT_SEP}*}"
+    eval "___X_CMD_LLIST_${name}=\"\${tmp#\$___X_CMD_LLIST_POP_}\""
 }
 
 ___x_cmd_llist_has(){
