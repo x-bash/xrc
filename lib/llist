@@ -52,7 +52,6 @@ ___x_cmd_llist_shift_(){
     local name="${1:?Provide list name}"
     local tmp
     eval tmp="\"\${___X_CMD_LLIST_${name}#\${___X_CMD_LDICT_SEP}}\""
-    local ___X_CMD_LLIST_SHIFT_
     ___X_CMD_LLIST_SHIFT_="${tmp%%${___X_CMD_LDICT_SEP}*}"
     eval "___X_CMD_LLIST_${name}=\"\${tmp#\$___X_CMD_LLIST_SHIFT_}\""
 }
