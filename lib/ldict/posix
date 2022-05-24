@@ -65,6 +65,12 @@ ___x_cmd_ldict_has(){
 }
 
 ___x_cmd_ldict_get(){
+    local ___X_CMD_LDICT_GET_
+    ___x_cmd_ldict_get_ "$@"
+    printf "%s" "$___X_CMD_LDICT_GET_"
+}
+
+___x_cmd_ldict_get_(){
     local name="${1:?Provide dict name}"
     local key="${2:?Provide key}"
 
@@ -73,8 +79,9 @@ ___x_cmd_ldict_get(){
     eval "tmp=\"\${___X_CMD_LDICT_${name}#*\${___X_CMD_LDICT_SEP}\${key}\${___X_CMD_LDICT_KVSEP}}\""
 
     if eval [ \"\$tmp\" != \"\$"___X_CMD_LDICT_${name}"\" ]; then
-        printf "%s" "${tmp%%${___X_CMD_LDICT_SEP}*}"
+        ___X_CMD_LDICT_GET_="${tmp%%${___X_CMD_LDICT_SEP}*}"
     else
+        ___X_CMD_LDICT_GET_=
         return 1
     fi
 }
