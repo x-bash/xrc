@@ -42,6 +42,17 @@ ___x_cmd_ldict_put(){
     eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}:-\${___X_CMD_LDICT_SEP}}\${key}\${___X_CMD_LDICT_KVSEP}\${value}\${___X_CMD_LDICT_SEP}\""
 }
 
+___x_cmd_ldict_load(){
+    local name="${1:?Provide dict name}"
+    local file="${2:?Provide file}"
+    local _line
+    [ -f "$file" ] || return
+    while read -r _line; do
+        [ -n "$_line" ] || continue
+        ___x_cmd_ldict_put "$name" "${_line%=*}" "${_line#*=}"
+    done < "$file"
+}
+
 ___x_cmd_ldict_rm(){
     local name="${1:?Provide dict name}"
     local key="${2:?Provide key}"
@@ -98,7 +109,7 @@ ___x_cmd_ldict_print(){
     local name="${1:?Provide dict name}"
     eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
 NR!=1{
-    print $1 " = " $2
+    print $1 "=" $2
 }'
 }
 
