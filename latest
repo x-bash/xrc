@@ -12,13 +12,6 @@ ___x_cmd_mkdirp(){
     done
 }
 
-___x_cmd_mkdirp4file(){
-    while [ $# -gt 0 ]; do
-        [ -d "${1%/*}" ] || mkdir -p "${1%/*}" || return 1
-        shift
-    done
-}
-
 {
 # if [ -z "$___X_CMD_ROOT" ]; then
     ___X_CMD_ROOT="${___X_CMD_ROOT:-$HOME/.x-cmd}"           # boot will be placed in "$HOME/.x-cmd/boot"
