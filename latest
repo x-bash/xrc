@@ -5,14 +5,6 @@
 
 # Section 0: Prepare source 0
 
-# Deprecated
-___x_cmd_ensuredir(){
-    while [ $# -gt 0 ]; do
-        [ -d "${1}" ] || mkdir -p "$1" || return 1
-        shift
-    done
-}
-
 ___x_cmd_mkdirp(){
     while [ $# -gt 0 ]; do
         [ -d "${1}" ] || mkdir -p "$1" || return 1
