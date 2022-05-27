@@ -42,6 +42,17 @@ ___x_cmd_ldict_put(){
     eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}:-\${___X_CMD_LDICT_SEP}}\${key}\${___X_CMD_LDICT_KVSEP}\${value}\${___X_CMD_LDICT_SEP}\""
 }
 
+___x_cmd_ldict_load(){
+    local name="${1:?Provide dict name}"
+    local file="${2:?Provide file}"
+    local _line
+    [ -f "$file" ] || return
+    while read -r _line; do
+        [ -n "$_line" ] || continue
+        ___x_cmd_ldict_put "$name" "${_line%=*}" "${_line#*=}"
+    done < "$file"
+}
+
 ___x_cmd_ldict_rm(){
     local name="${1:?Provide dict name}"
     local key="${2:?Provide key}"
@@ -66,7 +77,7 @@ ___x_cmd_ldict_has(){
 
 ___x_cmd_ldict_get(){
     local ___X_CMD_LDICT_GET_
-    ___x_cmd_ldict_get_ "$@"
+    ___x_cmd_ldict_get_ "$@" || return 1
     printf "%s" "$___X_CMD_LDICT_GET_"
 }
 
