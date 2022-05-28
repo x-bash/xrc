@@ -156,7 +156,7 @@ ___x_cmd_httpget_gitx_official(){
 ___x_cmd_httpget_curl(){
     local url="${1:?Provide url}"
     local cache="${2}"
-    x:debug "curl --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
+    x:debug "curl -L --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
 
     if [ -z "$cache" ]; then
         exec 3>&1
@@ -173,7 +173,7 @@ ___x_cmd_httpget_curl(){
 ___x_cmd_httpget_xcurl(){
     local url="${1:?Provide url}"
     local cache="${2}"
-    x:debug "x curl --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
+    x:debug "x curl -L --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
 
     if [ -z "$cache" ]; then
         exec 3>&1
