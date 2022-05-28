@@ -115,7 +115,11 @@ ___x_cmd_ldict_load(){
 
 ___x_cmd_ldict_dump(){
     local name="${1:?Provide dict name}"
-    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\"
+    if [ -z "$2" ]; then
+        eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\"
+    else
+        eval "$2=\"\$___X_CMD_LDICT_${name}\""
+    fi
 }
 
 ___x_cmd_ldict_print(){
