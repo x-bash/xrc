@@ -160,10 +160,10 @@ ___x_cmd_httpget_curl(){
 
     if [ -z "$cache" ]; then
         exec 3>&1
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl -L --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
         exec 3>&-
     else
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl -L --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
     fi
 
     local code=$?
@@ -177,10 +177,10 @@ ___x_cmd_httpget_xcurl(){
 
     if [ -z "$cache" ]; then
         exec 3>&1
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl -L --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
         exec 3>&-
     else
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl -L --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
     fi
 
     local code=$?
