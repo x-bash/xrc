@@ -7,7 +7,7 @@ ___x_cmd_sdict(){
         rm)         ___x_cmd_sdict_rm "$@" ;;
         has)        ___x_cmd_sdict_has "$@" ;;
         get)        ___x_cmd_sdict_get "$@" ;;
-        get_)       ___x_cmd_sdict_get "$@" ;;
+        get_)       ___x_cmd_sdict_get_ "$@" ;;
         keys)       ___x_cmd_sdict_keys "$@" ;;
         load)       ___x_cmd_sdict_load "$@" ;;
         dump)       ___x_cmd_sdict_dump "$@" ;;
