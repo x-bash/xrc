@@ -153,20 +153,6 @@ ___x_cmd_httpget_gitx_official(){
     ___x_cmd_httpget_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide resource path}" "$2" "$3"
 }
 
-
-# TODO: will remove the following functions
-___x_cmd_curl(){
-    ___x_cmd_httpget "$@"
-}
-
-___x_cmd_curl_gitx(){
-    ___x_cmd_httpget_gitx "$@"
-}
-
-___x_cmd_curl_gitx_official(){
-    ___x_cmd_httpget_gitx_official "$@"
-}
-
 ___x_cmd_httpget_curl(){
     local url="${1:?Provide url}"
     local cache="${2}"
