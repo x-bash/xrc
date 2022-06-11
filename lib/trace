@@ -64,25 +64,23 @@ ___x_cmd_trace_time(){
 # Section: log & log_exit
 ___x_cmd_trace_log(){
     if [ -n "$___X_CMD_LOG_C_TF" ] || [ -t 2 ]; then
-        printf "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: \033[1;7;32m%s\033[0m\n"     "$1" >&2
+        printf "\033[32m%s: \033[1;7;32m%s\033[0m\n"    "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]" "$1" >&2
     else
-        printf "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: %s\n"                        "$1" >&2
+        printf "%s: %s\n"                               "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]" "$1" >&2
     fi
 }
 
 ___x_cmd_trace_log_exit(){
     local code=$1;  shift
     local color
-    if [ "$code" -eq 0 ]; then
-        color="\033[1;7;36m"
-    else
-        color="\033[1;7;31m"
+    if [ "$code" -eq 0 ]; then      color="\033[1;7;36m"
+    else                            color="\033[1;7;31m"
     fi
 
     if [ -n "$___X_CMD_LOG_C_TF" ] || [ -t 2 ]; then
-        printf "${color}%s\033[0m\n"   "$1"  >&2
+        printf "%s: ${color}%s\033[0m\n"    "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]" "$1"  >&2
     else
-        printf "%s\n"               "$1"  >&2
+        printf "%s: %s\n"                   "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]" "$1"  >&2
     fi
 }
 # EndSection
