@@ -1,5 +1,5 @@
 
-
+alias x:trace='{ local ___X_CMD_LOG_DEBUG="${___X_CMD_LOG_DEBUG}"; local ___X_CMD_TRACE_LINE_LOCAL="${___X_CMD_TRACE_LINE_LOCAL}" } 2>/dev/null; ___x_cmd_trace'
 ___x_cmd_trace(){
     local old_trace_name="${___X_CMD_TRACE_LINE_LOCAL}"
     ___X_CMD_TRACE_LINE_LOCAL="$1"
@@ -32,19 +32,17 @@ ___x_cmd_trace(){
     ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${new_trace_name#"$common/"}]: $*"
 }
 
+alias x.trace.dbgtrig=___x_cmd_trace_debugtrig
 ___x_cmd_trace_debugtrig(){
     ___X_CMD_TRACE_DEBUGTRIG=1
 }
 
+alias x.trace.dbgtrig.stop=___x_cmd_trace_debugtrig_stop
 ___x_cmd_trace_debugtrig_stop(){
     ___X_CMD_TRACE_DEBUGTRIG=
 }
 
-alias x.trace.dbgtrig.stop=___x_cmd_trace_debugtrig_stop
-alias x.trace.dbgtrig=___x_cmd_trace_debugtrig
-
-alias x:trace='local ___X_CMD_LOG_DEBUG="${___X_CMD_LOG_DEBUG}"; local ___X_CMD_TRACE_LINE_LOCAL="${___X_CMD_TRACE_LINE_LOCAL}" 2>/dev/null; ___x_cmd_trace'
-
+alias x:trace:evex=___x_cmd_trace_evex
 ___x_cmd_trace_evex(){
     if [ -z "$___X_CMD_LOG_DEBUG" ] && eval [ "\${___X_CMD_LOG__${___X_CMD_TRACE_LINE_LOCAL%%/*}:-2}" -gt 1 ]; then
         ___x_cmd_evex "$@"
@@ -55,8 +53,7 @@ ___x_cmd_trace_evex(){
     fi
 }
 
-alias x:trace:evex=___x_cmd_trace_evex
-
+alias x:trace:time=___x_cmd_trace_time
 ___x_cmd_trace_time(){
     if [ -z "$___X_CMD_LOG_DEBUG" ] && eval [ "\${___X_CMD_LOG__${___X_CMD_TRACE_LINE_LOCAL%%/*}:-2}" -gt 1 ]; then
         ___x_cmd_evex "$@"
@@ -69,8 +66,7 @@ ___x_cmd_trace_time(){
     fi
 }
 
-alias x:trace:time=___x_cmd_trace_time
-
+# Section: log & log_exit
 ___x_cmd_trace_log(){
     if [ -n "$___X_CMD_LOG_C_TF" ] || [ -t 2 ]; then
         printf "\033[1;7;32m%s\033[0m\n"   "$1"  >&2
@@ -94,6 +90,7 @@ ___x_cmd_trace_log_exit(){
         printf "%s\n"               "$1"  >&2
     fi
 }
+# EndSection
 
 # f_a_c(){
 #     x:trace f/a/c
