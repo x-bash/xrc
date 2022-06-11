@@ -68,9 +68,9 @@ ___x_cmd_trace_time(){
 # Section: log & log_exit
 ___x_cmd_trace_log(){
     if [ -n "$___X_CMD_LOG_C_TF" ] || [ -t 2 ]; then
-        printf "\033[7;32m%s: \033[1;7;32m%s\033[0m\n"    "[TRACE]" "$1" >&2
+        printf "\033[7;32m%s: \033[1;7;32m%s\033[0m\n"  "[TRACE] <$___X_CMD_TRACE_LINE_LOCAL>" "$1" >&2
     else
-        printf "%s: %s\n"                               "[TRACE]" "$1" >&2
+        printf "%s: %s\n"                               "[TRACE] <$___X_CMD_TRACE_LINE_LOCAL>" "$1" >&2
     fi
 }
 
