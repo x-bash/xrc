@@ -14,12 +14,11 @@ ___x_cmd_trace(){
         return
     fi
 
-    local i
+
     local common
     local rest="${old_trace_name}"
     local e
-    local IFS="/"
-    for i in ${new_trace_name}; do
+    local IFS="/"; local i; for i in ${new_trace_name}; do
         e="${rest#"$i"}"
         [ "${e}" != "$rest" ] || break
         common="$common/${i}"
