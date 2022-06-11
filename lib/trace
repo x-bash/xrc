@@ -14,7 +14,6 @@ ___x_cmd_trace(){
         return
     fi
 
-
     local common
     local rest="${old_trace_name}"
     local e
