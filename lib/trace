@@ -24,7 +24,7 @@ ___x_cmd_trace(){
 
     shift
     common="${common#/}"
-    IFS=" "; ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${new_trace_name#"$common/"}]: $*"
+    IFS=" "; ___x_cmd_trace_log "[${common}]: [$rest => ${new_trace_name#"$common/"}]: $*"
 }
 
 alias x.trace.dbgtrig=___x_cmd_trace_debugtrig
@@ -42,9 +42,9 @@ ___x_cmd_trace_evex(){
     if [ -z "$___X_CMD_LOG_DEBUG" ] && eval [ "\${___X_CMD_LOG__${___X_CMD_TRACE_LINE_LOCAL%%/*}:-2}" -gt 1 ]; then
         ___x_cmd_evex "$@"
     else
-        ___x_cmd_trace_log "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: $*"      # repr $*
+        ___x_cmd_trace_log "$*"      # repr $*
         ___x_cmd_evex "$@"
-        ___x_cmd_trace_log_exit $? "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: [exit: $code] $*"
+        ___x_cmd_trace_log_exit $? "[exit: $code] $*"
     fi
 }
 
@@ -55,18 +55,18 @@ ___x_cmd_trace_time(){
     else
         local ___x_cmd_trace_time_timestamp
         ___x_cmd_trace_time_timestamp="$(date +%s)"
-        ___x_cmd_trace_log "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: $*"      # repr $*
+        ___x_cmd_trace_log "$*"      # repr $*
         ___x_cmd_evex "$@"
-        ___x_cmd_trace_log_exit $? "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: [exit: $code] [elapsed: $(($(date +%s) - ___x_cmd_trace_time_timestamp))]: $*"
+        ___x_cmd_trace_log_exit $? "[exit: $code] [elapsed: $(($(date +%s) - ___x_cmd_trace_time_timestamp))]: $*"
     fi
 }
 
 # Section: log & log_exit
 ___x_cmd_trace_log(){
     if [ -n "$___X_CMD_LOG_C_TF" ] || [ -t 2 ]; then
-        printf "\033[1;7;32m%s\033[0m\n"   "$1"  >&2
+        printf "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: \033[1;7;32m%s\033[0m\n"     "$1" >&2
     else
-        printf "%s\n"               "$1"  >&2
+        printf "[TRACE]: [$___X_CMD_TRACE_LINE_LOCAL]: %s\n"                        "$1" >&2
     fi
 }
 
