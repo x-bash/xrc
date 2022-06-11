@@ -24,8 +24,7 @@ ___x_cmd_trace(){
 
     shift
     common="${common#/}"
-    IFS=" "
-    ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${new_trace_name#"$common/"}]: $*"
+    IFS=" "; ___x_cmd_trace_log "[TRACE]: [${common}]: [$rest => ${new_trace_name#"$common/"}]: $*"
 }
 
 alias x.trace.dbgtrig=___x_cmd_trace_debugtrig
