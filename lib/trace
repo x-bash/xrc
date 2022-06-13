@@ -97,7 +97,7 @@ ___x_cmd_trace_log_exit(){
 }
 # EndSection
 
-echo $___X_CMD_TRACE_DEBUGTRIG
+# echo $___X_CMD_TRACE_DEBUGTRIG
 
 f_a_c(){
     x:trace f/a/c
@@ -116,4 +116,4 @@ f_a(){
     x:info hi
 }
 
-f_a
+# f_a
