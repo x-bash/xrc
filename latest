@@ -111,7 +111,7 @@ ___X_CMD_CUR_SHELL="${___X_CMD_SHELL:-sh}"      # TODO: will remove
 # EndSection
 
 # Section 2: xrc:mod   log   xrc: util,mirror,httpget,ldict
-xrc:mod xrc/lib/trace log/latest
+xrc:mod log/latest
 ___x_cmd_log init x
 
 xrc:mod:lib xrc         util  mirror httpget ldict/posix sdict instance arglist
