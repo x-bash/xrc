@@ -395,4 +395,7 @@ if [ -n "$ZSH_VERSION" ]; then
 else
     alias "+=xrc"
 fi
+
 # EndSection
+
+[ -z "$BASH_VERSION" ] || export BASH_SILENCE_DEPRECATION_WARNING=1
