@@ -80,6 +80,13 @@ ___X_CMD_UNSEENCHAR_NEWLINE="
 "
 # EndSection
 
+# Section 1: xrc:mod   log   xrc: util
+xrc:mod log/latest
+___x_cmd_log init x
+
+xrc:mod:lib xrc    util
+# EndSection
+
 # Section 1: get ___X_CMD_SHELL and TMPDIR
 if [ -n "$BASH_VERSION" ]; then
     ___X_CMD_SHELL=bash
@@ -110,11 +117,8 @@ ___X_CMD_CUR_SHELL="${___X_CMD_SHELL:-sh}"      # TODO: will remove
 
 # EndSection
 
-# Section 2: xrc:mod   log   xrc: util,mirror,httpget,ldict
-xrc:mod log/latest
-___x_cmd_log init x
-
-xrc:mod:lib xrc         util  mirror httpget ldict/posix sdict instance arglist
+# Section 2: xrc: mirror,httpget,ldict
+xrc:mod:lib xrc    mirror httpget ldict/posix sdict instance arglist
 # EndSection
 
 # Section 3: main entrance helper: xrc_set_main, which_one, which_one_with_naming
