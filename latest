@@ -324,10 +324,8 @@ ___x_cmd_xrc_source_file_main_(){
         if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-            local ___X_CMD_XRC_SET_MAIN
-            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict_get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
-
-            ___X_CMD_XRC_SOURCE_FILE_MAIN_="$___X_CMD_XRC_SET_MAIN"
+            ___x_cmd_ldict_get_ ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}"
+            ___X_CMD_XRC_SOURCE_FILE_MAIN_="$___X_CMD_LDICT_GET_"
             return    # exited already. skip
         fi
     fi
