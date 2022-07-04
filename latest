@@ -260,7 +260,6 @@ ___x_cmd_xrc_cat(){
 ___x_cmd_xrc_import(){
     ___X_CMD_XRC_SOURCE_FILE_MAIN_USING_IMPORT=1 ___x_cmd_xrc_source_file "$@"
 }
-alias '+=___x_cmd_xrc_import'
 
 ___X_CMD_XRC_MODULE_IMPORTED="
 "
@@ -416,9 +415,9 @@ alias xws="x ws"
 alias xdev="x dev"
 
 if [ -n "$ZSH_VERSION" ]; then
-    alias -- +=xrc
+    alias -- +=___x_cmd_xrc_import
 else
-    alias "+=xrc"
+    alias "+=___x_cmd_xrc_import"
 fi
 
 # EndSection
