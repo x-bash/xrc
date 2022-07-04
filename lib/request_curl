@@ -71,9 +71,9 @@ ___x_cmd_http___not_secure_get(){
 ___x_cmd_http___download_curl(){
     xrc os
     local arch
-    arch="$(os arch)"
-    name="$(os name)"
-    if [ "$(os name)" != "linux" ];then
+    arch="$(___x_cmd_os arch)"
+    name="$(___x_cmd_os name)"
+    if [ "$(___x_cmd_os name)" != "linux" ];then
         return 1
     fi
     local url="${1:-"static-build.gitee.io/curl/bin"}"

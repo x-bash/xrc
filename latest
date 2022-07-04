@@ -257,6 +257,10 @@ ___x_cmd_xrc_cat(){
     done
 }
 
+___x_cmd_xrc_import(){
+    ___X_CMD_XRC_SOURCE_FILE_MAIN_USING_IMPORT=1 ___x_cmd_xrc_source_file "$@"
+}
+
 ___X_CMD_XRC_MODULE_IMPORTED="
 "
 
@@ -313,17 +317,15 @@ ___x_cmd_xrc_source_file_main_define_by_setmain(){
     fi
 }
 
-___x_cmd_xrc_source_file_main(){
+___x_cmd_xrc_source_file_main_(){
     ___X_CMD_WHICH_ONE_RESULT="${1:?Provide exact file}"
 
     if [ -z "$___X_CMD_XRC_RELOAD" ]; then
         if [ "${___X_CMD_XRC_MODULE_IMPORTED#*
 "$___X_CMD_WHICH_ONE_RESULT"
 *}" != "${___X_CMD_XRC_MODULE_IMPORTED}" ]; then
-            local ___X_CMD_XRC_SET_MAIN
-            ___X_CMD_XRC_SET_MAIN="$(___x_cmd_ldict_get ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}")"
-
-            ___x_cmd_xrc_source_file_main_define_by_setmain
+            ___x_cmd_ldict_get_ ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}"
+            ___X_CMD_XRC_SOURCE_FILE_MAIN_="$___X_CMD_LDICT_GET_"
             return    # exited already. skip
         fi
     fi
@@ -336,10 +338,24 @@ ${___X_CMD_WHICH_ONE_RESULT}${___X_CMD_XRC_MODULE_IMPORTED}"
 
     if [ -n "$___X_CMD_XRC_SET_MAIN" ]; then
         ___x_cmd_ldict_put ___X_CMD_XRC_SET_MAIN_DICT "${___X_CMD_WHICH_ONE_RESULT}" "${___X_CMD_XRC_SET_MAIN}"
-        ___x_cmd_xrc_source_file_main_define_by_setmain
+        ___X_CMD_XRC_SOURCE_FILE_MAIN_="$___X_CMD_XRC_SET_MAIN"
     fi
 }
 
+___x_cmd_xrc_source_file_main_import(){
+    ___x_cmd_xrc_source_file_main_ "$@" || return
+    [ -n "$___X_CMD_XRC_SOURCE_FILE_MAIN_" ] || return 0
+    ___X_CMD_XRC_SET_MAIN="$___X_CMD_XRC_SOURCE_FILE_MAIN_" ___x_cmd_xrc_source_file_main_define_by_setmain
+}
+
+___x_cmd_xrc_source_file_main(){
+    local ___X_CMD_XRC_SOURCE_FILE_MAIN_
+    if [ -z "$___X_CMD_XRC_SOURCE_FILE_MAIN_USING_IMPORT" ]; then
+        ___x_cmd_xrc_source_file_main_ "$@"
+    else
+        ___x_cmd_xrc_source_file_main_import "$@"
+    fi
+}
 
 # EndSection
 
@@ -395,9 +411,9 @@ alias xws="x ws"
 alias xdev="x dev"
 
 if [ -n "$ZSH_VERSION" ]; then
-    alias -- +=xrc
+    alias -- +=___x_cmd_xrc_import
 else
-    alias "+=xrc"
+    alias "+=___x_cmd_xrc_import"
 fi
 
 # EndSection
