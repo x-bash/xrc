@@ -357,8 +357,6 @@ ___x_cmd_xrc_source_file_main(){
     fi
 }
 
-
-
 # EndSection
 
 # Section 5: main entrance
