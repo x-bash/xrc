@@ -80,14 +80,21 @@ ___X_CMD_UNSEENCHAR_NEWLINE="
 "
 # EndSection
 
-# Section 1: xrc:mod   log   xrc: util
-xrc:mod log/latest
-___x_cmd_log init x
-
-xrc:mod:lib xrc    util
-# EndSection
-
 # Section 1: get ___X_CMD_SHELL and TMPDIR
+___x_cmd_readlink_recursive_(){
+    if [ -L "${1:?Provide link}" ]; then
+        local next_link
+        next_link="$(readlink "${1}")" || return
+        if [ "${next_link#/}" = "$next_link" ]; then
+            next_link="$(dirname "${1}")/$next_link"
+        fi
+        ___x_cmd_readlink_recursive_ "$next_link"
+    else
+        [ ! -e "${1}" ] && return 1        # File Not Exists
+        ___X_CMD_READLINK_RECURSIVE_="$1"
+    fi
+}
+
 if [ -n "$BASH_VERSION" ]; then
     ___X_CMD_SHELL=bash
     shopt -s expand_aliases
@@ -101,8 +108,8 @@ elif [ -n "$KSH_VERSION" ]; then
 else
     # TODO: Otherwise, loading a remarkable script to detect shell
     ___X_CMD_SHELL="$(
-        res="$(___x_cmd_readlink_recursive "$(command -v "$0")")"
-        if [ "${res%dash}" != "$res" ]; then
+        ___x_cmd_readlink_recursive_ "$(command -v "$0")"
+        if [ "${___X_CMD_READLINK_RECURSIVE_%dash}" != "$___X_CMD_READLINK_RECURSIVE_" ]; then
             printf "%s" dash
         elif /bin/sh --help 2>&1 | grep BusyBox >/dev/null; then
             printf "%s" ash
@@ -117,8 +124,11 @@ ___X_CMD_CUR_SHELL="${___X_CMD_SHELL:-sh}"      # TODO: will remove
 
 # EndSection
 
-# Section 2: xrc: mirror,httpget,ldict
-xrc:mod:lib xrc    mirror httpget ldict/posix sdict instance arglist
+# Section 2: xrc: util,mirror,httpget,ldict
+xrc:mod log/latest
+___x_cmd_log init x
+
+xrc:mod:lib xrc    util mirror httpget ldict/posix sdict instance arglist
 # EndSection
 
 # Section 3: main entrance helper: xrc_set_main, which_one, which_one_with_naming
