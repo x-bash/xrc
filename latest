@@ -3,6 +3,11 @@
 
 # license:      GPLv3
 
+# KSH which doesn't support local
+# case "KSH_VERSION" in
+#     Version*JM*93t+*)       exit 1 ;;
+# esac
+
 # Section 0: Prepare source 0
 
 ___x_cmd_mkdirp(){
