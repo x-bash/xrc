@@ -172,3 +172,10 @@ ___x_cmd_eval(){
 # ___x_cmd_abspath(){
 #     cd "${1:?Provide Path}" && ___X_CMD_ABSPATH="$PWD" && cd "$OLDPWD" || return
 # }
+
+___x_cmd_is_ansi_escapes_are_valid(){
+    [ ! -t 2 ] || case "$TERM" in
+        xterm*|rxvt*|urxvt*|linux*|vt*) return 0 ;;
+    esac
+    return 1
+}
