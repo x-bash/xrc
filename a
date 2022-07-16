@@ -1,7 +1,0 @@
-___x_cmd_varjoin(){
-    local varname="$1"; local IFS="$2"; shift 2
-    local s="$*"
-    eval "$varname=\"\$s\""
-}
-
-# x a=join' '   a b c d e
