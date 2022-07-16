@@ -30,6 +30,7 @@ ___x_cmd_touch(){
     ___x_cmd_mkdirp "$___X_CMD_ROOT" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
 
+    # export ___X_CMD_VERSION     # Version inside the commit-id
     # export ___X_CMD_ROOT
     # export ___X_CMD_ROOT_MOD
     # export ___X_CMD_ROOT_TMP
