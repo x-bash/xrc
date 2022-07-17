@@ -129,6 +129,14 @@ ___X_CMD_CUR_SHELL="${___X_CMD_SHELL:-sh}"      # TODO: will remove
 xrc:mod log/latest
 ___x_cmd_log init x
 
+___x_cmd_log_envmsg(){
+    x:info "$M"
+    return 0
+}
+
+alias @exit='___x_cmd_log_envmsg && exit'
+alias @return='___x_cmd_log_envmsg && return'
+
 xrc:mod:lib xrc    util mirror httpget ldict/posix sdict instance arglist
 # EndSection
 
