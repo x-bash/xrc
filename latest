@@ -130,7 +130,7 @@ xrc:mod log/latest
 ___x_cmd_log init x
 
 ___x_cmd_log_envmsg(){
-    x:info "$M"
+    x:info "$A"
     return 0
 }
 
