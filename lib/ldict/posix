@@ -5,8 +5,13 @@ ___x_cmd_ldict(){
     case "$op" in
         put)        ___x_cmd_ldict_put "$@" ;;
         unshift)    ___x_cmd_ldict_unshift "$@" ;;
+        rm)         ___x_cmd_ldict_rm "$@" ;;
+        has)        ___x_cmd_ldict_has "$@" ;;
         get)        ___x_cmd_ldict_get "$@" ;;
+        get_)       ___x_cmd_ldict_get "$@" ;;
         keys)       ___x_cmd_ldict_keys "$@" ;;
+        load)       ___x_cmd_ldict_load "$@" ;;
+        dump)       ___x_cmd_ldict_dump "$@" ;;
         print)      ___x_cmd_ldict_print "$@" ;;
         *)
             printf "Show help for ldict\n" >&2
@@ -42,16 +47,7 @@ ___x_cmd_ldict_put(){
     eval "___X_CMD_LDICT_${name}=\"\${___X_CMD_LDICT_${name}:-\${___X_CMD_LDICT_SEP}}\${key}\${___X_CMD_LDICT_KVSEP}\${value}\${___X_CMD_LDICT_SEP}\""
 }
 
-___x_cmd_ldict_load(){
-    local name="${1:?Provide dict name}"
-    local file="${2:?Provide file}"
-    local _line
-    [ -f "$file" ] || return
-    while read -r _line; do
-        [ -n "$_line" ] || continue
-        ___x_cmd_ldict_put "$name" "${_line%=*}" "${_line#*=}"
-    done < "$file"
-}
+
 
 ___x_cmd_ldict_rm(){
     local name="${1:?Provide dict name}"
@@ -105,15 +101,31 @@ NR!=1{
 }'
 }
 
+
+___x_cmd_ldict_load(){
+    local name="${1:?Provide dict name}"
+    local file="${2:?Provide file}"
+    local _line
+    [ -f "$file" ] || return
+    while read -r _line; do
+        [ -n "$_line" ] || continue
+        ___x_cmd_ldict_put "$name" "${_line%=*}" "${_line#*=}"
+    done < "$file"
+}
+
+___x_cmd_ldict_dump(){
+    local name="${1:?Provide dict name}"
+    if [ -z "$2" ]; then
+        eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\"
+    else
+        eval "$2=\"\$___X_CMD_LDICT_${name}\""
+    fi
+}
+
 ___x_cmd_ldict_print(){
     local name="${1:?Provide dict name}"
     eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\" | awk -v RS="$___X_CMD_LDICT_SEP" -v FS="${___X_CMD_LDICT_KVSEP}" '
 NR!=1{
     print $1 "=" $2
 }'
-}
-
-___x_cmd_ldict_dump(){
-    local name="${1:?Provide dict name}"
-    eval printf \"%s\" \"\$"___X_CMD_LDICT_${name}"\"
 }

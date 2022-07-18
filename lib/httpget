@@ -153,37 +153,39 @@ ___x_cmd_httpget_gitx_official(){
     ___x_cmd_httpget_gitx x-cmd "$___X_CMD_CODESORUCE_REPO" "${___X_CMD_CODESORUCE_REPO_BRANCH}" "${1:?Provide resource path}" "$2" "$3"
 }
 
-
-# TODO: will remove the following functions
-___x_cmd_curl(){
-    ___x_cmd_httpget "$@"
-}
-
-___x_cmd_curl_gitx(){
-    ___x_cmd_httpget_gitx "$@"
-}
-
-___x_cmd_curl_gitx_official(){
-    ___x_cmd_httpget_gitx_official "$@"
-}
-
 ___x_cmd_httpget_curl(){
     local url="${1:?Provide url}"
     local cache="${2}"
-    x:debug "curl --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
+    x:debug "curl -L --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
 
     if [ -z "$cache" ]; then
         exec 3>&1
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl -L --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
         exec 3>&-
     else
-        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(curl -L --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
     fi
 
     local code=$?
     printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
 }
 
+___x_cmd_httpget_xcurl(){
+    local url="${1:?Provide url}"
+    local cache="${2}"
+    x:debug "x curl -L --dump - --output $cache --speed-time 5 --speed-limit 10 $url"
+
+    if [ -z "$cache" ]; then
+        exec 3>&1
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl -L --silent --dump - --output /dev/stderr --speed-time 5 --speed-limit 10 "$url" 2>&3)"
+        exec 3>&-
+    else
+        ___X_CMD_HTTP_GET_INNER_HEADER="$(x curl -L --silent --dump - --output "$cache" --speed-time 5 --speed-limit 10 "$url")"
+    fi
+
+    local code=$?
+    printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
+}
 
 # Section: httpget_inner
 # TODO: &3 is a global var. Must be handled in the proper way.
@@ -208,11 +210,8 @@ elif command -v wget >/dev/null && command -v ssl_client 1>/dev/null; then
         printf "%s" "$___X_CMD_HTTP_GET_INNER_HEADER" | ___x_cmd_httpget_handle_resp_header "$url" "$code"
     }
 else
-    xrc:mod xrc/lib/request_curl
-    if ___x_cmd_http___download_curl 1>/dev/null; then
-        ___x_cmd_httpget_inner(){
-            ___x_cmd_httpget_curl "$@"
-        }
-    fi
+    ___x_cmd_httpget_inner(){
+        ___x_cmd_httpget_xcurl "$@"
+    }
 fi
 # EndSection

@@ -27,17 +27,9 @@ ___x_cmd_is_suitable_advise_env(){
 }
 
 ___x_cmd_readlink_recursive(){
-    if [ -L "${1:?Provide link}" ]; then
-        local next_link
-        next_link="$(readlink "${1}")" || return
-        if [ "${next_link#/}" = "$next_link" ]; then
-            next_link="$(dirname "${1}")/$next_link"
-        fi
-        ___x_cmd_readlink_recursive "$next_link"
-    else
-        [ ! -e "${1}" ] && return 1        # File Not Exists
-        printf "%s" "$1"
-    fi
+    local ___X_CMD_READLINK_RECURSIVE_
+    ___x_cmd_readlink_recursive_ "$@"
+    printf "%s\n" "$___X_CMD_READLINK_RECURSIVE_"
 }
 
 ___x_cmd_definelazyloader(){
