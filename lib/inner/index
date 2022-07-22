@@ -1,5 +1,7 @@
 # shellcheck shell=dash
 
+___X_CMD_INNER_PATH="$PATH"
+
 if [ -z "$ZSH_VERSION" ]; then
 
 ___x_cmd_inner_cd(){
@@ -15,13 +17,14 @@ ___x_cmd_inner_cd(){
 fi
 
 ___x_cmd_inner_mv(){
-    command mv "$@"
+    PATH="$___X_CMD_INNER_PATH" command mv "$@"
 }
 
 ___x_cmd_inner_awk(){
-    xrc:mod xrc/lib/inner/awk
+    PATH="$___X_CMD_INNER_PATH" command awk "$@"
 }
 
 ___x_cmd_inner_curl(){
-    xrc:mod xrc/lib/inner/curl
+    # Download curl
+    PATH="$___X_CMD_INNER_PATH" command curl "$@"
 }

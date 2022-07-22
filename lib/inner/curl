@@ -2,6 +2,7 @@
 
 ___X_CMD_INNER_CURL_BINPATH=
 
+# What if we want to inject our own curl.
 ___x_cmd_inner_curl(){
     # GCURL Better Than CURL
     if [ -n "$___X_CMD_INNER_CURL_BINPATH" ]; then
