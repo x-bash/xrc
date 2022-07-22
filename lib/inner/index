@@ -7,7 +7,7 @@ ___x_cmd_inner_cd(){
 }
 
 ___x_cmd_inner_mv(){
-    xrc:mod:lib ""
+    builtin mv "$@" || return
 }
 
 else
