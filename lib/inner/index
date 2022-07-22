@@ -1,9 +1,4 @@
-
-
-___x_cmd_inner_mv(){
-    xrc:mod:lib ""
-}
-
+# shellcheck shell=dash
 
 if [ -z "$ZSH_VERSION" ]; then
 
@@ -11,10 +6,18 @@ ___x_cmd_inner_cd(){
     builtin cd "$@" || return
 }
 
+___x_cmd_inner_mv(){
+    xrc:mod:lib ""
+}
+
 else
 
 ___x_cmd_inner_cd(){
     cd "$@" || return
+}
+
+___x_cmd_inner_mv(){
+    command mv "$@"
 }
 
 fi
