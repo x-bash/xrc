@@ -164,3 +164,9 @@ ___x_cmd_eval(){
 # ___x_cmd_abspath(){
 #     cd "${1:?Provide Path}" && ___X_CMD_ABSPATH="$PWD" && cd "$OLDPWD" || return
 # }
+
+
+___x_cmd_isunset(){
+    eval '[ -z "${'"${1:?Provide name}"'+1}" ] ' || return 1
+    # eval '[ -z "${'"${1:?Provide name}"'}" ] && [ -z "${'"${1}"'+1}" ] ' || return 1
+}
