@@ -6,21 +6,17 @@ ___x_cmd_inner_cd(){
     builtin cd "$@" || return
 }
 
-___x_cmd_inner_mv(){
-    builtin mv "$@" || return
-}
-
 else
 
 ___x_cmd_inner_cd(){
-    cd "$@" || return
+    command cd "$@" || return
 }
+
+fi
 
 ___x_cmd_inner_mv(){
     command mv "$@"
 }
-
-fi
 
 ___x_cmd_inner_awk(){
     xrc:mod xrc/lib/inner/awk

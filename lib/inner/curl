@@ -2,7 +2,7 @@
 
 ___X_CMD_INNER_CURL_BINPATH=
 
-___x_cmd_inner_awk(){
+___x_cmd_inner_curl(){
     # GCURL Better Than CURL
     if [ -n "$___X_CMD_INNER_CURL_BINPATH" ]; then
         "$___X_CMD_INNER_CURL_BINPATH" "$@"
