@@ -1,0 +1,28 @@
+
+
+___x_cmd_inner_mv(){
+    xrc:mod:lib ""
+}
+
+
+if [ -z "$ZSH_VERSION" ]; then
+
+___x_cmd_inner_cd(){
+    builtin cd "$@" || return
+}
+
+else
+
+___x_cmd_inner_cd(){
+    cd "$@" || return
+}
+
+fi
+
+___x_cmd_inner_awk(){
+    xrc:mod xrc/lib/inner/awk
+}
+
+___x_cmd_inner_curl(){
+    xrc:mod xrc/lib/inner/curl
+}
