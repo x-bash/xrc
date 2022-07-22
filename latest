@@ -137,7 +137,7 @@ ___x_cmd_log_envmsg(){
 alias @exit='___x_cmd_log_envmsg && exit'
 alias @return='___x_cmd_log_envmsg && return'
 
-xrc:mod:lib xrc    util mirror httpget ldict/posix sdict instance arglist
+xrc:mod:lib xrc    util mirror httpget ldict/posix sdict instance arglist inner/index
 # EndSection
 
 # Section 3: main entrance helper: xrc_set_main, which_one, which_one_with_naming
