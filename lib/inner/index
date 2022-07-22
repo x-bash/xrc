@@ -24,6 +24,7 @@ ___x_cmd_inner_awk(){
     PATH="$___X_CMD_INNER_PATH" command awk "$@"
 }
 
+# TODO: In the future, we will introduce curl command.
 ___x_cmd_inner_curl(){
     # Download curl
     PATH="$___X_CMD_INNER_PATH" command curl "$@"
