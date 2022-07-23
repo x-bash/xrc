@@ -170,3 +170,21 @@ ___x_cmd_isunset(){
     eval '[ -z "${'"${1:?Provide name}"'+1}" ] ' || return 1
     # eval '[ -z "${'"${1:?Provide name}"'}" ] && [ -z "${'"${1}"'+1}" ] ' || return 1
 }
+
+___x_cmd_retry(){
+    local ___X_CMD_RETRY_MAX_ATTEMPT=3
+    local ___X_CMD_RETRY_INTERVAL=1
+    while true; do
+        case "$1" in
+            --)                 shift; break ;;
+            -m|--max)           shift; ___X_CMD_RETRY_MAX_ATTEMPT="$1"; shift; ;;
+            -i|--interval)      shift; ___X_CMD_RETRY_INTERVAL="$1"; shift ;;
+            *)                  break ;;
+        esac
+    done
+
+    while true; do
+        "$@"
+        sleep "$___X_CMD_RETRY_INTERVAL" || return 130
+    done
+}
