@@ -184,10 +184,14 @@ ___x_cmd_retry(){
     done
 
     local i=1
+    local ___X_CMD_RETRY_EXITCODE
     while true; do
-        ! "$@" || return 0
+        [ "$i" -gt 1 ] || x:warn "Retrying[${___X_CMD_RETRY_INTERVAL}s,$i/$___X_CMD_RETRY_MAX_ATTEMPT]: $*"
+        ___X_CMD_RETRY_EXITCODE=0
+        "$@" || ___X_CMD_RETRY_EXITCODE="$?"
+        [ "$___X_CMD_RETRY_EXITCODE" -ne 0 ] || return 0
         i=$((i+1))
-        [ "$i" -le "$___X_CMD_RETRY_MAX_ATTEMPT" ] || return 1
+        [ "$i" -le "$___X_CMD_RETRY_MAX_ATTEMPT" ] || return "$___X_CMD_RETRY_EXITCODE"
         sleep "$___X_CMD_RETRY_INTERVAL" || return 130
     done
 }
