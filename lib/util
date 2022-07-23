@@ -183,8 +183,10 @@ ___x_cmd_retry(){
         esac
     done
 
-    while true; do
-        "$@"
+    local i=1
+    while [ "$i" -le "$___X_CMD_RETRY_MAX_ATTEMPT" ]; do
+        i=$((i+1))
+        ! "$@" || return 0
         sleep "$___X_CMD_RETRY_INTERVAL" || return 130
     done
 }
