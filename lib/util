@@ -184,9 +184,10 @@ ___x_cmd_retry(){
     done
 
     local i=1
-    while [ "$i" -le "$___X_CMD_RETRY_MAX_ATTEMPT" ]; do
-        i=$((i+1))
+    while true; do
         ! "$@" || return 0
+        i=$((i+1))
+        [ "$i" -le "$___X_CMD_RETRY_MAX_ATTEMPT" ] || return 1
         sleep "$___X_CMD_RETRY_INTERVAL" || return 130
     done
 }
