@@ -10,7 +10,7 @@ ___x_cmd_xrc_update(){
     esac
 
     if ___x_cmd_httpget_gitx x-cmd "$codesrc" main "dist/all.tgz" "$CACHE" -; then
-        (cd "$___X_CMD_ROOT" && tar xvf "$CACHE")
+        (cd "$___X_CMD_ROOT" && tar xvf "$CACHE" 2>/dev/null 1>&2)
         x advise rm
         rm "$CACHE"
         rm "$___X_CMD_ROOT/.boot/boot"
