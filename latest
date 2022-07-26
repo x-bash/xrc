@@ -7,7 +7,7 @@
 
 ___x_cmd_mkdirp(){
     while [ $# -gt 0 ]; do
-        [ -d "${1}" ] || mkdir -p "$1" || return 1
+        [ -d "${1}" ] || command mkdir -p "$1" || return 1
         shift
     done
 }
@@ -15,7 +15,7 @@ ___x_cmd_mkdirp(){
 ___x_cmd_ensurefp(){
     while [ $# -gt 0 ]; do
         case "$1" in
-            */*)        [ -d "${1%/*}" ] || mkdir -p "${1%/*}" || return 1
+            */*)        [ -d "${1%/*}" ] || command mkdir -p "${1%/*}" || return 1
         esac
         shift
     done
@@ -24,7 +24,7 @@ ___x_cmd_ensurefp(){
 
 ___x_cmd_touch(){
     while [ $# -gt 0 ]; do
-        [ -d "${1%/*}" ] || mkdir -p "$1" || return 1
+        [ -d "${1%/*}" ] || command mkdir -p "$1" || return 1
         touch "$1"
         shift
     done
