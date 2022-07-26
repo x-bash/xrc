@@ -12,6 +12,16 @@ ___x_cmd_mkdirp(){
     done
 }
 
+___x_cmd_ensurefp(){
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            */*)        [ -d "${1%/*}" ] || mkdir -p "${1%/*}" || return 1
+        esac
+        shift
+    done
+}
+
+
 ___x_cmd_touch(){
     while [ $# -gt 0 ]; do
         [ -d "${1%/*}" ] || mkdir -p "$1" || return 1
