@@ -24,7 +24,7 @@ ___x_cmd_ensurefp(){
 
 ___x_cmd_touch(){
     while [ $# -gt 0 ]; do
-        [ -d "${1%/*}" ] || command mkdir -p "$1" || return 1
+        [ -d "${1%/*}" ] || command mkdir -p "${1%/*}" || return 1
         touch "$1"
         shift
     done
