@@ -448,3 +448,10 @@ fi
 # EndSection
 
 [ -z "$BASH_VERSION" ] || export BASH_SILENCE_DEPRECATION_WARNING=1
+
+# putting the boot code into the xrc
+! ___x_cmd_is_interative_tty || {
+    xrc env/latest
+    [ ! -f "$___X_CMD_ROOT/.boot/mod" ]   || . "$___X_CMD_ROOT/.boot/mod"
+    [ ! -f "$___X_CMD_ROOT/.boot/rc" ]    || . "$___X_CMD_ROOT/.boot/rc"
+}
