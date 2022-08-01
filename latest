@@ -34,7 +34,7 @@ ___x_cmd_touch(){
 {
 # if [ -z "$___X_CMD_ROOT" ]; then
     ___X_CMD_ROOT="${___X_CMD_ROOT:-$HOME/.x-cmd}"           # boot will be placed in "$HOME/.x-cmd/boot"
-    ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
+    ___X_CMD_ROOT_MOD="${___X_CMD_ROOT_MOD:-$___X_CMD_ROOT}"
     ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
 
     ___x_cmd_mkdirp "$___X_CMD_ROOT" || return 1 || exit 1
