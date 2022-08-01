@@ -7,14 +7,24 @@
 
 ___x_cmd_mkdirp(){
     while [ $# -gt 0 ]; do
-        [ -d "${1}" ] || mkdir -p "$1" || return 1
+        [ -d "${1}" ] || command mkdir -p "$1" || return 1
         shift
     done
 }
 
+___x_cmd_ensurefp(){
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            */*)        [ -d "${1%/*}" ] || command mkdir -p "${1%/*}" || return 1
+        esac
+        shift
+    done
+}
+
+
 ___x_cmd_touch(){
     while [ $# -gt 0 ]; do
-        [ -d "${1%/*}" ] || mkdir -p "$1" || return 1
+        [ -d "${1%/*}" ] || command mkdir -p "${1%/*}" || return 1
         touch "$1"
         shift
     done
@@ -24,7 +34,7 @@ ___x_cmd_touch(){
 {
 # if [ -z "$___X_CMD_ROOT" ]; then
     ___X_CMD_ROOT="${___X_CMD_ROOT:-$HOME/.x-cmd}"           # boot will be placed in "$HOME/.x-cmd/boot"
-    ___X_CMD_ROOT_MOD="$___X_CMD_ROOT"
+    ___X_CMD_ROOT_MOD="${___X_CMD_ROOT_MOD:-$___X_CMD_ROOT}"
     ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
 
     ___x_cmd_mkdirp "$___X_CMD_ROOT" || return 1 || exit 1
@@ -438,3 +448,10 @@ fi
 # EndSection
 
 [ -z "$BASH_VERSION" ] || export BASH_SILENCE_DEPRECATION_WARNING=1
+
+# putting the boot code into the xrc
+! ___x_cmd_is_interative_tty || {
+    xrc env/latest
+    [ ! -f "$___X_CMD_ROOT/.boot/mod" ]   || . "$___X_CMD_ROOT/.boot/mod"
+    [ ! -f "$___X_CMD_ROOT/.boot/rc" ]    || . "$___X_CMD_ROOT/.boot/rc"
+}

@@ -170,3 +170,28 @@ ___x_cmd_isunset(){
     eval '[ -z "${'"${1:?Provide name}"'+1}" ] ' || return 1
     # eval '[ -z "${'"${1:?Provide name}"'}" ] && [ -z "${'"${1}"'+1}" ] ' || return 1
 }
+
+___x_cmd_retry(){
+    local ___X_CMD_RETRY_MAX_ATTEMPT=3
+    local ___X_CMD_RETRY_INTERVAL=1
+    while true; do
+        case "$1" in
+            --)                 shift; break ;;
+            -m|--max)           shift; ___X_CMD_RETRY_MAX_ATTEMPT="$1"; shift; ;;
+            -i|--interval)      shift; ___X_CMD_RETRY_INTERVAL="$1"; shift ;;
+            *)                  break ;;
+        esac
+    done
+
+    local i=1
+    local ___X_CMD_RETRY_EXITCODE
+    while true; do
+        [ "$i" -eq 1 ] || x:warn "Retrying[${___X_CMD_RETRY_INTERVAL}s,$i/$___X_CMD_RETRY_MAX_ATTEMPT]: $*"
+        ___X_CMD_RETRY_EXITCODE=0
+        "$@" || ___X_CMD_RETRY_EXITCODE="$?"
+        [ "$___X_CMD_RETRY_EXITCODE" -ne 0 ] || return 0
+        i=$((i+1))
+        [ "$i" -le "$___X_CMD_RETRY_MAX_ATTEMPT" ] || return "$___X_CMD_RETRY_EXITCODE"
+        sleep "$___X_CMD_RETRY_INTERVAL" || return 130
+    done
+}
