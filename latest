@@ -252,7 +252,7 @@ ___x_cmd_which_one(){
                 x:debug "Version suffix unavailable. Using \"latest\" by default: $module"
             fi
 
-            TGT="$___X_CMD_ROOT/$module"
+            TGT="$___X_CMD_ROOT_MOD/$module"
             if [ -f "$TGT" ]; then
                 ___X_CMD_WHICH_ONE_RESULT="$TGT"
                 return 0
