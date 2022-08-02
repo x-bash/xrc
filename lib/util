@@ -23,7 +23,7 @@ ___x_cmd_is_interative_tty(){
 }
 
 ___x_cmd_is_suitable_advise_env(){
-    [ -n "$___X_CMD_ADVISE_ENABLE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
+    [ -z "$___X_CMD_ADVISE_DISABLE" ] && [ -n "${BASH_VERSION}${ZSH_VERSION}" ] && [ "${-#*i}" != "$-" ]
 }
 
 ___x_cmd_readlink_recursive(){
