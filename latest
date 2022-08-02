@@ -37,7 +37,7 @@ ___x_cmd_touch(){
     ___X_CMD_ROOT_MOD="${___X_CMD_ROOT_MOD:-$___X_CMD_ROOT}"
     ___X_CMD_ROOT_TMP="$___X_CMD_ROOT/.tmp"
 
-    ___x_cmd_mkdirp "$___X_CMD_ROOT" || return 1 || exit 1
+    ___x_cmd_mkdirp "$___X_CMD_ROOT_TMP" || return 1 || exit 1
     PATH="$___X_CMD_ROOT/.bin:$___X_CMD_ROOT/x-cmd/lib/bin:$PATH"
 
     # export ___X_CMD_VERSION     # Version inside the commit-id
