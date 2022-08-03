@@ -1,10 +1,10 @@
 {
     "cat": {
-        "#n": "ls $___X_CMD_ROOT | grep -v BASE64",
+        "#n": "ls $___X_CMD_ROOT_MOD | grep -v BASE64",
         "#desc": "Show the script in text form"
     },
     "which": {
-        "#n": "ls $___X_CMD_ROOT | grep -v BASE64",
+        "#n": "ls $___X_CMD_ROOT_MOD | grep -v BASE64",
         "#desc": "Download lib files and print the local path"
     },
     "cache": "--- Provide cache filepath",
